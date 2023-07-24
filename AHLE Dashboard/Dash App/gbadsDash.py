@@ -3333,9 +3333,12 @@ gbadsDash.layout = html.Div([
 
             html.H3("Ethiopia Animal Health Loss Envelope and Disease Attribution"),
             html.Label(["Displaying production values, expenditures, and gross margin under the current and ideal scenario estimated by a compartmental herd dynamics model. Attribution of AHLE to infectious, non-infectious, and external causes is based on the results of expert elicitation."]),
-            html.Label(["Results on this page are currently limited to cattle, small ruminants, and poultry, as those are the species for which the compartmental herd model has been estimated."]),
+            # html.Label(["Results on this page are currently limited to cattle, small ruminants, and poultry, as those are the species for which the compartmental herd model has been estimated."]),
+            html.Label(["Results on this page are currently limited to cattle, small ruminants, and poultry."]),
             html.Hr(style={'margin-right':'10px'}),
-            html.Label(["Select a species and production system to view and the currency to display for all charts"] ,style={"font-style":"italic"}),
+            html.Label(["Select a species and production system to view and the currency to display for all charts"]
+                       ,style={"font-style":"italic"}
+                       ),
 
             #### -- DROPDOWNS CONTROLS
             dbc.Row([
