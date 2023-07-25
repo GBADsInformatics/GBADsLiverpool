@@ -463,8 +463,8 @@ ahle_combo_forattr_1 = ahle_combo_forattr_1[cols_first + cols_other].rename(colu
 
 #%% Prep for Attribution - Small Ruminants
 '''
-For sheep and goats, the expert attribution file uses non-sex-specific Juvenile
-and Neonatal groups.
+For sheep and goats, the expert attribution file:
+    - Uses non-sex-specific groups for Juvenile and Neonatal ages.
 '''
 # =============================================================================
 #### Subset data to correct species

@@ -694,7 +694,9 @@ datainfo(ahle_combo)
 ahle_combo.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_stacked.csv') ,index=False)
 
 #%% Checks on raw simulation output
-
+'''
+This creates some check_ datasets and prints checks to the console.
+'''
 check_ahle_combo = ahle_combo.copy()
 
 _group_overall = (check_ahle_combo['group'].str.upper() == 'OVERALL')
@@ -1461,7 +1463,7 @@ print(check_ahle_combo_withahle.query("ahle_dueto_bruc_total_mean.notnull()")[['
 
 #%% Create scenario summary table
 '''
-This produces a summary data set with a different structure than before. This uses
+This produces a summary data frame with a different structure than before. This uses
 only the total system value for each item (dropping the age/sex-specific values).
 It then creates a row for each scenario. Scenarios set either specific age/sex
 groups to ideal conditions or all age/sex groups simultaneously.
