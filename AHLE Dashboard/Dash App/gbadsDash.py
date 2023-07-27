@@ -161,6 +161,7 @@ else:
     # Output folders:
     ECS_PROGRAM_OUTPUT_FOLDER = os.path.join(GBADsLiverpool, Ethiopia_Workspace, "Program outputs")
     GA_DATA_FOLDER = os.path.join(GBADsLiverpool, Global_Agg_Workspace, "Data")
+
 # -----------------------------------------------------------------------------
 # Poultry
 # -----------------------------------------------------------------------------
@@ -197,11 +198,11 @@ ecs_ahle_summary2 = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary
 
 # Attribution Summary
 # ecs_ahle_all_withattr = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr.csv'))
-# Using alternative data with placeholders for disease-specific attribution
+# Using data with disease-specific attribution
 ecs_ahle_all_withattr = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv'))
 
 # JR 2023-4-19: added regional results. Testing with Nationl level (should be same as before).
-ecs_ahle_summary = ahle_all_scensmry.query("region == 'National'").copy()
+# ahle_all_scensmry = ahle_all_scensmry.query("region == 'National'").copy()
 ecs_ahle_summary2 = ecs_ahle_summary2.query("region == 'National'")
 # ecs_ahle_all_withattr = ecs_ahle_all_withattr.query("region == 'National'")
 
@@ -678,7 +679,7 @@ swine_lookup_breed_df = {
 # =============================================================================
 # Species
 # ecs_species_options = []
-# for i in np.sort(ecs_ahle_summary['species'].unique()):
+# for i in np.sort(ahle_all_scensmry['species'].unique()):
 #     str(ecs_species_options.append({'label':i,'value':(i)}))
 # Specify the order of the species
 ecs_species_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Cattle",
@@ -692,23 +693,23 @@ ecs_species_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Ca
 
 # Production system
 # Rename Overall to more descriptive
-ecs_ahle_summary['production_system'] = ecs_ahle_summary['production_system'].replace({'Overall': 'All Production Systems'})
+ahle_all_scensmry['production_system'] = ahle_all_scensmry['production_system'].replace({'Overall': 'All Production Systems'})
 
 # ecs_prodsys_options are now defined dynamically in a callback based on selected species
 # ecs_prodsys_options = []
-# for i in np.sort(ecs_ahle_summary['production_system'].unique()):
+# for i in np.sort(ahle_all_scensmry['production_system'].unique()):
 #    str(ecs_prodsys_options.append({'label':i,'value':(i)}))
 
 # Year
 # Year options are now set in a callback
 # ecs_year_options=[]
-# for i in np.sort(ecs_ahle_summary['year'].unique()):
+# for i in np.sort(ahle_all_scensmry['year'].unique()):
 #     str(ecs_year_options.append({'label':i,'value':(i)}))
 
 
 # Sex
 ecs_agesex_options=[]
-for i in np.sort(ecs_ahle_summary['agesex_scenario'].unique()):
+for i in np.sort(ahle_all_scensmry['agesex_scenario'].unique()):
    str(ecs_agesex_options.append({'label':i,'value':(i)}))
 
 # Filter for juvenile and neonates
@@ -7235,7 +7236,7 @@ def update_ahle_lineplot_ga(
     )
 def update_prodsys_options_ecs(species):
     # Get unique production systems for selected species
-    unique_prodsys = np.sort(ecs_ahle_summary.loc[ecs_ahle_summary['species'] == species ,'production_system'].unique())
+    unique_prodsys = np.sort(ahle_all_scensmry.loc[ahle_all_scensmry['species'] == species ,'production_system'].unique())
     options = [{'label': i, 'value': i} for i in unique_prodsys]
     value = options[0]['value']  # Default is first one
     return options, value
@@ -7271,7 +7272,7 @@ def update_year_select_ecs(graph, species):
 
     if (graph == 'Single Year') & (species.upper() == 'CATTLE'):
         ecs_year_options=[]
-        for i in np.sort(ecs_ahle_summary['year'].unique()):
+        for i in np.sort(ahle_all_scensmry['year'].unique()):
             str(ecs_year_options.append({'label':i,'value':(i)}))
     elif graph == 'Over Time':   # Over time - placeholder (all)
         placeholder = '(all)'
@@ -7683,13 +7684,16 @@ def update_footnote(graph):
 )
 def update_ecs_ahle_data(currency, species, prodsys, agesex):
     # Read in data and apply filters
-    input_df = ecs_ahle_summary
+    input_df = ahle_all_scensmry
+
     # Species filter
     input_df = input_df.loc[(input_df['species'] == species)]
+
     # Production System filter
     # Rename values to match filters
     input_df['production_system'] = input_df['production_system'].replace({'Overall': 'All Production Systems'})
     input_df=input_df.loc[(input_df['production_system'] == prodsys)]
+
     # Age/sex filter
     input_df=input_df.loc[(input_df['agesex_scenario'] == agesex)]
 
@@ -7717,18 +7721,19 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
                               'mean_AHLE_mortality',]].applymap('{:,.0f}'.format))
 
     columns_to_display_with_labels = {
-      'species':'Species'
-      ,'production_system':'Production System'
-      ,'year':'Year'
-      ,'item':'Value or Cost'
-      # ,'age_group':'Age'
-      # ,'sex':'Sex'
-      ,'agesex_scenario':'Group'
-      ,'mean_current':f'Current Mean ({display_currency})'
-      ,'mean_ideal':f'Ideal Mean ({display_currency})'
-      ,'mean_mortality_zero':f'Mortality Zero Mean ({display_currency})'
-      ,'mean_AHLE':'AHLE (Ideal - Current)'
-      ,'mean_AHLE_mortality':'AHLE due to Mortality (Mortality Zero - Current)'
+        'species':'Species'
+        ,'production_system':'Production System'
+        ,'region':'Region'
+        ,'year':'Year'
+        ,'item':'Value or Cost'
+        # ,'age_group':'Age'
+        # ,'sex':'Sex'
+        ,'agesex_scenario':'Group'
+        ,'mean_current':f'Current Mean ({display_currency})'
+        ,'mean_ideal':f'Ideal Mean ({display_currency})'
+        ,'mean_mortality_zero':f'Mortality Zero Mean ({display_currency})'
+        ,'mean_AHLE':'AHLE (Ideal - Current)'
+        ,'mean_AHLE_mortality':'AHLE due to Mortality (Mortality Zero - Current)'
     }
 
     # Subset columns
@@ -7817,17 +7822,18 @@ def update_ecs_attr_data(currency, prodsys, species):
     # input_df.update(input_df[['pct_of_total']].applymap('{:,.2f}%'.format))
 
     columns_to_display_with_labels = {
-      'species':'Species'
-      ,'production_system':'Production System'
-      ,'age_group':'Age'
-      ,'sex':'Sex'
-      ,'ahle_component':'AHLE Component'
-      ,'cause':'Attribution'
-      ,'mean':f'Mean ({display_currency})'
-      ,'sd':'Std. Dev.'
-      ,'lower95':'Lower 95%'
-      ,'upper95':'Upper 95%'
-      # ,'pct_of_total':'Percent of Total AHLE'
+        'species':'Species'
+        ,'production_system':'Production System'
+        ,'region':'Region'
+        ,'age_group':'Age'
+        ,'sex':'Sex'
+        ,'ahle_component':'AHLE Component'
+        ,'cause':'Attribution'
+        ,'mean':f'Mean ({display_currency})'
+        ,'sd':'Std. Dev.'
+        ,'lower95':'Lower 95%'
+        ,'upper95':'Upper 95%'
+        # ,'pct_of_total':'Percent of Total AHLE'
     }
 
     # Subset columns
@@ -7952,14 +7958,16 @@ def update_ahle_value_and_cost_viz_ecs(
     ):
     # Read in data and apply filters
     input_df = ahle_all_scensmry
+
     # Species filter
     input_df = input_df.loc[(input_df['species'] == species)]
+
     # Production System filter
-    # Rename values to match filters
-    input_df['production_system'] = input_df['production_system'].replace({'Overall': 'All Production Systems'})
     input_df=input_df.loc[(input_df['production_system'] == prodsys)]
+
     # Age/sex filter
     input_df=input_df.loc[(input_df['agesex_scenario'] == agesex)]
+
     # Geographic filter
     if geo_view.upper() == "NATIONAL":
         input_df = input_df.query("region == 'National'")
