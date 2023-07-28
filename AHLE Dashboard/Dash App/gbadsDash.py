@@ -706,26 +706,16 @@ ahle_all_scensmry['production_system'] = ahle_all_scensmry['production_system'].
 # for i in np.sort(ahle_all_scensmry['year'].unique()):
 #     str(ecs_year_options.append({'label':i,'value':(i)}))
 
-
 # Sex
 ecs_agesex_options=[]
 for i in np.sort(ahle_all_scensmry['agesex_scenario'].unique()):
    str(ecs_agesex_options.append({'label':i,'value':(i)}))
 
-# Filter for juvenile and neonates
-ecs_sex_options_filter = [{'label': "Overall Sex", 'value': "Overall Sex", 'disabled': False}]
-
 # Currency
 ecs_currency_options = [{'label': "Birr", 'value': "Birr", 'disabled': False},
                         {'label': "USD", 'value': "USD", 'disabled': False}]
 
-# Attribution
-ecs_attr_options = [{'label': "All Causes", 'value': "All Causes", 'disabled': False}]
-
-for i in np.sort(ecs_ahle_all_withattr['cause'].unique()):
-   str(ecs_attr_options.append({'label':i,'value':(i)}))
-
-# Hierarchy
+# Attribution hierarchy
 ecs_hierarchy_attr_options = [{'label': "Cause", 'value': "cause", 'disabled': False},
                               {'label': "Production System", 'value': "production_system", 'disabled': False},
                               {'label': "Age Group", 'value': "age_group", 'disabled': False},
@@ -749,27 +739,6 @@ ecs_display_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Di
                                                                              "Side by Side",
                                                                             ]]
 # Item
-# Keep only items for the waterfall
-waterfall_plot_values = ('Value of Offtake',
-                         'Value of Eggs consumed',
-                         'Value of Eggs sold',
-                         'Value of Herd Increase',
-                         'Value of Draught',
-                         'Value of Milk',
-                         'Value of Manure',
-                         'Value of Hides',
-                         'Expenditure on Feed',
-                         'Expenditure on Labour',
-                         'Expenditure on Health',
-                         'Expenditure on Housing',
-                         'Expenditure on Capital',
-                         'Gross Margin')
-
-ecs_item_ahle_options=[]
-for i in waterfall_plot_values:
-   str(ecs_item_ahle_options.append({'label':i,'value':(i)}))
-
-# ecs_item_ahle_options += [{'label': i, 'value': i, 'disabled': False} for i in ["Totals"]]
 
 # Compare
 ecs_compare_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Ideal",
@@ -1416,47 +1385,10 @@ def prep_ahle_forwaterfall_ecs(INPUT_DF):
    # Fill missing values with 0
    working_df.fillna(0)
 
-   # Trim the data to keep things needed for the waterfall
-   # ecs_ahle_waterfall = working_df[['species',
-   #                                  'production_system',
-   #                                  'agesex_scenario',
-   #                                  'item',
-   #                                  'year',
-   #                                  'mean_current',
-   #                                  'stdev_current',
-   #                                  'mean_ideal',
-   #                                  'stdev_ideal',
-   #                                  'mean_mortality_zero',
-   #                                  'mean_current_usd',
-   #                                  'mean_ideal_usd',
-   #                                  'mean_mortality_zero_usd',
-   #                                  'mean_all_mort_25_imp',
-   #                                  'mean_all_mort_50_imp',
-   #                                  'mean_all_mort_75_imp',
-   #                                  'mean_current_repro_25_imp',
-   #                                  'mean_current_repro_50_imp',
-   #                                  'mean_current_repro_75_imp',
-   #                                  'mean_current_repro_100_imp',
-   #                                  'mean_current_growth_25_imp_all',
-   #                                  'mean_current_growth_50_imp_all',
-   #                                  'mean_current_growth_75_imp_all',
-   #                                  'mean_current_growth_100_imp_all',
-   #                                  'mean_all_mort_25_imp_usd',
-   #                                  'mean_all_mort_50_imp_usd',
-   #                                  'mean_all_mort_75_imp_usd',
-   #                                  'mean_current_repro_25_imp_usd',
-   #                                  'mean_current_repro_50_imp_usd',
-   #                                  'mean_current_repro_75_imp_usd',
-   #                                  'mean_current_repro_100_imp_usd',
-   #                                  'mean_current_growth_25_imp_all_usd',
-   #                                  'mean_current_growth_50_imp_all_usd',
-   #                                  'mean_current_growth_75_imp_all_usd',
-   #                                  'mean_current_growth_100_imp_all_usd',
-   #                                  ]]
-
    ecs_ahle_waterfall = working_df
 
    # Keep only items for the waterfall
+   # This also specifies the ordering of the bars
    waterfall_plot_values = ('Value of Offtake',
                             'Value of Eggs consumed',
                             'Value of Eggs sold',
@@ -1473,42 +1405,6 @@ def prep_ahle_forwaterfall_ecs(INPUT_DF):
                             'Gross Margin')
    ecs_ahle_waterfall = ecs_ahle_waterfall.loc[ecs_ahle_waterfall['item'].isin(waterfall_plot_values)]
 
-   # Make costs negative
-   costs = ('Feed Cost',
-            'Labour Cost',
-            'Health Cost',
-            'Infrastructure Cost',
-            'Capital Cost')
-   ecs_ahle_waterfall['mean_current'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current']* -1, ecs_ahle_waterfall['mean_current'])
-   ecs_ahle_waterfall['mean_ideal'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_ideal']* -1, ecs_ahle_waterfall['mean_ideal'])
-   ecs_ahle_waterfall['mean_mortality_zero'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_mortality_zero']* -1, ecs_ahle_waterfall['mean_mortality_zero'])
-   ecs_ahle_waterfall['mean_current_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_usd']* -1, ecs_ahle_waterfall['mean_current_usd'])
-   ecs_ahle_waterfall['mean_ideal_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_ideal_usd']* -1, ecs_ahle_waterfall['mean_ideal_usd'])
-   ecs_ahle_waterfall['mean_mortality_zero_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_mortality_zero_usd']* -1, ecs_ahle_waterfall['mean_mortality_zero_usd'])
-   ecs_ahle_waterfall['mean_all_mort_25_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_25_imp']* -1, ecs_ahle_waterfall['mean_all_mort_25_imp'])
-   ecs_ahle_waterfall['mean_all_mort_50_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_50_imp']* -1, ecs_ahle_waterfall['mean_all_mort_50_imp'])
-   ecs_ahle_waterfall['mean_all_mort_75_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_75_imp']* -1, ecs_ahle_waterfall['mean_all_mort_75_imp'])
-   ecs_ahle_waterfall['mean_current_repro_25_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_25_imp']* -1, ecs_ahle_waterfall['mean_current_repro_25_imp'])
-   ecs_ahle_waterfall['mean_current_repro_50_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_50_imp']* -1, ecs_ahle_waterfall['mean_current_repro_50_imp'])
-   ecs_ahle_waterfall['mean_current_repro_75_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_75_imp']* -1, ecs_ahle_waterfall['mean_current_repro_75_imp'])
-   ecs_ahle_waterfall['mean_current_repro_100_imp'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_100_imp']* -1, ecs_ahle_waterfall['mean_current_repro_100_imp'])
-   ecs_ahle_waterfall['mean_current_growth_25_imp_all'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_25_imp_all']* -1, ecs_ahle_waterfall['mean_current_growth_25_imp_all'])
-   ecs_ahle_waterfall['mean_current_growth_50_imp_all'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_50_imp_all']* -1, ecs_ahle_waterfall['mean_current_growth_50_imp_all'])
-   ecs_ahle_waterfall['mean_current_growth_75_imp_all'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_75_imp_all']* -1, ecs_ahle_waterfall['mean_current_growth_75_imp_all'])
-   ecs_ahle_waterfall['mean_current_growth_100_imp_all'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_100_imp_all']* -1, ecs_ahle_waterfall['mean_current_growth_100_imp_all'])
-   ecs_ahle_waterfall['mean_all_mort_25_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_25_imp_usd']* -1, ecs_ahle_waterfall['mean_all_mort_25_imp_usd'])
-   ecs_ahle_waterfall['mean_all_mort_50_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_50_imp_usd']* -1, ecs_ahle_waterfall['mean_all_mort_50_imp_usd'])
-   ecs_ahle_waterfall['mean_all_mort_75_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_all_mort_75_imp_usd']* -1, ecs_ahle_waterfall['mean_all_mort_75_imp_usd'])
-   ecs_ahle_waterfall['mean_current_repro_25_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_25_imp_usd']* -1, ecs_ahle_waterfall['mean_current_repro_25_imp_usd'])
-   ecs_ahle_waterfall['mean_current_repro_50_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_50_imp_usd']* -1, ecs_ahle_waterfall['mean_current_repro_50_imp_usd'])
-   ecs_ahle_waterfall['mean_current_repro_75_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_75_imp_usd']* -1, ecs_ahle_waterfall['mean_current_repro_75_imp_usd'])
-   ecs_ahle_waterfall['mean_current_repro_100_imp_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_repro_100_imp_usd']* -1, ecs_ahle_waterfall['mean_current_repro_100_imp_usd'])
-   ecs_ahle_waterfall['mean_current_growth_25_imp_all_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_25_imp_all_usd']* -1, ecs_ahle_waterfall['mean_current_growth_25_imp_all_usd'])
-   ecs_ahle_waterfall['mean_current_growth_50_imp_all_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_50_imp_all_usd']* -1, ecs_ahle_waterfall['mean_current_growth_50_imp_all_usd'])
-   ecs_ahle_waterfall['mean_current_growth_75_imp_all_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_75_imp_all_usd']* -1, ecs_ahle_waterfall['mean_current_growth_75_imp_all_usd'])
-   ecs_ahle_waterfall['mean_current_growth_100_imp_all_usd'] = np.where(ecs_ahle_waterfall.item.isin(costs), ecs_ahle_waterfall['mean_current_growth_100_imp_all_usd']* -1, ecs_ahle_waterfall['mean_current_growth_100_imp_all_usd'])
-
-
    # Sort Item column to keep values and costs together
    ecs_ahle_waterfall['item'] = ecs_ahle_waterfall['item'].astype('category')
    ecs_ahle_waterfall.item.cat.set_categories(waterfall_plot_values, inplace=True)
@@ -1521,63 +1417,6 @@ def prep_ahle_forwaterfall_ecs(INPUT_DF):
                                                                     'Infrastructure Cost': 'Expenditure on Housing',
                                                                     'Capital Cost': 'Expenditure on Capital',
                                                                     'Value of draught': 'Value of Draught'})
-
-   # Create AHLE difference columns
-   ecs_ahle_waterfall['mean_AHLE'] = ecs_ahle_waterfall['mean_ideal'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_ideal']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_AHLE_mortality'] = ecs_ahle_waterfall['mean_mortality_zero'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_AHLE_mortality'] = np.sqrt(ecs_ahle_waterfall['stdev_mortality_zero']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_AHLE_usd'] = ecs_ahle_waterfall['mean_ideal_usd'] - ecs_ahle_waterfall['mean_current_usd']
-   ecs_ahle_waterfall['stdev_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_ideal_usd']**2 + ecs_ahle_waterfall['stdev_current_usd']**2)
-   ecs_ahle_waterfall['mean_AHLE_mortality_usd'] = ecs_ahle_waterfall['mean_mortality_zero_usd'] - ecs_ahle_waterfall['mean_current_usd']
-   ecs_ahle_waterfall['stdev_AHLE_mortality_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_mortality_zero_usd']**2 + ecs_ahle_waterfall['stdev_current_usd']**2)
-   # For Mortality
-   ecs_ahle_waterfall['mean_all_mort_25_AHLE'] = ecs_ahle_waterfall['mean_all_mort_25_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_25_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_25_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_mort_50_AHLE'] = ecs_ahle_waterfall['mean_all_mort_50_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_50_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_50_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_mort_75_AHLE'] = ecs_ahle_waterfall['mean_all_mort_75_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_75_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_75_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_mort_25_AHLE_usd'] = ecs_ahle_waterfall['mean_all_mort_25_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_25_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_25_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_mort_50_AHLE_usd'] = ecs_ahle_waterfall['mean_all_mort_50_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_50_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_50_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_mort_75_AHLE_usd'] = ecs_ahle_waterfall['mean_all_mort_75_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_mort_75_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_all_mort_75_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   # For Parturition
-   ecs_ahle_waterfall['mean_all_current_repro_25_AHLE'] = ecs_ahle_waterfall['mean_current_repro_25_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_25_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_25_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_50_AHLE'] = ecs_ahle_waterfall['mean_current_repro_50_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_50_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_50_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_75_AHLE'] = ecs_ahle_waterfall['mean_current_repro_75_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_75_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_75_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_100_AHLE'] = ecs_ahle_waterfall['mean_current_repro_100_imp'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_100_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_100_imp']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_25_AHLE_usd'] = ecs_ahle_waterfall['mean_current_repro_25_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_25_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_25_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_50_AHLE_usd'] = ecs_ahle_waterfall['mean_current_repro_50_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_50_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_50_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_75_AHLE_usd'] = ecs_ahle_waterfall['mean_current_repro_75_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_75_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_75_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_repro_100_AHLE_usd'] = ecs_ahle_waterfall['mean_current_repro_100_imp_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_repro_100_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_repro_100_imp_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   # For Live Weight
-   ecs_ahle_waterfall['mean_all_current_growth_25_AHLE'] = ecs_ahle_waterfall['mean_current_growth_25_imp_all'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_25_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_25_imp_all']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_50_AHLE'] = ecs_ahle_waterfall['mean_current_growth_50_imp_all'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_50_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_50_imp_all']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_75_AHLE'] = ecs_ahle_waterfall['mean_current_growth_75_imp_all'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_75_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_75_imp_all']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_100_AHLE'] = ecs_ahle_waterfall['mean_current_growth_100_imp_all'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_100_AHLE'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_100_imp_all']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_25_AHLE_usd'] = ecs_ahle_waterfall['mean_current_growth_25_imp_all_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_25_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_25_imp_all_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_50_AHLE_usd'] = ecs_ahle_waterfall['mean_current_growth_50_imp_all_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_50_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_50_imp_all_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_75_AHLE_usd'] = ecs_ahle_waterfall['mean_current_growth_75_imp_all_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_75_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_75_imp_all_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
-   ecs_ahle_waterfall['mean_all_current_growth_100_AHLE_usd'] = ecs_ahle_waterfall['mean_current_growth_100_imp_all_usd'] - ecs_ahle_waterfall['mean_current']
-   ecs_ahle_waterfall['stdev_all_current_growth_100_AHLE_usd'] = np.sqrt(ecs_ahle_waterfall['stdev_current_growth_100_imp_all_usd']**2 + ecs_ahle_waterfall['stdev_current']**2)
 
    OUTPUT_DF = ecs_ahle_waterfall
 
@@ -8200,7 +8039,6 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
             prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
-            measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
         elif 'POULTRY' in species.upper():   # Poultry have value of eggs, do not have manure or hides
             waterfall_plot_values = ('Value of Offtake',
                                      'Value of Herd Increase',
@@ -8214,7 +8052,6 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
             prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
-            measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
         else:
             waterfall_plot_values = ('Value of Offtake',
                                      'Value of Herd Increase',
@@ -8229,8 +8066,7 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
             prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
-            measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
-
+        measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
         x = prep_df['item']
 
         # Display and Compare filters
