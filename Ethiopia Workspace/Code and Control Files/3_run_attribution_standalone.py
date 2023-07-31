@@ -273,7 +273,7 @@ and ahle_dueto_healthcost_mean wherever they are missing by summing the individu
 sex estimates (e.g. Adult Combined = Adult Female + Adult Male), then recalculate
 ahle_dueto_productionloss_mean.
 
-Trick: the agesex_scenarios are in separate rows, so this requires summing across
+The agesex_scenarios are in separate rows, so this requires summing across
 rows and must be done carefully to use the correct rows for each distinct BY group
 (by region, species, production system, and year).
 '''

@@ -9157,12 +9157,6 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
             item_filter = item
         input_df = input_df.query("item == @item_filter")
 
-        # Create AHLE columns
-        input_df['mean_AHLE'] = input_df['mean_ideal'] - input_df['mean_current']
-        input_df['mean_AHLE_usd'] = input_df['mean_ideal_usd'] - input_df['mean_current_usd']
-        input_df['mean_AHLE_perkgbiomass'] = input_df['mean_ideal_perkgbiomass'] - input_df['mean_current_perkgbiomass']
-        input_df['mean_AHLE_usd_perkgbiomass'] = input_df['mean_ideal_usd_perkgbiomass'] - input_df['mean_current_usd_perkgbiomass']
-
         # Set values based on selected currency and denominator values
         # If currency is USD, use USD columns
         display_currency = 'Ethiopian Birr'

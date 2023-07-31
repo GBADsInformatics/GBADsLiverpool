@@ -142,7 +142,12 @@ datainfo(exchg_data)
 
 # Filter and rename
 exchg_data_tomerge = exchg_data.query("country_name == 'Ethiopia'")
-exchg_data_tomerge = exchg_data_tomerge.rename(columns={'official_exchange_rate__lcu_per_us_dol___period_average___pa_nus_fcrf_':'exchg_rate_lcuperusdol'})
+keep_rename_cols = {
+    'country_name':'country_name'
+    ,'time':'year'
+    ,'official_exchange_rate__lcu_per_us_dol___period_average___pa_nus_fcrf_':'exchg_rate_lcuperusdol'
+    }
+exchg_data_tomerge = exchg_data_tomerge[list(keep_rename_cols)].rename(columns=keep_rename_cols)
 
 # Fill coded values with nan
 exchg_data_tomerge['exchg_rate_lcuperusdol'] = exchg_data_tomerge['exchg_rate_lcuperusdol'].replace('..' ,np.nan).astype('float64')
@@ -152,9 +157,8 @@ exchg_data_tomerge['exchg_rate_lcuperusdol'] = exchg_data_tomerge['exchg_rate_lc
 exchg_data_tomerge['exchg_rate_lcuperusdol_prev'] = exchg_data_tomerge['exchg_rate_lcuperusdol'].shift(periods=1)
 exchg_data_tomerge['exchg_rate_lcuperusdol'] = \
     exchg_data_tomerge['exchg_rate_lcuperusdol'].fillna(exchg_data_tomerge['exchg_rate_lcuperusdol_prev'])
+del exchg_data_tomerge['exchg_rate_lcuperusdol_prev']
 
-# Limit to needed columns
-exchg_data_tomerge = exchg_data_tomerge[['country_name' ,'time' ,'exchg_rate_lcuperusdol']]
 datainfo(exchg_data_tomerge)
 
 # Export
@@ -806,7 +810,11 @@ ahle_combo_adj['item_type_code'] = ahle_combo_adj['item'].replace(item_type_code
 # Make values negative for all monetary cost items
 float_cols = list(ahle_combo_adj.select_dtypes(include='float'))
 for COL in float_cols:
-    ahle_combo_adj[COL] = np.where(ahle_combo_adj['item_type_code'] == 'mc' ,ahle_combo_adj[COL] * -1 ,ahle_combo_adj[COL])
+    ahle_combo_adj[COL] = np.where(
+        ahle_combo_adj['item_type_code'] == 'mc'
+        ,ahle_combo_adj[COL] * -1
+        ,ahle_combo_adj[COL]
+    )
 
 # Reorder columns
 cols_first = ['species' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex']
@@ -1090,8 +1098,7 @@ ahle_combo_withagg['country_name'] = 'Ethiopia'     # Add country for joining
 ahle_combo_withagg = pd.merge(
     left=ahle_combo_withagg
     ,right=exchg_data_tomerge
-    ,left_on=['country_name' ,'year']
-    ,right_on=['country_name' ,'time']
+    ,on=['country_name' ,'year']
     ,how='left'
     )
 del ahle_combo_withagg['country_name']
@@ -1194,8 +1201,8 @@ ahle_combo_withagg_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.
 # =============================================================================
 # For AHLE calcs, we want each item in a column
 # Need means and standard deviations for later calculations
-mean_cols = [i for i in list(ahle_combo_withagg) if 'mean' in i]
-sd_cols = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
+mean_cols_agg = [i for i in list(ahle_combo_withagg) if 'mean' in i]
+sd_cols_agg = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
 
 # Only need the system total for each item: 'Overall' group
 _groups_for_summary = (ahle_combo_withagg['group'].str.upper() == 'OVERALL')
@@ -1212,7 +1219,7 @@ _items_for_ahle = (ahle_combo_withagg['item'].str.upper().isin(keep_items_upper)
 ahle_combo_withagg_p = ahle_combo_withagg.loc[(_items_for_ahle & _groups_for_summary)].pivot(
     index=['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year']
     ,columns='item'
-    ,values=mean_cols + sd_cols
+    ,values=mean_cols_agg + sd_cols_agg
 ).reset_index()
 ahle_combo_withagg_p = colnames_from_index(ahle_combo_withagg_p)   # Change multi-index to column names
 cleancolnames(ahle_combo_withagg_p)
@@ -1421,8 +1428,7 @@ ahle_combo_withahle['country_name'] = 'Ethiopia'     # Add country for joining
 ahle_combo_withahle = pd.merge(
     left=ahle_combo_withahle
     ,right=exchg_data_tomerge
-    ,left_on=['country_name' ,'year']
-    ,right_on=['country_name' ,'time']
+    ,on=['country_name' ,'year']
     ,how='left'
     )
 del ahle_combo_withahle['country_name']
@@ -1574,7 +1580,7 @@ scenario_basetable = pd.DataFrame({
 
 ahle_combo_scensmry = pd.merge(
    left=scenario_basetable
-   ,right=ahle_combo_adj.query("group.str.upper() == 'OVERALL'")    # Keep only Total System results (group = "Overall")
+   ,right=ahle_combo_adj.query("group.str.upper() == 'OVERALL'")    # Keep only System Total results (group = "Overall")
    ,on='group'
    ,how='outer'
    )
@@ -2127,73 +2133,7 @@ for i ,VARCOL in enumerate(var_cols):
    ahle_combo_scensmry[SDCOL] = np.sqrt(ahle_combo_scensmry[VARCOL])
    del ahle_combo_scensmry[VARCOL]
 
-# =============================================================================
-#### Add currency conversion
-# =============================================================================
-# Merge exchange rates onto data
-ahle_combo_scensmry['country_name'] = 'Ethiopia'     # Add country for joining
-ahle_combo_scensmry = pd.merge(
-    left=ahle_combo_scensmry
-    ,right=exchg_data_tomerge
-    ,left_on=['country_name' ,'year']
-    ,right_on=['country_name' ,'time']
-    ,how='left'
-    )
-del ahle_combo_scensmry['country_name']
-
-# Add columns in USD for appropriate items
-currency_items_containing = ['cost' ,'value' ,'margin' ,'expenditure']
-currency_items = []
-for STR in currency_items_containing:
-    currency_items = currency_items + [item for item in ahle_combo_scensmry['item'].unique() if STR.upper() in item.upper()]
-
-for MEANCOL in mean_cols_scensmry:
-    MEANCOL_USD = MEANCOL + '_usd'
-    ahle_combo_scensmry.loc[ahle_combo_scensmry['item'].isin(currency_items) ,MEANCOL_USD] = \
-        ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['exchg_rate_lcuperusdol']
-
-# For standard deviations, convert to variances then scale by the squared denominator
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
-for SDCOL in sd_cols_scensmry:
-    SDCOL_USD = SDCOL + '_usd'
-    ahle_combo_scensmry.loc[ahle_combo_scensmry['item'].isin(currency_items) ,SDCOL_USD] = \
-        np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['exchg_rate_lcuperusdol']**2)
-
-# =============================================================================
-#### Add columns per kg biomass
-# =============================================================================
-# Get current population liveweight by region into its own column
-regional_wt_byvars = ['region' ,'species' ,'production_system' ,'year']
-liveweight_byregion = ahle_combo_scensmry.query("item == 'Population Liveweight (kg)'")[regional_wt_byvars + ['item' ,'mean_current']].drop_duplicates()
-liveweight_byregion = liveweight_byregion.pivot(
-    index=regional_wt_byvars
-    ,columns='item'
-    ,values='mean_current'
-    ).reset_index()
-cleancolnames(liveweight_byregion)
-
-# Merge with original data
-ahle_combo_scensmry = pd.merge(
-    left=ahle_combo_scensmry
-    ,right=liveweight_byregion
-    ,on=regional_wt_byvars
-    ,how='left'
-    )
-
-# Calculate value columns per kg liveweight
-# Recreate column lists to include USD columns
-mean_cols_scensmry = [i for i in list(ahle_combo_scensmry) if 'mean' in i]
-sd_cols_scensmry = [i for i in list(ahle_combo_scensmry) if 'stdev' in i]
-
-for MEANCOL in mean_cols_scensmry:
-    NEWCOL_NAME = MEANCOL + '_perkgbiomass'
-    ahle_combo_scensmry[NEWCOL_NAME] = ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['population_liveweight__kg_']
-
-# For standard deviations, convert to variances then scale by the squared denominator
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
-for SDCOL in sd_cols_scensmry:
-    NEWCOL_NAME = SDCOL + '_perkgbiomass'
-    ahle_combo_scensmry[NEWCOL_NAME] = np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['population_liveweight__kg_']**2)
+#%% Add calcs to scenario summary table
 
 # =============================================================================
 #### Add AHLE calcs
@@ -2206,19 +2146,13 @@ NOTE: mean values for all cost items are made negative before these calcs.
 
 I am keeping the variable names unchanged, as these are what Dash will look for.
 
-These might partially replace my AHLE calcs below. However, these do not calculate
-the contributions of mortality, health cost, and production loss to total AHLE.
+These might partially replace my AHLE calcs below.
 '''
 # For ideal and mortality zero
 ahle_combo_scensmry['mean_AHLE'] = ahle_combo_scensmry['mean_ideal'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_ideal']**2 + ahle_combo_scensmry['stdev_current']**2)
 ahle_combo_scensmry['mean_AHLE_mortality'] = ahle_combo_scensmry['mean_mortality_zero'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_AHLE_mortality'] = np.sqrt(ahle_combo_scensmry['stdev_mortality_zero']**2 + ahle_combo_scensmry['stdev_current']**2)
-
-ahle_combo_scensmry['mean_AHLE_usd'] = ahle_combo_scensmry['mean_ideal_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_ideal_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_AHLE_mortality_usd'] = ahle_combo_scensmry['mean_mortality_zero_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_AHLE_mortality_usd'] = np.sqrt(ahle_combo_scensmry['stdev_mortality_zero_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
 
 # For Mortality incremental improvement
 ahle_combo_scensmry['mean_all_mort_25_AHLE'] = ahle_combo_scensmry['mean_all_mort_25_imp'] - ahle_combo_scensmry['mean_current']
@@ -2227,13 +2161,6 @@ ahle_combo_scensmry['mean_all_mort_50_AHLE'] = ahle_combo_scensmry['mean_all_mor
 ahle_combo_scensmry['stdev_all_mort_50_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_50_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
 ahle_combo_scensmry['mean_all_mort_75_AHLE'] = ahle_combo_scensmry['mean_all_mort_75_imp'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_all_mort_75_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_75_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-
-ahle_combo_scensmry['mean_all_mort_25_AHLE_usd'] = ahle_combo_scensmry['mean_all_mort_25_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_mort_25_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_25_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_mort_50_AHLE_usd'] = ahle_combo_scensmry['mean_all_mort_50_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_mort_50_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_50_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_mort_75_AHLE_usd'] = ahle_combo_scensmry['mean_all_mort_75_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_mort_75_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_75_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
 
 # For Parturition incremental improvement
 ahle_combo_scensmry['mean_all_current_repro_25_AHLE'] = ahle_combo_scensmry['mean_current_repro_25_imp'] - ahle_combo_scensmry['mean_current']
@@ -2245,15 +2172,6 @@ ahle_combo_scensmry['stdev_all_current_repro_75_AHLE'] = np.sqrt(ahle_combo_scen
 ahle_combo_scensmry['mean_all_current_repro_100_AHLE'] = ahle_combo_scensmry['mean_current_repro_100_imp'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_all_current_repro_100_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_100_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
 
-ahle_combo_scensmry['mean_all_current_repro_25_AHLE_usd'] = ahle_combo_scensmry['mean_current_repro_25_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_repro_25_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_25_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_repro_50_AHLE_usd'] = ahle_combo_scensmry['mean_current_repro_50_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_repro_50_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_50_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_repro_75_AHLE_usd'] = ahle_combo_scensmry['mean_current_repro_75_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_repro_75_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_75_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_repro_100_AHLE_usd'] = ahle_combo_scensmry['mean_current_repro_100_imp_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_repro_100_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_100_imp_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-
 # For Live Weight incremental improvement
 ahle_combo_scensmry['mean_all_current_growth_25_AHLE'] = ahle_combo_scensmry['mean_current_growth_25_imp_all'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_all_current_growth_25_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_25_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
@@ -2264,14 +2182,71 @@ ahle_combo_scensmry['stdev_all_current_growth_75_AHLE'] = np.sqrt(ahle_combo_sce
 ahle_combo_scensmry['mean_all_current_growth_100_AHLE'] = ahle_combo_scensmry['mean_current_growth_100_imp_all'] - ahle_combo_scensmry['mean_current']
 ahle_combo_scensmry['stdev_all_current_growth_100_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_100_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
 
-ahle_combo_scensmry['mean_all_current_growth_25_AHLE_usd'] = ahle_combo_scensmry['mean_current_growth_25_imp_all_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_growth_25_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_25_imp_all_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_growth_50_AHLE_usd'] = ahle_combo_scensmry['mean_current_growth_50_imp_all_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_growth_50_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_50_imp_all_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_growth_75_AHLE_usd'] = ahle_combo_scensmry['mean_current_growth_75_imp_all_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_growth_75_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_75_imp_all_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
-ahle_combo_scensmry['mean_all_current_growth_100_AHLE_usd'] = ahle_combo_scensmry['mean_current_growth_100_imp_all_usd'] - ahle_combo_scensmry['mean_current_usd']
-ahle_combo_scensmry['stdev_all_current_growth_100_AHLE_usd'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_100_imp_all_usd']**2 + ahle_combo_scensmry['stdev_current_usd']**2)
+# =============================================================================
+#### Add currency conversion
+# =============================================================================
+# Merge exchange rates onto data
+ahle_combo_scensmry['country_name'] = 'Ethiopia'     # Add country for joining
+ahle_combo_scensmry = pd.merge(
+    left=ahle_combo_scensmry
+    ,right=exchg_data_tomerge
+    ,on=['country_name' ,'year']
+    ,how='left'
+    )
+del ahle_combo_scensmry['country_name']
+
+# Create column lists to include AHLE cols
+mean_cols_scensmry_ahle = [i for i in list(ahle_combo_scensmry) if 'mean' in i]
+sd_cols_scensmry_ahle = [i for i in list(ahle_combo_scensmry) if 'stdev' in i]
+
+# Add columns in USD for currency items
+for MEANCOL in mean_cols_scensmry_ahle:
+    MEANCOL_USD = MEANCOL + '_usd'
+    ahle_combo_scensmry.loc[ahle_combo_scensmry['item_type_code'].isin(['mv' ,'mc']) ,MEANCOL_USD] = \
+        ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['exchg_rate_lcuperusdol']
+
+# For standard deviations, convert to variances then scale by the squared denominator
+# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+for SDCOL in sd_cols_scensmry_ahle:
+    SDCOL_USD = SDCOL + '_usd'
+    ahle_combo_scensmry.loc[ahle_combo_scensmry['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
+        np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['exchg_rate_lcuperusdol']**2)
+
+# =============================================================================
+#### Add columns per kg biomass
+# =============================================================================
+# Get current population liveweight by region into its own column
+regional_wt_byvars = ['region' ,'species' ,'production_system' ,'year']
+liveweight_byregion = ahle_combo_scensmry.query("item == 'Population Liveweight (kg)'")[regional_wt_byvars + ['item' ,'mean_current']].drop_duplicates()
+liveweight_byregion = liveweight_byregion.pivot(
+    index=regional_wt_byvars
+    ,columns='item'
+    ,values='mean_current'
+).reset_index()
+cleancolnames(liveweight_byregion)
+
+# Merge with original data
+ahle_combo_scensmry = pd.merge(
+    left=ahle_combo_scensmry
+    ,right=liveweight_byregion
+    ,on=regional_wt_byvars
+    ,how='left'
+)
+
+# Recreate column lists to include USD columns
+mean_cols_scensmry_ahle_usd = [i for i in list(ahle_combo_scensmry) if 'mean' in i]
+sd_cols_scensmry_ahle_usd = [i for i in list(ahle_combo_scensmry) if 'stdev' in i]
+
+# Calculate value columns per kg liveweight
+for MEANCOL in mean_cols_scensmry_ahle_usd:
+    NEWCOL_NAME = MEANCOL + '_perkgbiomass'
+    ahle_combo_scensmry[NEWCOL_NAME] = ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['population_liveweight__kg_']
+
+# For standard deviations, convert to variances then scale by the squared denominator
+# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+for SDCOL in sd_cols_scensmry_ahle_usd:
+    NEWCOL_NAME = SDCOL + '_perkgbiomass'
+    ahle_combo_scensmry[NEWCOL_NAME] = np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['population_liveweight__kg_']**2)
 
 # =============================================================================
 #### Cleanup and export
@@ -2286,7 +2261,7 @@ for STR in drop_distr_containing:
 dropcols = ['group' ,'age_group' ,'sex'] + drop_distr_cols
 ahle_combo_scensmry = ahle_combo_scensmry.drop(columns=dropcols)
 
-datainfo(ahle_combo_scensmry ,MAX_COLS=200)
+datainfo(ahle_combo_scensmry ,300)
 
 ahle_combo_scensmry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
 # ahle_combo_scensmry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.pkl.gz'))
@@ -2296,8 +2271,9 @@ ahle_combo_scensmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv
 
 #%% Calculate AHLE using scenario summaries
 '''
-Note: calculations of AHLE are redone in Dash. However, they are still necessary
-here to be used as input to the attribution function.
+Calculations of AHLE here to be used as input to the attribution function.
+
+These could be simplified using the AHLE calcs performed above.
 '''
 # =============================================================================
 #### Restructure
@@ -2537,8 +2513,7 @@ ahle_combo_scensmry_withahle['country_name'] = 'Ethiopia'     # Add country for 
 ahle_combo_scensmry_withahle = pd.merge(
     left=ahle_combo_scensmry_withahle
     ,right=exchg_data_tomerge
-    ,left_on=['country_name' ,'year']
-    ,right_on=['country_name' ,'time']
+    ,on=['country_name' ,'year']
     ,how='left'
     )
 del ahle_combo_scensmry_withahle['country_name']
