@@ -1103,22 +1103,17 @@ ahle_combo_withagg = pd.merge(
     )
 del ahle_combo_withagg['country_name']
 
-# Add columns in USD for appropriate items
-currency_items_containing = ['cost' ,'value' ,'margin' ,'expenditure']
-currency_items = []
-for STR in currency_items_containing:
-   currency_items = currency_items + [item for item in ahle_combo_withagg['item'].unique() if STR.upper() in item.upper()]
-
+# Add columns in USD for currency items
 for MEANCOL in mean_cols:
    MEANCOL_USD = MEANCOL + '_usd'
-   ahle_combo_withagg.loc[ahle_combo_withagg['item'].isin(currency_items) ,MEANCOL_USD] = \
+   ahle_combo_withagg.loc[ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']) ,MEANCOL_USD] = \
       ahle_combo_withagg[MEANCOL] / ahle_combo_withagg['exchg_rate_lcuperusdol']
 
 # For standard deviations, convert to variances then scale by the squared exchange rate
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 for SDCOL in sd_cols:
    SDCOL_USD = SDCOL + '_usd'
-   ahle_combo_withagg.loc[ahle_combo_withagg['item'].isin(currency_items) ,SDCOL_USD] = \
+   ahle_combo_withagg.loc[ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
       np.sqrt(ahle_combo_withagg[SDCOL]**2 / ahle_combo_withagg['exchg_rate_lcuperusdol']**2)
 
 datainfo(ahle_combo_withagg)
@@ -1192,7 +1187,7 @@ ahle_combo_withagg_smry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_su
 # ahle_combo_withagg_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary.pkl.gz'))
 
 # Output for Dash
-ahle_combo_withagg_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv') ,index=False)
+# ahle_combo_withagg_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv') ,index=False)
 
 #%% Calculate AHLE
 
@@ -1440,7 +1435,7 @@ for MEANCOL in mean_cols_ahle:
     ahle_combo_withahle[MEANCOL_USD] = ahle_combo_withahle[MEANCOL] / ahle_combo_withahle['exchg_rate_lcuperusdol']
 
 # For standard deviations, convert to variances then scale by the squared exchange rate
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 sd_cols_ahle = [i for i in list(ahle_combo_withahle) if 'stdev' in i and 'ahle' in i]
 for SDCOL in sd_cols_ahle:
     SDCOL_USD = SDCOL + '_usd'
@@ -2136,11 +2131,11 @@ for i ,VARCOL in enumerate(var_cols):
 #%% Add calcs to scenario summary table
 
 # =============================================================================
-#### Add AHLE calcs
+#### Add item-level AHLE calcs
 # =============================================================================
 '''
-These calcs were originally done in Dash. They calculate the difference between
-ideal and current for every item.
+These calculate the difference between current values and values under the ideal
+scenario (or other scenarios) for every item.
 
 NOTE: mean values for all cost items are made negative before these calcs.
 
@@ -2206,7 +2201,7 @@ for MEANCOL in mean_cols_scensmry_ahle:
         ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['exchg_rate_lcuperusdol']
 
 # For standard deviations, convert to variances then scale by the squared denominator
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 for SDCOL in sd_cols_scensmry_ahle:
     SDCOL_USD = SDCOL + '_usd'
     ahle_combo_scensmry.loc[ahle_combo_scensmry['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
@@ -2243,7 +2238,7 @@ for MEANCOL in mean_cols_scensmry_ahle_usd:
     ahle_combo_scensmry[NEWCOL_NAME] = ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['population_liveweight__kg_']
 
 # For standard deviations, convert to variances then scale by the squared denominator
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 for SDCOL in sd_cols_scensmry_ahle_usd:
     NEWCOL_NAME = SDCOL + '_perkgbiomass'
     ahle_combo_scensmry[NEWCOL_NAME] = np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['population_liveweight__kg_']**2)
@@ -2271,9 +2266,16 @@ ahle_combo_scensmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv
 
 #%% Calculate AHLE using scenario summaries
 '''
-Calculations of AHLE here to be used as input to the attribution function.
+Calculations of AHLE to be used as input to the attribution function.
+
+NOTE this process may change when using outputs from Stephen's updated compartmental model.
 
 These could be simplified using the AHLE calcs performed above.
+	ahle_total_mean = mean_ahle_gross_margin
+	ahle_dueto_mortality_mean = mean_ahle_mortality_gross_margin
+	ahle_dueto_healthcost_mean = mean_ahle_health_cost
+
+    Standard deviations also equal!
 '''
 # =============================================================================
 #### Restructure
@@ -2324,7 +2326,7 @@ Relying on the following properties of sums of random variables:
 ahle_combo_scensmry_withahle = ahle_combo_scensmry_p.copy()
 
 # Note there is a row for each age/sex-specific result
-# AHLE due to health cost in this view should be the reduction in total health expenditure when the indicated age/sex group is at ideal.
+# AHLE due to health cost in this view should be the reduction in total health expenditure when the row-level age/sex group is at ideal.
 # This is calculated as (current system total health cost) minus (system total health cost when that group is at ideal).
 # Note health costs are negative, but the AHLE due to health cost is expressed as a positive.
 ahle_combo_scensmry_withahle.eval(
@@ -2525,7 +2527,7 @@ for MEANCOL in mean_cols_scensmry_ahle:
     ahle_combo_scensmry_withahle[MEANCOL_USD] = ahle_combo_scensmry_withahle[MEANCOL] / ahle_combo_scensmry_withahle['exchg_rate_lcuperusdol']
 
 # For standard deviations, convert to variances then scale by the squared exchange rate
-# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 sd_cols_scensmry_ahle = [i for i in list(ahle_combo_scensmry_withahle) if 'stdev' in i and 'ahle' in i]
 for SDCOL in sd_cols_scensmry_ahle:
     SDCOL_USD = SDCOL + '_usd'
@@ -2547,7 +2549,7 @@ ahle_combo_scensmry_withahle_sub.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ah
 ahle_combo_scensmry_withahle_sub.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry_ahle.pkl.gz'))
 
 # Output for Dash
-ahle_combo_scensmry_withahle_sub.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry_ahle.csv') ,index=False)
+# ahle_combo_scensmry_withahle_sub.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry_ahle.csv') ,index=False)
 
 #%% Checks on AHLE using scenario summaries
 

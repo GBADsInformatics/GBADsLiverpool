@@ -1380,12 +1380,10 @@ def prep_ahle_fortreemap_ecs(INPUT_DF):
 
 
 def prep_ahle_forwaterfall_ecs(INPUT_DF):
-   working_df = INPUT_DF.copy()
+   ecs_ahle_waterfall = INPUT_DF.copy()
 
    # Fill missing values with 0
-   working_df.fillna(0)
-
-   ecs_ahle_waterfall = working_df
+   ecs_ahle_waterfall.fillna(0)
 
    # Keep only items for the waterfall
    # This also specifies the ordering of the bars
@@ -7523,7 +7521,7 @@ def update_footnote(graph):
 )
 def update_ecs_ahle_data(currency, species, prodsys, agesex):
     # Read in data and apply filters
-    input_df = ahle_all_scensmry
+    input_df = ahle_all_scensmry.copy()
 
     # Species filter
     input_df = input_df.loc[(input_df['species'] == species)]
@@ -7565,8 +7563,6 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
         ,'region':'Region'
         ,'year':'Year'
         ,'item':'Value or Cost'
-        # ,'age_group':'Age'
-        # ,'sex':'Sex'
         ,'agesex_scenario':'Group'
         ,'mean_current':f'Current Mean ({display_currency})'
         ,'mean_ideal':f'Ideal Mean ({display_currency})'
