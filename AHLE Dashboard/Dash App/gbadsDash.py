@@ -7546,10 +7546,6 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
         input_df['mean_ideal'] = input_df['mean_ideal_usd']
         input_df['stdev_ideal'] = input_df['stdev_ideal_usd']
 
-    # Create AHLE columns
-    input_df['mean_AHLE'] = input_df['mean_ideal'] - input_df['mean_current']
-    input_df['mean_AHLE_mortality'] = input_df['mean_mortality_zero'] - input_df['mean_current']
-
     # Format numbers
     input_df.update(input_df[['mean_current',
                               'mean_ideal',

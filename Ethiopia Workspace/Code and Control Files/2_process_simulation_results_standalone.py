@@ -2078,7 +2078,7 @@ for i ,VARCOL in enumerate(var_cols):
 # Create overall production system
 # -----------------------------------------------------------------------------
 ahle_combo_scensmry_sumprod = ahle_combo_scensmry.pivot_table(
-   index=['region' ,'species' ,'item' ,'agesex_scenario' ,'year']
+   index=['region' ,'species' ,'item' ,'item_type_code' ,'agesex_scenario' ,'year']
    ,values=mean_cols_scensmry + var_cols
    ,aggfunc=lambda x: x.mean() * x.count()  # Hack: sum is equal to zero if all values are missing. This will cause all missings to produce missing.
 ).reset_index()
@@ -2097,7 +2097,7 @@ del ahle_combo_scensmry_sumprod
 # -----------------------------------------------------------------------------
 # "All Small Ruminants" for Sheep and Goats
 ahle_combo_scensmry_sumspec1 = ahle_combo_scensmry.query("species.str.upper().isin(['SHEEP' ,'GOAT'])").pivot_table(
-   index=['region' ,'production_system' ,'item' ,'agesex_scenario' ,'year']
+   index=['region' ,'production_system' ,'item' ,'item_type_code' ,'agesex_scenario' ,'year']
    ,values=mean_cols_scensmry + var_cols
    ,aggfunc=lambda x: x.mean() * x.count()  # Hack: sum is equal to zero if all values are missing. This will cause all missings to produce missing.
 ).reset_index()
@@ -2105,7 +2105,7 @@ ahle_combo_scensmry_sumspec1['species'] = 'All Small Ruminants'
 
 # "All poultry"
 ahle_combo_scensmry_sumspec2 = ahle_combo_scensmry.query("species.str.contains('poultry' ,case=False ,na=False)").pivot_table(
-   index=['region' ,'production_system' ,'item' ,'agesex_scenario' ,'year']
+   index=['region' ,'production_system' ,'item' ,'item_type_code' ,'agesex_scenario' ,'year']
    ,values=mean_cols_scensmry + var_cols
    ,aggfunc=lambda x: x.mean() * x.count()  # Hack: sum is equal to zero if all values are missing. This will cause all missings to produce missing.
 ).reset_index()
@@ -2130,6 +2130,8 @@ for i ,VARCOL in enumerate(var_cols):
 
 #%% Add calcs to scenario summary table
 
+ahle_combo_scensmry_diffs = ahle_combo_scensmry.copy()
+
 # =============================================================================
 #### Add item-level AHLE calcs
 # =============================================================================
@@ -2143,76 +2145,98 @@ I am keeping the variable names unchanged, as these are what Dash will look for.
 
 These might partially replace my AHLE calcs below.
 '''
-# For ideal and mortality zero
-ahle_combo_scensmry['mean_AHLE'] = ahle_combo_scensmry['mean_ideal'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_ideal']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_AHLE_mortality'] = ahle_combo_scensmry['mean_mortality_zero'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_AHLE_mortality'] = np.sqrt(ahle_combo_scensmry['stdev_mortality_zero']**2 + ahle_combo_scensmry['stdev_current']**2)
+# -----------------------------------------------------------------------------
+# Ideal and mortality zero scenarios
+# -----------------------------------------------------------------------------
+ahle_combo_scensmry_diffs['mean_AHLE'] = ahle_combo_scensmry_diffs['mean_ideal'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_ideal']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
 
-# For Mortality incremental improvement
-ahle_combo_scensmry['mean_all_mort_25_AHLE'] = ahle_combo_scensmry['mean_all_mort_25_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_mort_25_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_25_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_mort_50_AHLE'] = ahle_combo_scensmry['mean_all_mort_50_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_mort_50_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_50_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_mort_75_AHLE'] = ahle_combo_scensmry['mean_all_mort_75_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_mort_75_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_all_mort_75_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_AHLE_mortality'] = ahle_combo_scensmry_diffs['mean_mortality_zero'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_AHLE_mortality'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_mortality_zero']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
 
-# For Parturition incremental improvement
-ahle_combo_scensmry['mean_all_current_repro_25_AHLE'] = ahle_combo_scensmry['mean_current_repro_25_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_repro_25_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_25_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_repro_50_AHLE'] = ahle_combo_scensmry['mean_current_repro_50_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_repro_50_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_50_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_repro_75_AHLE'] = ahle_combo_scensmry['mean_current_repro_75_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_repro_75_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_75_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_repro_100_AHLE'] = ahle_combo_scensmry['mean_current_repro_100_imp'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_repro_100_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_repro_100_imp']**2 + ahle_combo_scensmry['stdev_current']**2)
+# -----------------------------------------------------------------------------
+# Incremental improvement scenarios
+# -----------------------------------------------------------------------------
+# Mortality
+ahle_combo_scensmry_diffs['mean_all_mort_25_AHLE'] = ahle_combo_scensmry_diffs['mean_all_mort_25_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_mort_25_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_all_mort_25_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_mort_50_AHLE'] = ahle_combo_scensmry_diffs['mean_all_mort_50_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_mort_50_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_all_mort_50_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_mort_75_AHLE'] = ahle_combo_scensmry_diffs['mean_all_mort_75_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_mort_75_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_all_mort_75_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
 
-# For Live Weight incremental improvement
-ahle_combo_scensmry['mean_all_current_growth_25_AHLE'] = ahle_combo_scensmry['mean_current_growth_25_imp_all'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_growth_25_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_25_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_growth_50_AHLE'] = ahle_combo_scensmry['mean_current_growth_50_imp_all'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_growth_50_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_50_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_growth_75_AHLE'] = ahle_combo_scensmry['mean_current_growth_75_imp_all'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_growth_75_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_75_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
-ahle_combo_scensmry['mean_all_current_growth_100_AHLE'] = ahle_combo_scensmry['mean_current_growth_100_imp_all'] - ahle_combo_scensmry['mean_current']
-ahle_combo_scensmry['stdev_all_current_growth_100_AHLE'] = np.sqrt(ahle_combo_scensmry['stdev_current_growth_100_imp_all']**2 + ahle_combo_scensmry['stdev_current']**2)
+# Parturition
+ahle_combo_scensmry_diffs['mean_all_current_repro_25_AHLE'] = ahle_combo_scensmry_diffs['mean_current_repro_25_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_repro_25_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_repro_25_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_repro_50_AHLE'] = ahle_combo_scensmry_diffs['mean_current_repro_50_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_repro_50_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_repro_50_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_repro_75_AHLE'] = ahle_combo_scensmry_diffs['mean_current_repro_75_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_repro_75_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_repro_75_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_repro_100_AHLE'] = ahle_combo_scensmry_diffs['mean_current_repro_100_imp'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_repro_100_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_repro_100_imp']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+
+# Live Weight
+ahle_combo_scensmry_diffs['mean_all_current_growth_25_AHLE'] = ahle_combo_scensmry_diffs['mean_current_growth_25_imp_all'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_growth_25_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_growth_25_imp_all']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_growth_50_AHLE'] = ahle_combo_scensmry_diffs['mean_current_growth_50_imp_all'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_growth_50_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_growth_50_imp_all']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_growth_75_AHLE'] = ahle_combo_scensmry_diffs['mean_current_growth_75_imp_all'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_growth_75_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_growth_75_imp_all']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+ahle_combo_scensmry_diffs['mean_all_current_growth_100_AHLE'] = ahle_combo_scensmry_diffs['mean_current_growth_100_imp_all'] - ahle_combo_scensmry_diffs['mean_current']
+ahle_combo_scensmry_diffs['stdev_all_current_growth_100_AHLE'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_current_growth_100_imp_all']**2 + ahle_combo_scensmry_diffs['stdev_current']**2)
+
+# -----------------------------------------------------------------------------
+# Disease-specific scenarios
+#
+# These scenarios are modifications of the ideal scenario where the indicated
+# disease is the only one present. Disease-specific impacts are calculated as
+# the difference from the ideal. These are currently only run for
+# agesex_scenario 'overall'.
+# -----------------------------------------------------------------------------
+# PPR
+ahle_combo_scensmry_diffs['mean_AHLE_ppr'] = ahle_combo_scensmry_diffs['mean_ideal'] - ahle_combo_scensmry_diffs['mean_ppr']
+ahle_combo_scensmry_diffs['stdev_AHLE_ppr'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_ideal']**2 + ahle_combo_scensmry_diffs['stdev_ppr']**2)
+
+# Brucellosis
+ahle_combo_scensmry_diffs['mean_AHLE_bruc'] = ahle_combo_scensmry_diffs['mean_ideal'] - ahle_combo_scensmry_diffs['mean_bruc']
+ahle_combo_scensmry_diffs['stdev_AHLE_bruc'] = np.sqrt(ahle_combo_scensmry_diffs['stdev_ideal']**2 + ahle_combo_scensmry_diffs['stdev_bruc']**2)
 
 # =============================================================================
 #### Add currency conversion
 # =============================================================================
 # Merge exchange rates onto data
-ahle_combo_scensmry['country_name'] = 'Ethiopia'     # Add country for joining
-ahle_combo_scensmry = pd.merge(
-    left=ahle_combo_scensmry
+ahle_combo_scensmry_diffs['country_name'] = 'Ethiopia'     # Add country for joining
+ahle_combo_scensmry_diffs = pd.merge(
+    left=ahle_combo_scensmry_diffs
     ,right=exchg_data_tomerge
     ,on=['country_name' ,'year']
     ,how='left'
     )
-del ahle_combo_scensmry['country_name']
+del ahle_combo_scensmry_diffs['country_name']
 
 # Create column lists to include AHLE cols
-mean_cols_scensmry_ahle = [i for i in list(ahle_combo_scensmry) if 'mean' in i]
-sd_cols_scensmry_ahle = [i for i in list(ahle_combo_scensmry) if 'stdev' in i]
+mean_cols_scensmry_diffs = [i for i in list(ahle_combo_scensmry_diffs) if 'mean' in i]
+sd_cols_scensmry_diffs = [i for i in list(ahle_combo_scensmry_diffs) if 'stdev' in i]
 
 # Add columns in USD for currency items
-for MEANCOL in mean_cols_scensmry_ahle:
+for MEANCOL in mean_cols_scensmry_diffs:
     MEANCOL_USD = MEANCOL + '_usd'
-    ahle_combo_scensmry.loc[ahle_combo_scensmry['item_type_code'].isin(['mv' ,'mc']) ,MEANCOL_USD] = \
-        ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['exchg_rate_lcuperusdol']
+    ahle_combo_scensmry_diffs.loc[ahle_combo_scensmry_diffs['item_type_code'].isin(['mv' ,'mc']) ,MEANCOL_USD] = \
+        ahle_combo_scensmry_diffs[MEANCOL] / ahle_combo_scensmry_diffs['exchg_rate_lcuperusdol']
 
 # For standard deviations, convert to variances then scale by the squared denominator
 # VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
-for SDCOL in sd_cols_scensmry_ahle:
+for SDCOL in sd_cols_scensmry_diffs:
     SDCOL_USD = SDCOL + '_usd'
-    ahle_combo_scensmry.loc[ahle_combo_scensmry['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
-        np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['exchg_rate_lcuperusdol']**2)
+    ahle_combo_scensmry_diffs.loc[ahle_combo_scensmry_diffs['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
+        np.sqrt(ahle_combo_scensmry_diffs[SDCOL]**2 / ahle_combo_scensmry_diffs['exchg_rate_lcuperusdol']**2)
 
 # =============================================================================
 #### Add columns per kg biomass
 # =============================================================================
 # Get current population liveweight by region into its own column
 regional_wt_byvars = ['region' ,'species' ,'production_system' ,'year']
-liveweight_byregion = ahle_combo_scensmry.query("item == 'Population Liveweight (kg)'")[regional_wt_byvars + ['item' ,'mean_current']].drop_duplicates()
+liveweight_byregion = ahle_combo_scensmry_diffs.query("item == 'Population Liveweight (kg)'")[regional_wt_byvars + ['item' ,'mean_current']].drop_duplicates()
 liveweight_byregion = liveweight_byregion.pivot(
     index=regional_wt_byvars
     ,columns='item'
@@ -2221,27 +2245,27 @@ liveweight_byregion = liveweight_byregion.pivot(
 cleancolnames(liveweight_byregion)
 
 # Merge with original data
-ahle_combo_scensmry = pd.merge(
-    left=ahle_combo_scensmry
+ahle_combo_scensmry_diffs = pd.merge(
+    left=ahle_combo_scensmry_diffs
     ,right=liveweight_byregion
     ,on=regional_wt_byvars
     ,how='left'
 )
 
 # Recreate column lists to include USD columns
-mean_cols_scensmry_ahle_usd = [i for i in list(ahle_combo_scensmry) if 'mean' in i]
-sd_cols_scensmry_ahle_usd = [i for i in list(ahle_combo_scensmry) if 'stdev' in i]
+mean_cols_scensmry_diffs_usd = [i for i in list(ahle_combo_scensmry_diffs) if 'mean' in i]
+sd_cols_scensmry_diffs_usd = [i for i in list(ahle_combo_scensmry_diffs) if 'stdev' in i]
 
 # Calculate value columns per kg liveweight
-for MEANCOL in mean_cols_scensmry_ahle_usd:
+for MEANCOL in mean_cols_scensmry_diffs_usd:
     NEWCOL_NAME = MEANCOL + '_perkgbiomass'
-    ahle_combo_scensmry[NEWCOL_NAME] = ahle_combo_scensmry[MEANCOL] / ahle_combo_scensmry['population_liveweight__kg_']
+    ahle_combo_scensmry_diffs[NEWCOL_NAME] = ahle_combo_scensmry_diffs[MEANCOL] / ahle_combo_scensmry_diffs['population_liveweight__kg_']
 
 # For standard deviations, convert to variances then scale by the squared denominator
 # VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
-for SDCOL in sd_cols_scensmry_ahle_usd:
+for SDCOL in sd_cols_scensmry_diffs_usd:
     NEWCOL_NAME = SDCOL + '_perkgbiomass'
-    ahle_combo_scensmry[NEWCOL_NAME] = np.sqrt(ahle_combo_scensmry[SDCOL]**2 / ahle_combo_scensmry['population_liveweight__kg_']**2)
+    ahle_combo_scensmry_diffs[NEWCOL_NAME] = np.sqrt(ahle_combo_scensmry_diffs[SDCOL]**2 / ahle_combo_scensmry_diffs['population_liveweight__kg_']**2)
 
 # =============================================================================
 #### Cleanup and export
@@ -2250,30 +2274,163 @@ for SDCOL in sd_cols_scensmry_ahle_usd:
 drop_distr_containing = ['min_' ,'q1_' ,'median_' ,'q3_' ,'max_']
 drop_distr_cols = []
 for STR in drop_distr_containing:
-   drop_distr_cols = drop_distr_cols + [item for item in list(ahle_combo_scensmry) if STR.upper() in item.upper()]
+   drop_distr_cols = drop_distr_cols + [item for item in list(ahle_combo_scensmry_diffs) if STR.upper() in item.upper()]
 
 # Drop columns with original age/sex groups (this file uses only the Overall group)
 dropcols = ['group' ,'age_group' ,'sex'] + drop_distr_cols
-ahle_combo_scensmry = ahle_combo_scensmry.drop(columns=dropcols)
+ahle_combo_scensmry_diffs = ahle_combo_scensmry_diffs.drop(columns=dropcols)
 
-datainfo(ahle_combo_scensmry ,300)
+datainfo(ahle_combo_scensmry_diffs ,300)
 
-ahle_combo_scensmry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
-# ahle_combo_scensmry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.pkl.gz'))
+ahle_combo_scensmry_diffs.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
+# ahle_combo_scensmry_diffs.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.pkl.gz'))
 
 # Output for Dash
-ahle_combo_scensmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
+ahle_combo_scensmry_diffs.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
 
-#%% Calculate AHLE using scenario summaries
+#%% Summarize AHLE for Attribution
+
+# =============================================================================
+#### Restructure
+# =============================================================================
+# For AHLE calcs, we want each item in a column
+# Need means and standard deviations for later calculations
+mean_cols_scensmry_diffs = [i for i in list(ahle_combo_scensmry_diffs) if 'mean' in i]
+sd_cols_scensmry_diffs = [i for i in list(ahle_combo_scensmry_diffs) if 'stdev' in i]
+
+# Only need a few items for AHLE calcs
+keep_items = [
+    'gross margin'
+    ,'health cost'
+    ,'value of total mortality'
+    ]
+keep_items_upper = [i.upper() for i in keep_items]
+_items_for_ahle = (ahle_combo_scensmry_diffs['item'].str.upper().isin(keep_items_upper))
+
+ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs.loc[_items_for_ahle].pivot(
+    index=['region' ,'species' ,'production_system' ,'agesex_scenario' ,'year']
+    ,columns='item'
+    ,values=mean_cols_scensmry_diffs + sd_cols_scensmry_diffs
+).reset_index()
+ahle_combo_scensmry_diffs_p = colnames_from_index(ahle_combo_scensmry_diffs_p)   # Change multi-index to column names
+cleancolnames(ahle_combo_scensmry_diffs_p)
+
+# Remove underscores added when collapsing column index
+ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.rename(
+    columns={
+        'region_':'region'
+        ,'species_':'species'
+        ,'production_system_':'production_system'
+        ,'agesex_scenario_':'agesex_scenario'
+        ,'year_':'year'
+    }
+)
+
+datainfo(ahle_combo_scensmry_diffs_p)
+
+# =============================================================================
+#### Process columns
+# =============================================================================
+'''
+Most of the AHLE components are gross margin item-level differences that have
+already been calculated.
+'''
+ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.eval(
+    # Top level
+    '''
+    ahle_total_mean = mean_ahle_gross_margin
+    ahle_total_stdev = stdev_ahle_gross_margin
+
+    ahle_dueto_mortality_mean = mean_ahle_mortality_gross_margin
+    ahle_dueto_mortality_stdev = stdev_ahle_mortality_gross_margin
+
+    ahle_dueto_healthcost_mean = mean_ahle_health_cost
+    ahle_dueto_healthcost_stdev = stdev_ahle_health_cost
+
+    ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
+    '''
+    # Marginal improvement
+    '''
+    ahle_when_mort_imp25_mean = mean_all_mort_25_ahle_gross_margin
+    ahle_when_mort_imp25_stdev = stdev_all_mort_25_ahle_gross_margin
+    ahle_when_mort_imp50_mean = mean_all_mort_50_ahle_gross_margin
+    ahle_when_mort_imp50_stdev = stdev_all_mort_50_ahle_gross_margin
+    ahle_when_mort_imp75_mean = mean_all_mort_75_ahle_gross_margin
+    ahle_when_mort_imp75_stdev = stdev_all_mort_75_ahle_gross_margin
+
+    ahle_when_repro_imp25_mean = mean_all_current_repro_25_ahle_gross_margin
+    ahle_when_repro_imp25_stdev = stdev_all_current_repro_25_ahle_gross_margin
+    ahle_when_repro_imp50_mean = mean_all_current_repro_50_ahle_gross_margin
+    ahle_when_repro_imp50_stdev = stdev_all_current_repro_50_ahle_gross_margin
+    ahle_when_repro_imp75_mean = mean_all_current_repro_75_ahle_gross_margin
+    ahle_when_repro_imp75_stdev = stdev_all_current_repro_75_ahle_gross_margin
+    ahle_when_repro_imp100_mean = mean_all_current_repro_100_ahle_gross_margin
+    ahle_when_repro_imp100_stdev = stdev_all_current_repro_100_ahle_gross_margin
+
+    ahle_when_all_growth_imp25_mean = mean_all_current_growth_25_ahle_gross_margin
+    ahle_when_all_growth_imp25_stdev = stdev_all_current_growth_25_ahle_gross_margin
+    ahle_when_all_growth_imp50_mean = mean_all_current_growth_50_ahle_gross_margin
+    ahle_when_all_growth_imp50_stdev = stdev_all_current_growth_50_ahle_gross_margin
+    ahle_when_all_growth_imp75_mean = mean_all_current_growth_75_ahle_gross_margin
+    ahle_when_all_growth_imp75_stdev = stdev_all_current_growth_75_ahle_gross_margin
+    ahle_when_all_growth_imp100_mean = mean_all_current_growth_100_ahle_gross_margin
+    ahle_when_all_growth_imp100_stdev = stdev_all_current_growth_100_ahle_gross_margin
+    '''
+    # Disease-specific
+    '''
+    ahle_dueto_ppr_total_mean = mean_ahle_ppr_gross_margin
+    ahle_dueto_ppr_total_stdev = stdev_ahle_ppr_gross_margin
+    ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
+    ahle_dueto_ppr_mortality_stdev = stdev_ppr_value_of_total_mortality * -1
+    ahle_dueto_ppr_healthcost_mean = mean_ahle_ppr_health_cost
+    ahle_dueto_ppr_healthcost_stdev = stdev_ahle_ppr_health_cost
+    ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
+
+    ahle_dueto_bruc_total_mean = mean_ahle_bruc_gross_margin
+    ahle_dueto_bruc_total_stdev = stdev_ahle_bruc_gross_margin
+    ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
+    ahle_dueto_bruc_mortality_stdev = stdev_bruc_value_of_total_mortality * -1
+    ahle_dueto_bruc_healthcost_mean = mean_ahle_bruc_health_cost
+    ahle_dueto_bruc_healthcost_stdev = stdev_ahle_bruc_health_cost
+    ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
+    '''
+)
+ahle_combo_scensmry_diffs_p['ahle_dueto_productionloss_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_productionloss_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev']**2
+    )
+
+datainfo(ahle_combo_scensmry_diffs_p)
+
+# -----------------------------------------------------------------------------
+# AHLE due to Other Diseases
+# -----------------------------------------------------------------------------
+
+#%% OLD Calculate AHLE for Attribution
 '''
 Calculations of AHLE to be used as input to the attribution function.
 
 NOTE this process may change when using outputs from Stephen's updated compartmental model.
 
-These could be simplified using the AHLE calcs performed above.
+These have some overlap with the AHLE calcs performed above. After pivoting:
 	ahle_total_mean = mean_ahle_gross_margin
 	ahle_dueto_mortality_mean = mean_ahle_mortality_gross_margin
 	ahle_dueto_healthcost_mean = mean_ahle_health_cost
+
+    ahle_total_mean_usd = mean_ahle_usd_gross_margin
+
+    ahle_dueto_ppr_total_mean = mean_ahle_ppr_gross_margin
 
     Standard deviations also equal!
 '''
@@ -2334,7 +2491,7 @@ ahle_combo_scensmry_withahle.eval(
     '''
     ahle_total_mean = mean_ideal_gross_margin - mean_current_gross_margin
     ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
-    ahle_dueto_healthcost_mean = (mean_current_health_cost - mean_ideal_health_cost) * -1
+    ahle_dueto_healthcost_mean = mean_ideal_health_cost - mean_current_health_cost
     ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
     '''
     # Marginal improvement
@@ -2391,12 +2548,12 @@ ahle_combo_scensmry_withahle.eval(
     '''
     ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
     ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
-    ahle_dueto_ppr_healthcost_mean = (mean_ppr_health_cost - mean_ideal_health_cost) * -1
+    ahle_dueto_ppr_healthcost_mean = mean_ideal_health_cost - mean_ppr_health_cost
     ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
 
     ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
     ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
-    ahle_dueto_bruc_healthcost_mean = (mean_bruc_health_cost - mean_ideal_health_cost) * -1
+    ahle_dueto_bruc_healthcost_mean = mean_ideal_health_cost - mean_bruc_health_cost
     ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
     '''
     ,inplace=True
