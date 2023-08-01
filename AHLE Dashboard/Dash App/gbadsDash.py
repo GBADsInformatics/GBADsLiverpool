@@ -1785,7 +1785,7 @@ def create_map_display_ecs(input_df, geojson, location, featurekey, color_by, co
                                        labels={'region': 'State',
                                                'mean_current': 'Current',
                                                'mean_ideal': 'Ideal',
-                                               'mean_AHLE': 'AHLE'}
+                                               'mean_diff_ideal': 'AHLE'}
                                        )
 
     return ecs_map_fig
@@ -7550,8 +7550,8 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
     input_df.update(input_df[['mean_current',
                               'mean_ideal',
                               'mean_mortality_zero',
-                              'mean_AHLE',
-                              'mean_AHLE_mortality',]].applymap('{:,.0f}'.format))
+                              'mean_diff_ideal',
+                              'mean_diff_mortzero',]].applymap('{:,.0f}'.format))
 
     columns_to_display_with_labels = {
         'species':'Species'
@@ -7563,8 +7563,8 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
         ,'mean_current':f'Current Mean ({display_currency})'
         ,'mean_ideal':f'Ideal Mean ({display_currency})'
         ,'mean_mortality_zero':f'Mortality Zero Mean ({display_currency})'
-        ,'mean_AHLE':'AHLE (Ideal - Current)'
-        ,'mean_AHLE_mortality':'AHLE due to Mortality (Mortality Zero - Current)'
+        ,'mean_diff_ideal':'AHLE (Ideal - Current)'
+        ,'mean_diff_mortzero':'AHLE due to Mortality (Mortality Zero - Current)'
     }
 
     # Subset columns
@@ -7818,50 +7818,50 @@ def update_ahle_value_and_cost_viz_ecs(
         prep_df['mean_current']                     = prep_df['mean_current_usd']
         prep_df['mean_mortality_zero']              = prep_df['mean_mortality_zero_usd']
         prep_df['mean_ideal']                       = prep_df['mean_ideal_usd']
-        prep_df['mean_AHLE']                        = prep_df['mean_AHLE_usd']
-        prep_df['mean_AHLE_mortality']              = prep_df['mean_AHLE_mortality_usd']
+        prep_df['mean_diff_ideal']                  = prep_df['mean_diff_ideal_usd']
+        prep_df['mean_diff_mortzero']               = prep_df['mean_diff_mortzero_usd']
         prep_df['mean_all_mort_25_imp']             = prep_df['mean_all_mort_25_imp_usd']
         prep_df['mean_all_mort_50_imp']             = prep_df['mean_all_mort_50_imp_usd']
         prep_df['mean_all_mort_75_imp']             = prep_df['mean_all_mort_75_imp_usd']
-        prep_df['mean_all_mort_25_AHLE']            = prep_df['mean_all_mort_25_AHLE_usd']
-        prep_df['mean_all_mort_50_AHLE']            = prep_df['mean_all_mort_50_AHLE_usd']
-        prep_df['mean_all_mort_75_AHLE']            = prep_df['mean_all_mort_75_AHLE_usd']
+        prep_df['mean_diff_mortimp25']              = prep_df['mean_diff_mortimp25_usd']
+        prep_df['mean_diff_mortimp50']              = prep_df['mean_diff_mortimp50_usd']
+        prep_df['mean_diff_mortimp75']              = prep_df['mean_diff_mortimp75_usd']
         prep_df['mean_current_repro_25_imp']        = prep_df['mean_current_repro_25_imp_usd']
         prep_df['mean_current_repro_50_imp']        = prep_df['mean_current_repro_50_imp_usd']
         prep_df['mean_current_repro_75_imp']        = prep_df['mean_current_repro_75_imp_usd']
         prep_df['mean_current_repro_100_imp']       = prep_df['mean_current_repro_100_imp_usd']
-        prep_df['mean_all_current_repro_25_AHLE']   = prep_df['mean_all_current_repro_25_AHLE_usd']
-        prep_df['mean_all_current_repro_50_AHLE']   = prep_df['mean_all_current_repro_50_AHLE_usd']
-        prep_df['mean_all_current_repro_75_AHLE']   = prep_df['mean_all_current_repro_75_AHLE_usd']
-        prep_df['mean_all_current_repro_100_AHLE']  = prep_df['mean_all_current_repro_100_AHLE_usd']
+        prep_df['mean_diff_reprimp25']              = prep_df['mean_diff_reprimp25_usd']
+        prep_df['mean_diff_reprimp50']              = prep_df['mean_diff_reprimp50_usd']
+        prep_df['mean_diff_reprimp75']              = prep_df['mean_diff_reprimp75_usd']
+        prep_df['mean_diff_reprimp100']             = prep_df['mean_diff_reprimp100_usd']
         prep_df['mean_current_growth_25_imp_all']   = prep_df['mean_current_growth_25_imp_all_usd']
         prep_df['mean_current_growth_50_imp_all']   = prep_df['mean_current_growth_50_imp_all_usd']
         prep_df['mean_current_growth_75_imp_all']   = prep_df['mean_current_growth_75_imp_all_usd']
         prep_df['mean_current_growth_100_imp_all']  = prep_df['mean_current_growth_100_imp_all_usd']
-        prep_df['mean_all_current_growth_25_AHLE']  = prep_df['mean_all_current_growth_25_AHLE_usd']
-        prep_df['mean_all_current_growth_50_AHLE']  = prep_df['mean_all_current_growth_50_AHLE_usd']
-        prep_df['mean_all_current_growth_75_AHLE']  = prep_df['mean_all_current_growth_75_AHLE_usd']
-        prep_df['mean_all_current_growth_100_AHLE'] = prep_df['mean_all_current_growth_100_AHLE_usd']
+        prep_df['mean_diff_growimp25']              = prep_df['mean_diff_growimp25_usd']
+        prep_df['mean_diff_growimp50']              = prep_df['mean_diff_growimp50_usd']
+        prep_df['mean_diff_growimp75']              = prep_df['mean_diff_growimp75_usd']
+        prep_df['mean_diff_growimp100']             = prep_df['mean_diff_growimp100_usd']
 
         prep_df['stdev_current']                     = prep_df['stdev_current_usd']
         prep_df['stdev_mortality_zero']              = prep_df['stdev_mortality_zero_usd']
         prep_df['stdev_ideal']                       = prep_df['stdev_ideal_usd']
-        prep_df['stdev_AHLE']                        = prep_df['stdev_AHLE_usd']
-        prep_df['stdev_AHLE_mortality']              = prep_df['stdev_AHLE_mortality_usd']
+        prep_df['stdev_diff_ideal']                  = prep_df['stdev_diff_ideal_usd']
+        prep_df['stdev_diff_mortzero']               = prep_df['stdev_diff_mortzero_usd']
         prep_df['stdev_all_mort_25_imp']             = prep_df['stdev_all_mort_25_imp_usd']
         prep_df['stdev_all_mort_50_imp']             = prep_df['stdev_all_mort_50_imp_usd']
         prep_df['stdev_all_mort_75_imp']             = prep_df['stdev_all_mort_75_imp_usd']
-        prep_df['stdev_all_mort_25_AHLE']            = prep_df['stdev_all_mort_25_AHLE_usd']
-        prep_df['stdev_all_mort_50_AHLE']            = prep_df['stdev_all_mort_50_AHLE_usd']
-        prep_df['stdev_all_mort_75_AHLE']            = prep_df['stdev_all_mort_75_AHLE_usd']
+        prep_df['stdev_diff_mortimp25']              = prep_df['stdev_diff_mortimp25_usd']
+        prep_df['stdev_diff_mortimp50']              = prep_df['stdev_diff_mortimp50_usd']
+        prep_df['stdev_diff_mortimp75']              = prep_df['stdev_diff_mortimp75_usd']
         prep_df['stdev_current_repro_25_imp']        = prep_df['stdev_current_repro_25_imp_usd']
         prep_df['stdev_current_repro_50_imp']        = prep_df['stdev_current_repro_50_imp_usd']
         prep_df['stdev_current_repro_75_imp']        = prep_df['stdev_current_repro_75_imp_usd']
         prep_df['stdev_current_repro_100_imp']       = prep_df['stdev_current_repro_100_imp_usd']
-        prep_df['stdev_all_current_repro_25_AHLE']   = prep_df['stdev_all_current_repro_25_AHLE_usd']
-        prep_df['stdev_all_current_repro_50_AHLE']   = prep_df['stdev_all_current_repro_50_AHLE_usd']
-        prep_df['stdev_all_current_repro_75_AHLE']   = prep_df['stdev_all_current_repro_75_AHLE_usd']
-        prep_df['stdev_all_current_repro_100_AHLE']  = prep_df['stdev_all_current_repro_100_AHLE_usd']
+        prep_df['stdev_diff_reprimp25']              = prep_df['stdev_diff_reprimp25_usd']
+        prep_df['stdev_diff_reprimp50']              = prep_df['stdev_diff_reprimp50_usd']
+        prep_df['stdev_diff_reprimp75']              = prep_df['stdev_diff_reprimp75_usd']
+        prep_df['stdev_diff_reprimp100']             = prep_df['stdev_diff_reprimp100_usd']
         prep_df['stdev_current_growth_25_imp_all']   = prep_df['stdev_current_growth_25_imp_all_usd']
         prep_df['stdev_current_growth_50_imp_all']   = prep_df['stdev_current_growth_50_imp_all_usd']
         prep_df['stdev_current_growth_75_imp_all']   = prep_df['stdev_current_growth_75_imp_all_usd']
@@ -7895,33 +7895,33 @@ def update_ahle_value_and_cost_viz_ecs(
         # Create AHLE (difference) value
         if display == "Difference":
             if compare == 'Ideal':
-                y = prep_df['mean_AHLE']
-                stdev = prep_df['stdev_AHLE']
+                y = prep_df['mean_diff_ideal']
+                stdev = prep_df['stdev_diff_ideal']
             elif compare == 'Zero Mortality':
-                y = prep_df['mean_AHLE_mortality']
-                stdev = prep_df['stdev_AHLE_mortality']
+                y = prep_df['mean_diff_mortzero']
+                stdev = prep_df['stdev_diff_mortzero']
             else:
                 compare = impvmnt_factor + "- " + impvmnt_value
                 if impvmnt_factor == 'Mortality' and impvmnt_value == '25%':
-                    y = prep_df['mean_all_mort_25_AHLE']
-                    stdev = prep_df['stdev_all_mort_25_AHLE']
+                    y = prep_df['mean_diff_mortimp25']
+                    stdev = prep_df['stdev_diff_mortimp25']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '50%':
-                    y = prep_df['mean_all_mort_50_AHLE']
-                    stdev = prep_df['stdev_all_mort_50_AHLE']
+                    y = prep_df['mean_diff_mortimp50']
+                    stdev = prep_df['stdev_diff_mortimp50']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '75%':
-                    y = prep_df['mean_all_mort_75_AHLE']
-                    stdev = prep_df['stdev_all_mort_75_AHLE']
+                    y = prep_df['mean_diff_mortimp75']
+                    stdev = prep_df['stdev_diff_mortimp75']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '100%':
-                    y = prep_df['mean_AHLE_mortality']
-                    stdev = prep_df['stdev_AHLE_mortality']
+                    y = prep_df['mean_diff_mortzero']
+                    stdev = prep_df['stdev_diff_mortzero']
                 elif impvmnt_factor == 'Parturition Rate':
                     number_split = impvmnt_value.split('%')[0]
-                    y = prep_df[f'mean_all_current_repro_{number_split}_AHLE']
-                    stdev = prep_df[f'stdev_all_current_repro_{number_split}_AHLE']
+                    y = prep_df[f'mean_diff_reprimp{number_split}']
+                    stdev = prep_df[f'stdev_diff_reprimp{number_split}']
                 elif impvmnt_factor == 'Live Weight':
                     number_split = impvmnt_value.split('%')[0]
-                    y = prep_df[f'mean_all_current_growth_{number_split}_AHLE']
-                    stdev = prep_df[f'stdev_all_current_growth_{number_split}_AHLE']
+                    y = prep_df[f'mean_diff_growimp{number_split}']
+                    stdev = prep_df[f'stdev_diff_growimp{number_split}']
 
             # AHLE graph
             stdev = 1.96 * stdev    # Scale stdev to create 95% confidence
@@ -8067,33 +8067,33 @@ def update_ahle_value_and_cost_viz_ecs(
             prep_df["item"] = np.where(prep_df["item"] == "Gross Margin", "Gross Margin (AHLE)", prep_df["item"])
             x = prep_df['item']
             if compare == 'Ideal':
-                y = prep_df['mean_AHLE']
-                stdev = prep_df['stdev_AHLE']
+                y = prep_df['mean_diff_ideal']
+                stdev = prep_df['stdev_diff_ideal']
             elif compare == 'Zero Mortality':
-                y = prep_df['mean_AHLE_mortality']
-                stdev = prep_df['stdev_AHLE_mortality']
+                y = prep_df['mean_diff_mortzero']
+                stdev = prep_df['stdev_diff_mortzero']
             else:
                 compare = impvmnt_factor + "- " + impvmnt_value
                 if impvmnt_factor == 'Mortality' and impvmnt_value == '25%':
-                    y = prep_df['mean_all_mort_25_AHLE']
-                    stdev = prep_df['stdev_all_mort_25_AHLE']
+                    y = prep_df['mean_diff_mortimp25']
+                    stdev = prep_df['stdev_diff_mortimp25']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '50%':
-                    y = prep_df['mean_all_mort_50_AHLE']
-                    stdev = prep_df['stdev_all_mort_50_AHLE']
+                    y = prep_df['mean_diff_mortimp50']
+                    stdev = prep_df['stdev_diff_mortimp50']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '75%':
-                    y = prep_df['mean_all_mort_75_AHLE']
-                    stdev = prep_df['stdev_all_mort_75_AHLE']
+                    y = prep_df['mean_diff_mortimp75']
+                    stdev = prep_df['stdev_diff_mortimp75']
                 elif impvmnt_factor == 'Mortality' and impvmnt_value == '100%':
-                    y = prep_df['mean_AHLE_mortality']
-                    stdev = prep_df['stdev_AHLE_mortality']
+                    y = prep_df['mean_diff_mortzero']
+                    stdev = prep_df['stdev_diff_mortzero']
                 elif impvmnt_factor == 'Parturition Rate':
                     number_split = impvmnt_value.split('%')[0]
-                    y = prep_df[f'mean_all_current_repro_{number_split}_AHLE']
-                    stdev = prep_df[f'stdev_all_current_repro_{number_split}_AHLE']
+                    y = prep_df[f'mean_diff_reprimp{number_split}']
+                    stdev = prep_df[f'stdev_diff_reprimp{number_split}']
                 elif impvmnt_factor == 'Live Weight':
                     number_split = impvmnt_value.split('%')[0]
-                    y = prep_df[f'mean_all_current_growth_{number_split}_AHLE']
-                    stdev = prep_df[f'stdev_all_current_growth_{number_split}_AHLE']
+                    y = prep_df[f'mean_diff_growimp{number_split}']
+                    stdev = prep_df[f'stdev_diff_growimp{number_split}']
 
             # Create graph
             name = 'AHLE'
@@ -9157,24 +9157,24 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
                 display_currency = 'USD'
                 input_df['mean_current'] = input_df['mean_current_usd_perkgbiomass']
                 input_df['mean_ideal'] = input_df['mean_ideal_usd_perkgbiomass']
-                input_df['mean_AHLE'] = input_df['mean_AHLE_usd_perkgbiomass']
+                input_df['mean_diff_ideal'] = input_df['mean_diff_ideal_usd_perkgbiomass']
             else:
                 input_df['mean_current'] = input_df['mean_current_perkgbiomass']
                 input_df['mean_ideal'] = input_df['mean_ideal_perkgbiomass']
-                input_df['mean_AHLE'] = input_df['mean_AHLE_perkgbiomass']
+                input_df['mean_diff_ideal'] = input_df['mean_diff_ideal_perkgbiomass']
 
         else:
             if currency == 'USD':
                 display_currency = 'USD'
                 input_df['mean_current'] = input_df['mean_current_usd']
                 input_df['mean_ideal'] = input_df['mean_ideal_usd']
-                input_df['mean_AHLE'] = input_df['mean_AHLE_usd']
+                input_df['mean_diff_ideal'] = input_df['mean_diff_ideal_usd']
 
         # Color scale by current, ideal or AHLE
         if item == 'Ideal Gross Margin':
             color_by = 'mean_ideal'
         elif item == 'Animal Health Loss Envelope':
-            color_by = 'mean_AHLE'
+            color_by = 'mean_diff_ideal'
         else:
             color_by = 'mean_current'
 
