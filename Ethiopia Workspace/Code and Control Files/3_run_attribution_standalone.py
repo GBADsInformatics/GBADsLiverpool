@@ -220,7 +220,7 @@ ETHIOPIA_DATA_FOLDER = os.path.join(PARENT_FOLDER ,'Data')
 DASH_DATA_FOLDER = os.path.join(GRANDPARENT_FOLDER, 'AHLE Dashboard' ,'Dash App' ,'data')
 
 # Full path to rscript.exe
-r_executable = 'C:\\Program Files\\R\\R-4.2.1\\bin\\x64\\Rscript.exe'
+r_executable = 'C:\\Program Files\\R\\R-4.3.1\\bin\\x64\\Rscript.exe'
 
 #%% External data
 
@@ -463,7 +463,7 @@ ahle_combo_forattr_1 = ahle_combo_forattr_1[cols_first + cols_other].rename(colu
 
 #%% Prep for Attribution - Small Ruminants
 '''
-For sheep and goats, the expert attribution file:
+For sheep and goats, expert attribution file:
     - Uses non-sex-specific groups for Juvenile and Neonatal ages.
 '''
 # =============================================================================
@@ -1221,11 +1221,10 @@ ahle_combo_withattr_diseases['country_name'] = 'Ethiopia'     # Add country for 
 ahle_combo_withattr_diseases = pd.merge(
     left=ahle_combo_withattr_diseases
     ,right=exchg_data_tomerge
-    ,left_on=['country_name' ,'year']
-    ,right_on=['country_name' ,'time']
+    ,on=['country_name' ,'year']
     ,how='left'
     )
-ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.drop(columns=['country_name' ,'time'])
+ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.drop(columns=['country_name'])
 
 # Add columns in USD
 ahle_combo_withattr_diseases['mean_usd'] = ahle_combo_withattr_diseases['mean'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
