@@ -2128,22 +2128,20 @@ for i ,VARCOL in enumerate(var_cols):
    ahle_combo_scensmry[SDCOL] = np.sqrt(ahle_combo_scensmry[VARCOL])
    del ahle_combo_scensmry[VARCOL]
 
+datainfo(ahle_combo_scensmry)
+
 #%% Add calcs to scenario summary table
 
 ahle_combo_scensmry_diffs = ahle_combo_scensmry.copy()
 
 # =============================================================================
-#### Add item-level AHLE calcs
+#### Calculate scenario differences
 # =============================================================================
 '''
 These calculate the difference between current values and values under the ideal
 scenario (or other scenarios) for every item.
 
 NOTE: mean values for all cost items are made negative before these calcs.
-
-I am keeping the variable names unchanged, as these are what Dash will look for.
-
-These might partially replace my AHLE calcs below.
 '''
 # -----------------------------------------------------------------------------
 # Ideal and mortality zero scenarios
@@ -2280,7 +2278,7 @@ for STR in drop_distr_containing:
 dropcols = ['group' ,'age_group' ,'sex'] + drop_distr_cols
 ahle_combo_scensmry_diffs = ahle_combo_scensmry_diffs.drop(columns=dropcols)
 
-datainfo(ahle_combo_scensmry_diffs ,300)
+datainfo(ahle_combo_scensmry_diffs)
 
 ahle_combo_scensmry_diffs.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
 # ahle_combo_scensmry_diffs.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_scensmry.pkl.gz'))
@@ -2325,7 +2323,6 @@ ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.rename(
         ,'year_':'year'
     }
 )
-
 datainfo(ahle_combo_scensmry_diffs_p)
 
 # =============================================================================
@@ -2416,6 +2413,8 @@ ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.eval(
     # ahle_when_all_growth_imp100_stdev = stdev_diff_growimp100_gross_margin
     # '''
 )
+
+# Standard deviations
 ahle_combo_scensmry_diffs_p['ahle_dueto_productionloss_stdev'] = np.sqrt(
     ahle_combo_scensmry_diffs_p['ahle_total_stdev']**2 \
         + ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev']**2 \
@@ -2453,10 +2452,83 @@ datainfo(ahle_combo_scensmry_diffs_p)
 
 # -----------------------------------------------------------------------------
 # AHLE due to Other Diseases
-#
-# Will depend on which diseases were estimated for each species.
-# Set disease-specific AHLE to zero for species where it does not apply
 # -----------------------------------------------------------------------------
+# Will depend on which diseases were estimated for each species
+# Fill missing values of disease-specific AHLE with zero for species where they do not apply
+
+# PPR only impacts small ruminants
+ahle_dueto_ppr_cols = [i for i in list(ahle_combo_scensmry_diffs_p) if 'ahle_dueto_ppr' in i]
+_ppr_applies = (ahle_combo_scensmry_diffs_p['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS']))
+for COL in ahle_dueto_ppr_cols:
+    ahle_combo_scensmry_diffs_p.loc[~ _ppr_applies ,COL] = \
+        ahle_combo_scensmry_diffs_p.loc[~ _ppr_applies ,COL].fillna(0)
+
+# Brucellosis only impacts small ruminants and cattle
+ahle_dueto_bruc_cols = [i for i in list(ahle_combo_scensmry_diffs_p) if 'ahle_dueto_bruc' in i]
+_bruc_applies = (ahle_combo_scensmry_diffs_p['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS' ,'CATTLE']))
+for COL in ahle_dueto_bruc_cols:
+    ahle_combo_scensmry_diffs_p.loc[~ _bruc_applies ,COL] = \
+        ahle_combo_scensmry_diffs_p.loc[~ _bruc_applies ,COL].fillna(0)
+
+# Calculate ahle due to other disease
+ahle_combo_scensmry_diffs_p.eval(
+    '''
+    ahle_dueto_otherdisease_total_mean = ahle_total_mean - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
+    ahle_dueto_otherdisease_mortality_mean = ahle_dueto_mortality_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_bruc_mortality_mean
+    ahle_dueto_otherdisease_healthcost_mean = ahle_dueto_healthcost_mean - ahle_dueto_ppr_healthcost_mean - ahle_dueto_bruc_healthcost_mean
+    ahle_dueto_otherdisease_productionloss_mean = ahle_dueto_otherdisease_total_mean - ahle_dueto_otherdisease_mortality_mean - ahle_dueto_otherdisease_healthcost_mean
+
+    ahle_dueto_otherdisease_total_mean_usd = ahle_total_mean_usd - ahle_dueto_ppr_total_mean_usd - ahle_dueto_bruc_total_mean_usd
+    ahle_dueto_otherdisease_mortality_mean_usd = ahle_dueto_mortality_mean_usd - ahle_dueto_ppr_mortality_mean_usd - ahle_dueto_bruc_mortality_mean_usd
+    ahle_dueto_otherdisease_healthcost_mean_usd = ahle_dueto_healthcost_mean_usd - ahle_dueto_ppr_healthcost_mean_usd - ahle_dueto_bruc_healthcost_mean_usd
+    ahle_dueto_otherdisease_productionloss_mean_usd = ahle_dueto_otherdisease_total_mean_usd - ahle_dueto_otherdisease_mortality_mean_usd - ahle_dueto_otherdisease_healthcost_mean_usd
+    '''
+    ,inplace=True
+)
+
+# Standard deviations
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev']**2
+    )
+
+# In USD
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_total_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd']**2
+    )
 
 # =============================================================================
 #### Cleanup and export
@@ -2662,7 +2734,7 @@ ahle_dueto_ppr_cols = [
     ,'ahle_dueto_ppr_mortality_stdev'
     ,'ahle_dueto_ppr_healthcost_stdev'
     ,'ahle_dueto_ppr_productionloss_stdev'
-    ]
+]
 _zeroimpact_ppr = (~ ahle_combo_scensmry_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS']))
 for COL in ahle_dueto_ppr_cols:
     ahle_combo_scensmry_withahle.loc[_zeroimpact_ppr ,COL] = \
@@ -2679,7 +2751,7 @@ ahle_dueto_bruc_cols = [
     ,'ahle_dueto_bruc_mortality_stdev'
     ,'ahle_dueto_bruc_healthcost_stdev'
     ,'ahle_dueto_bruc_productionloss_stdev'
-    ]
+]
 _zeroimpact_bruc = (~ ahle_combo_scensmry_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS' ,'CATTLE']))
 for COL in ahle_dueto_bruc_cols:
     ahle_combo_scensmry_withahle.loc[_zeroimpact_bruc ,COL] = \
