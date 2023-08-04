@@ -419,7 +419,7 @@ ahle_combo_forattr_means['ahle_component'] = ahle_combo_forattr_means['ahle_comp
 ahle_combo_forattr_stdev['ahle_component'] = ahle_combo_forattr_stdev['ahle_component'].replace(simplify_ahle_comps)
 
 # Merge means and standard deviations
-ahle_combo_forattr_1 = pd.merge(
+ahle_combo_forattr_m = pd.merge(
    left=ahle_combo_forattr_means
    ,right=ahle_combo_forattr_stdev
    ,on=attr_byvars + ['ahle_component']
@@ -428,7 +428,7 @@ ahle_combo_forattr_1 = pd.merge(
 del ahle_combo_forattr_means ,ahle_combo_forattr_stdev
 
 # Add variance column for summing
-ahle_combo_forattr_1['variance'] = ahle_combo_forattr_1['stdev']**2
+ahle_combo_forattr_m['variance'] = ahle_combo_forattr_m['stdev']**2
 
 # =============================================================================
 #### Drop unneeded rows
@@ -436,11 +436,11 @@ ahle_combo_forattr_1['variance'] = ahle_combo_forattr_1['stdev']**2
 '''
 Attribution function does not need aggregate production system or age class.
 '''
-_droprows = (ahle_combo_forattr_1['production_system'].str.upper() == 'OVERALL') \
-    | (ahle_combo_forattr_1['agesex_scenario'].str.upper() == 'OVERALL')
+_droprows = (ahle_combo_forattr_m['production_system'].str.upper() == 'OVERALL') \
+    | (ahle_combo_forattr_m['agesex_scenario'].str.upper() == 'OVERALL')
 print(f"> Dropping {_droprows.sum() :,} rows where production_system or agesex_scenario are 'Overall'.")
-ahle_combo_forattr_1 = \
-    ahle_combo_forattr_1.drop(ahle_combo_forattr_1.loc[_droprows].index).reset_index(drop=True)
+ahle_combo_forattr_m = \
+    ahle_combo_forattr_m.drop(ahle_combo_forattr_m.loc[_droprows].index).reset_index(drop=True)
 
 # =============================================================================
 #### Rename and reorder columns
@@ -458,9 +458,9 @@ colnames_ordered_forattr = {
     ,"stdev":"sd"
 }
 cols_first = list(colnames_ordered_forattr)
-cols_other = [i for i in list(ahle_combo_forattr_1) if i not in cols_first]
+cols_other = [i for i in list(ahle_combo_forattr_m) if i not in cols_first]
 
-ahle_combo_forattr_1 = ahle_combo_forattr_1[cols_first + cols_other].rename(columns=colnames_ordered_forattr)
+ahle_combo_forattr_m = ahle_combo_forattr_m[cols_first + cols_other].rename(columns=colnames_ordered_forattr)
 
 #%% Species-specific prep
 
@@ -469,12 +469,13 @@ ahle_combo_forattr_1 = ahle_combo_forattr_1[cols_first + cols_other].rename(colu
 # =============================================================================
 '''
 For sheep and goats, expert attribution file:
-    - Uses non-sex-specific groups for Juvenile and Neonatal ages.
+    - Uses sex-specific groups for Adults
+    - Uses non-sex-specific groups for Juvenile and Neonatal age groups
 '''
 # Subset data to correct species
-_row_selection = (ahle_combo_forattr_1['Species'].str.upper().isin(['SHEEP' ,'GOAT']))
+_row_selection = (ahle_combo_forattr_m['Species'].str.upper().isin(['SHEEP' ,'GOAT']))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_smallrum = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_smallrum = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
 datainfo(ahle_combo_forattr_smallrum)
 
@@ -510,9 +511,9 @@ For cattle, expert attribution file:
         'Sub-adult' maps to 'Juvenile' in the AHLE file
 '''
 # Subset data to correct species
-_row_selection = (ahle_combo_forattr_1['Species'].str.upper() == 'CATTLE')
+_row_selection = (ahle_combo_forattr_m['Species'].str.upper() == 'CATTLE')
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_cattle = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_cattle = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
 datainfo(ahle_combo_forattr_cattle)
 
@@ -562,9 +563,9 @@ For poultry, expert attribution file:
         'Chick' maps to 'Neonate' in the AHLE file
 '''
 # Subset data to correct species
-_row_selection = (ahle_combo_forattr_1['Species'].str.upper() == 'ALL POULTRY')     # Applying attribution to combined poultry species
+_row_selection = (ahle_combo_forattr_m['Species'].str.upper() == 'ALL POULTRY')     # Applying attribution to combined poultry species
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_poultry = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_poultry = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
 datainfo(ahle_combo_forattr_poultry)
 
@@ -1116,6 +1117,21 @@ THIS MAY NOT WORK.
 #     ,how='inner'
 #     )
 
+#%% DEV disease-specific 2
+'''
+Mean AHLE for PPR and Brucellosis over all age/sex groups are estimated with
+the compartmental model, including components of mortality, health cost, and
+production loss.
+
+Objective 1: derive estimates of these impacts for individual age/sex groups.
+- Split among age/sex groups according to their proportions of total AHLE?
+- According to their proportions of Infectious AHLE?
+
+Objective 2: calculate the AHLE due to "Other Diseases".
+- Use the fact that all disease-specific AHLE estimates must add up to the
+total Infectious AHLE.
+'''
+
 #%% Add disease-specific attribution
 
 # =============================================================================
@@ -1141,6 +1157,7 @@ ahle_diseases_inf = ahle_combo_forattr.query("agesex_scenario == 'Overall'")[dis
 ahle_diseases_inf['cause'] = 'Infectious'
 
 # Get the proportion each disease makes up of total AHLE
+#!!! This is flawed. We want the proportion each disease makes up of total Infectious AHLE.
 # Note I am overwriting the mean columns with proportions to simplify renaming
 for COL in list(disease_inf_vars):
     ahle_diseases_inf[COL] = ahle_diseases_inf[COL] / ahle_diseases_inf['ahle_total_mean']
@@ -1285,12 +1302,11 @@ ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.drop(columns=['count
 
 # Add columns in USD
 ahle_combo_withattr_diseases['mean_usd'] = ahle_combo_withattr_diseases['mean'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
-ahle_combo_withattr_diseases['lower95_usd'] = ahle_combo_withattr_diseases['lower95'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
-ahle_combo_withattr_diseases['upper95_usd'] = ahle_combo_withattr_diseases['upper95'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
-
-# For standard deviations, convert to variances then scale by the squared exchange rate
+# For standard deviations, scale variances by the squared exchange rate.
 # VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
 ahle_combo_withattr_diseases['sd_usd'] = np.sqrt(ahle_combo_withattr_diseases['sd']**2 / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']**2)
+ahle_combo_withattr_diseases['lower95_usd'] = ahle_combo_withattr_diseases['lower95'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
+ahle_combo_withattr_diseases['upper95_usd'] = ahle_combo_withattr_diseases['upper95'] / ahle_combo_withattr_diseases['exchg_rate_lcuperusdol']
 
 #%% Cleanup and export
 
