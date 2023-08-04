@@ -246,7 +246,7 @@ timerstart()
 run_cmd([r_executable ,r_script] + r_args)
 timerstop()
 
-#%% Read data and restructure
+#%% Read data and prep for attribution
 '''
 Restructuring is the same for all species.
 '''
@@ -290,7 +290,7 @@ ahle_combo_forattr['ahle_dueto_healthcost_variance'] = ahle_combo_forattr['ahle_
 
 # -----------------------------------------------------------------------------
 # For each species, production system, region, year, and age group:
-#    calculate the Combined sex result based on the Male and Female results
+#    Calculate the Combined sex result based on the Male and Female results
 # -----------------------------------------------------------------------------
 fillsex_byvars = [
     'region'
@@ -391,14 +391,15 @@ ahle_combo_forattr['ahle_dueto_productionloss_stdev'] = \
 # =============================================================================
 #### Restructure for Attribution function
 # =============================================================================
+attr_byvars = ['region' ,'species' ,'production_system' ,'agesex_scenario' ,'year']
 ahle_combo_forattr_means = ahle_combo_forattr.melt(
-   id_vars=['region' ,'species' ,'production_system' ,'agesex_scenario' ,'year']
+   id_vars=attr_byvars
    ,value_vars=['ahle_dueto_mortality_mean' ,'ahle_dueto_healthcost_mean' ,'ahle_dueto_productionloss_mean']
    ,var_name='ahle_component'
    ,value_name='mean'
 )
 ahle_combo_forattr_stdev = ahle_combo_forattr.melt(
-   id_vars=['region' ,'species' ,'production_system' ,'agesex_scenario' ,'year']
+   id_vars=attr_byvars
    ,value_vars=['ahle_dueto_mortality_stdev' ,'ahle_dueto_healthcost_stdev' ,'ahle_dueto_productionloss_stdev']
    ,var_name='ahle_component'
    ,value_name='stdev'
@@ -421,7 +422,7 @@ ahle_combo_forattr_stdev['ahle_component'] = ahle_combo_forattr_stdev['ahle_comp
 ahle_combo_forattr_1 = pd.merge(
    left=ahle_combo_forattr_means
    ,right=ahle_combo_forattr_stdev
-   ,on=['region' ,'species' ,'production_system' ,'agesex_scenario' ,'ahle_component' ,'year']
+   ,on=attr_byvars + ['ahle_component']
    ,how='outer'
 )
 del ahle_combo_forattr_means ,ahle_combo_forattr_stdev
@@ -461,24 +462,26 @@ cols_other = [i for i in list(ahle_combo_forattr_1) if i not in cols_first]
 
 ahle_combo_forattr_1 = ahle_combo_forattr_1[cols_first + cols_other].rename(columns=colnames_ordered_forattr)
 
-#%% Prep for Attribution - Small Ruminants
+#%% Species-specific prep
+
+# =============================================================================
+#### Small Ruminants
+# =============================================================================
 '''
 For sheep and goats, expert attribution file:
     - Uses non-sex-specific groups for Juvenile and Neonatal ages.
 '''
-# =============================================================================
-#### Subset data to correct species
-# =============================================================================
+# Subset data to correct species
 _row_selection = (ahle_combo_forattr_1['Species'].str.upper().isin(['SHEEP' ,'GOAT']))
 print(f"> Selected {_row_selection.sum() :,} rows.")
 ahle_combo_forattr_smallrum = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
 
-# =============================================================================
-#### Filter groups and rename
-# =============================================================================
+datainfo(ahle_combo_forattr_smallrum)
+
+# -----------------------------------------------------------------------------
+# Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-# -----------------------------------------------------------------------------
 groups_for_attribution = {
    'Adult Female':'Adult female'
    ,'Adult Male':'Adult male'
@@ -495,7 +498,9 @@ ahle_combo_forattr_smallrum = ahle_combo_forattr_smallrum.loc[_row_selection].re
 # Rename groups to match attribution code
 ahle_combo_forattr_smallrum['Age class'] = ahle_combo_forattr_smallrum['Age class'].replace(groups_for_attribution)
 
-#%% Prep for Attribution - Cattle
+# =============================================================================
+#### Cattle
+# =============================================================================
 '''
 For cattle, expert attribution file:
     - Uses non-sex-specific groups for all ages
@@ -504,19 +509,17 @@ For cattle, expert attribution file:
         'Juvenile' maps to 'Neonate' in the AHLE file
         'Sub-adult' maps to 'Juvenile' in the AHLE file
 '''
-# =============================================================================
-#### Subset data to correct species
-# =============================================================================
+# Subset data to correct species
 _row_selection = (ahle_combo_forattr_1['Species'].str.upper() == 'CATTLE')
 print(f"> Selected {_row_selection.sum() :,} rows.")
 ahle_combo_forattr_cattle = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
 
-# =============================================================================
-#### Filter groups and rename
-# =============================================================================
+datainfo(ahle_combo_forattr_cattle)
+
+# -----------------------------------------------------------------------------
+# Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-# -----------------------------------------------------------------------------
 groups_for_attribution = {
    'Adult Combined':'Adult'
    ,'Juvenile Combined':'Sub-adult'
@@ -533,9 +536,7 @@ ahle_combo_forattr_cattle = ahle_combo_forattr_cattle.loc[_row_selection].reset_
 # Rename to match attribution code
 ahle_combo_forattr_cattle['Age class'] = ahle_combo_forattr_cattle['Age class'].replace(groups_for_attribution)
 
-# -----------------------------------------------------------------------------
 # Production systems
-# -----------------------------------------------------------------------------
 cattle_prodsys_forattribution = {
     'Crop livestock mixed':'Crop livestock mixed'
     ,'Pastoral':'Pastoral'
@@ -551,26 +552,26 @@ ahle_combo_forattr_cattle = ahle_combo_forattr_cattle.loc[_row_selection].reset_
 # Rename to match attribution code
 ahle_combo_forattr_cattle['Production system'] = ahle_combo_forattr_cattle['Production system'].replace(cattle_prodsys_forattribution)
 
-#%% Prep for Attribution - Poultry
+# =============================================================================
+#### Poultry
+# =============================================================================
 '''
 For poultry, expert attribution file:
     - Uses non-sex-specific groups for all ages. This matches the AHLE scenarios.
     - Has different labels for groups:
         'Chick' maps to 'Neonate' in the AHLE file
 '''
-# =============================================================================
-#### Subset data to correct species
-# =============================================================================
+# Subset data to correct species
 _row_selection = (ahle_combo_forattr_1['Species'].str.upper() == 'ALL POULTRY')     # Applying attribution to combined poultry species
 print(f"> Selected {_row_selection.sum() :,} rows.")
 ahle_combo_forattr_poultry = ahle_combo_forattr_1.loc[_row_selection].reset_index(drop=True)
 
-# =============================================================================
-#### Filter groups and rename
-# =============================================================================
+datainfo(ahle_combo_forattr_poultry)
+
+# -----------------------------------------------------------------------------
+# Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-# -----------------------------------------------------------------------------
 groups_for_attribution = {
    'Adult Combined':'Adult'
    ,'Juvenile Combined':'Juvenile'
@@ -759,10 +760,6 @@ ahle_combo_withattr = pd.concat(
     ,ignore_index=True   # True: do not keep index values on concatenation axis
     )
 cleancolnames(ahle_combo_withattr)
-datainfo(ahle_combo_withattr)
-
-# Drop Median column as it will not be valid after adding placeholders
-del ahle_combo_withattr['median']
 
 #%% Add health cost component
 
@@ -892,6 +889,64 @@ ahle_combo_withattr = pd.concat(
     ,join='outer'        # 'outer': keep all index values from all data frames
     ,ignore_index=True   # True: do not keep index values on concatenation axis
 )
+
+# =============================================================================
+#### Cleanup and Export
+# =============================================================================
+# Rename columns to those Dash will look for
+rename_cols = {
+    "ahle":"ahle_component"
+    ,"age_class":"group"
+}
+ahle_combo_withattr = ahle_combo_withattr.rename(columns=rename_cols)
+
+# Split age and sex groups into their own columns
+ahle_combo_withattr[['age_group' ,'sex']] = ahle_combo_withattr['group'].str.split(' ' ,expand=True)
+
+# Recode columns to values Dash will look for
+recode_sex = {
+   None:'Overall'
+   ,'female':'Female'
+   ,'male':'Male'
+}
+ahle_combo_withattr['sex'] = ahle_combo_withattr['sex'].replace(recode_sex)
+
+recode_age = {
+   'Neonate':'Neonatal'
+}
+ahle_combo_withattr['age_group'] = ahle_combo_withattr['age_group'].replace(recode_age)
+
+recode_prodsys = {
+    "Dairy":"Periurban dairy"
+}
+ahle_combo_withattr['production_system'] = ahle_combo_withattr['production_system'].replace(recode_prodsys)
+
+datainfo(ahle_combo_withattr)
+
+# Drop Median column as it will not be valid after adding placeholders
+del ahle_combo_withattr['median']
+
+# Reorder columns
+cols_first = [
+    'species'
+    ,'region'
+    ,'production_system'
+    ,'year'
+    ,'group'
+    ,'age_group'
+    ,'sex'
+    ,'ahle_component'
+    ,'cause'
+]
+cols_other = [i for i in list(ahle_combo_withattr) if i not in cols_first]
+ahle_combo_withattr = ahle_combo_withattr.reindex(columns=cols_first + cols_other)
+ahle_combo_withattr = ahle_combo_withattr.sort_values(by=cols_first ,ignore_index=True)
+
+datainfo(ahle_combo_withattr)
+
+ahle_combo_withattr.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr.csv') ,index=False)
+# ahle_combo_withattr.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr.csv') ,index=False)
+
 #%% DEV disease-specific 1
 '''
 This adds estimates of AHLE due to individual diseases by apportioning total AHLE
@@ -912,8 +967,10 @@ THIS MAY NOT WORK.
 #     ,'cause'
 #     ]
 # disagg_into = [
-#     'age_class'
-#     ,'ahle'
+#    'group'
+#    ,'age_group'
+#    ,'sex'
+#    ,'ahle_component'
 #     ]
 # ahle_combo_withattr['total_bycause'] = ahle_combo_withattr.groupby(disagg_byvars)['mean'].transform('sum')
 # ahle_combo_withattr['disagg_prpn_bycause'] = ahle_combo_withattr['mean'] / ahle_combo_withattr['total_bycause']
@@ -1237,53 +1294,26 @@ ahle_combo_withattr_diseases['sd_usd'] = np.sqrt(ahle_combo_withattr_diseases['s
 
 #%% Cleanup and export
 
-ahle_combo_withattr_toexport = ahle_combo_withattr_diseases
-
-# =============================================================================
-#### Rename and reorder
-# =============================================================================
-# Rename columns to those Dash will look for
-rename_cols = {
-    "ahle":"ahle_component"
-    ,"age_class":"group"
-}
-ahle_combo_withattr_toexport = ahle_combo_withattr_toexport.rename(columns=rename_cols)
-
-# Split age and sex groups into their own columns
-ahle_combo_withattr_toexport[['age_group' ,'sex']] = ahle_combo_withattr_toexport['group'].str.split(' ' ,expand=True)
-
-# Recode columns to values Dash will look for
-recode_sex = {
-   None:'Overall'
-   ,'female':'Female'
-   ,'male':'Male'
-}
-ahle_combo_withattr_toexport['sex'] = ahle_combo_withattr_toexport['sex'].replace(recode_sex)
-
-recode_age = {
-   'Neonate':'Neonatal'
-}
-ahle_combo_withattr_toexport['age_group'] = ahle_combo_withattr_toexport['age_group'].replace(recode_age)
-
-recode_prodsys = {
-    "Dairy":"Periurban dairy"
-}
-ahle_combo_withattr_toexport['production_system'] = ahle_combo_withattr_toexport['production_system'].replace(recode_prodsys)
-
 # Reorder columns
-cols_first = ['species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year' ,'ahle_component' ,'cause']
-cols_other = [i for i in list(ahle_combo_withattr_toexport) if i not in cols_first]
-ahle_combo_withattr_toexport = ahle_combo_withattr_toexport.reindex(columns=cols_first + cols_other)
-ahle_combo_withattr_toexport = ahle_combo_withattr_toexport.sort_values(by=cols_first ,ignore_index=True)
-datainfo(ahle_combo_withattr_toexport)
+cols_first = [
+    'species'
+    ,'region'
+    ,'production_system'
+    ,'year'
+    ,'group'
+    ,'age_group'
+    ,'sex'
+    ,'ahle_component'
+    ,'cause'
+    ,'disease'
+    ,'disease_proportion'
+]
+cols_other = [i for i in list(ahle_combo_withattr_diseases) if i not in cols_first]
+ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.reindex(columns=cols_first + cols_other)
+ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.sort_values(by=cols_first ,ignore_index=True)
 
-# =============================================================================
-#### Write CSV
-# =============================================================================
-# Without disease-specific attribution
-# ahle_combo_withattr_toexport.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr.csv') ,index=False)
-# ahle_combo_withattr_toexport.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr.csv') ,index=False)
+datainfo(ahle_combo_withattr_diseases)
 
-# With disease-specific attribution
-ahle_combo_withattr_toexport.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
-ahle_combo_withattr_toexport.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
+# Write CSV
+ahle_combo_withattr_diseases.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
+ahle_combo_withattr_diseases.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)

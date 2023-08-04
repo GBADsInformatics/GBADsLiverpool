@@ -662,7 +662,7 @@ _item_grossmargin = (check_ahle_combo['item'].str.upper() == 'GROSS MARGIN')
 #### Change in Gross Margin
 # =============================================================================
 check_grossmargin_overall = check_ahle_combo.loc[_group_overall].loc[_item_grossmargin]
-check_grossmargin_overall.eval(
+check_grossmargin_overall = check_grossmargin_overall.eval(
     # Change in Gross Margin overall vs. individual ideal scenarios
     '''
     gmchange_ideal_overall = mean_ideal - mean_current
@@ -689,7 +689,6 @@ check_grossmargin_overall.eval(
     gmchange_dueto_bruc = mean_ideal - mean_bruc
     gmchange_dueto_bruc_ratio = gmchange_dueto_bruc / gmchange_ideal_overall
     '''
-    ,inplace=True
 )
 # Not all agesex scenarios apply to every species. Set missing to zero.
 gmchange_ind_list = [
@@ -703,7 +702,8 @@ gmchange_ind_list = [
 ]
 for COL in gmchange_ind_list:
     check_grossmargin_overall[COL] = check_grossmargin_overall[COL].fillna(0)
-check_grossmargin_overall.eval(
+
+check_grossmargin_overall = check_grossmargin_overall.eval(
     '''
     gmchange_ideal_sumind = gmchange_ideal_af + gmchange_ideal_am \
         + gmchange_ideal_jf + gmchange_ideal_jm \
@@ -711,10 +711,9 @@ check_grossmargin_overall.eval(
                 + gmchange_ideal_o
     gmchange_ideal_check = gmchange_ideal_sumind / gmchange_ideal_overall
     '''
-    ,inplace=True
 )
 
-print('\n> Checking the change in Gross Margin for ideal overall')
+print('\n> Summarizing the change in Gross Margin for ideal overall')
 print(check_grossmargin_overall['gmchange_ideal_overall'].describe())
 print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_ideal_overall']])
 
@@ -748,11 +747,10 @@ check_agesex_sums = pd.merge(
 )
 check_agesex_sums = check_agesex_sums.rename(columns={'mean_current':'mean_current_overall'})
 
-check_agesex_sums.eval(
+check_agesex_sums = check_agesex_sums.eval(
     '''
     check_ratio = mean_current_sumagesex / mean_current_overall
     '''
-    ,inplace=True
 )
 print('\n> Checking the sum of individual age/sex compared to the overall for each item')
 print('\nMaximum ratio \n-------------')
@@ -807,7 +805,7 @@ item_type_code = {
 }
 ahle_combo_adj['item_type_code'] = ahle_combo_adj['item'].replace(item_type_code)
 
-# Make values negative for all monetary cost items
+# Make all monetary cost items negative
 float_cols = list(ahle_combo_adj.select_dtypes(include='float'))
 for COL in float_cols:
     ahle_combo_adj[COL] = np.where(
@@ -1457,39 +1455,7 @@ ahle_combo_withahle_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary
 check_ahle_combo_withahle = ahle_combo_withahle.copy()
 
 # =============================================================================
-#### Change in Gross Margin overall vs. individual ideal scenarios
-# =============================================================================
-check_ahle_combo_withahle.eval(
-    '''
-    gmchange_ideal_overall = mean_ideal_gross_margin - mean_current_gross_margin
-
-    gmchange_ideal_af = mean_ideal_af_gross_margin - mean_current_gross_margin
-    gmchange_ideal_am = mean_ideal_am_gross_margin - mean_current_gross_margin
-    gmchange_ideal_jf = mean_ideal_jf_gross_margin - mean_current_gross_margin
-    gmchange_ideal_jm = mean_ideal_jm_gross_margin - mean_current_gross_margin
-    gmchange_ideal_nf = mean_ideal_nf_gross_margin - mean_current_gross_margin
-    gmchange_ideal_nm = mean_ideal_nm_gross_margin - mean_current_gross_margin
-
-    gmchange_ideal_sumind = gmchange_ideal_af + gmchange_ideal_am \
-        + gmchange_ideal_jf + gmchange_ideal_jm \
-            + gmchange_ideal_nf + gmchange_ideal_nm
-
-    gmchange_ideal_check = gmchange_ideal_sumind / gmchange_ideal_overall
-
-    gmchange_ideal_sumind_withhealth = gmchange_ideal_sumind + mean_current_health_cost
-    gmchange_ideal_check_withhealth = gmchange_ideal_sumind_withhealth / gmchange_ideal_overall
-    '''
-    ,inplace=True
-)
-print('\n> Checking the change in Gross Margin for ideal overall vs. individual ideal scenarios')
-print(check_ahle_combo_withahle[['region' ,'species' ,'production_system' ,'year' ,'gmchange_ideal_check']])
-
-print('\n> Checking the change in Gross Margin for ideal overall vs. individual ideal scenarios')
-print('> With health cost added to sum of individual ideal scenarios')
-print(check_ahle_combo_withahle[['region' ,'species' ,'production_system' ,'year' ,'gmchange_ideal_check_withhealth']])
-
-# =============================================================================
-#### Sum of individual age/sex AHLE compared to overall AHLE
+#### Sum of agesex AHLE compared to overall AHLE
 # =============================================================================
 check_ahle_combo_withahle.eval(
     '''
@@ -1522,15 +1488,15 @@ print(check_ahle_combo_withahle.query("ahle_dueto_bruc_total_mean.notnull()")[['
 
 #%% Create scenario summary table
 '''
-This produces a summary data frame with a different structure than before. This uses
-only the total system value for each item (dropping the age/sex-specific values).
-It then creates a row for each scenario. Scenarios set either specific age/sex
-groups to ideal conditions or all age/sex groups simultaneously.
+This produces a summary data frame with a different structure than before.
+This uses only the total system value for each item. It then creates a row
+for each scenario. Scenarios set either specific age/sex groups to ideal
+conditions or all age/sex groups simultaneously.
 
-For example, the ideal_AF scenario sets Adult Females to ideal conditions while
+For example, the ideal_AF scenario sets adult females to ideal conditions while
 leaving other age/sex groups at their current conditions; the resulting values are
 interpreted as the total system values of gross margin, health cost, etc., when
-Adult Females are at their ideal.
+adult females are at their ideal.
 
 Plan to minimize changes needed in Dash:
     Columns will retain names of system total scenarios, e.g:
@@ -2278,7 +2244,7 @@ ahle_combo_scensmry_diffs.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_
 # Output for Dash
 ahle_combo_scensmry_diffs.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv') ,index=False)
 
-#%% Summarize AHLE for Attribution
+#%% Summarize AHLE
 
 # =============================================================================
 #### Restructure
@@ -2321,8 +2287,8 @@ datainfo(ahle_combo_scensmry_diffs_p)
 #### Process columns
 # =============================================================================
 '''
-Most of the AHLE components are gross margin item-level differences that have
-already been calculated.
+Most of the AHLE components are item-level (gross margin) differences between
+scenarios that have already been calculated.
 '''
 ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.eval(
     # Top level
