@@ -2427,11 +2427,8 @@ ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_productionloss_stdev_usd'] = np.sqr
     )
 
 # -----------------------------------------------------------------------------
-# AHLE due to Other Diseases
-# -----------------------------------------------------------------------------
-# Will depend on which diseases were estimated for each species
 # Fill missing values of disease-specific AHLE with zero for species where they do not apply
-
+# -----------------------------------------------------------------------------
 # PPR only impacts small ruminants
 ahle_dueto_ppr_cols = [i for i in list(ahle_combo_scensmry_diffs_p) if 'ahle_dueto_ppr' in i]
 _ppr_applies = (ahle_combo_scensmry_diffs_p['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS']))
@@ -2439,74 +2436,79 @@ for COL in ahle_dueto_ppr_cols:
     ahle_combo_scensmry_diffs_p.loc[~ _ppr_applies ,COL] = \
         ahle_combo_scensmry_diffs_p.loc[~ _ppr_applies ,COL].fillna(0)
 
-# Brucellosis only impacts small ruminants and cattle
+# Brucellosis impacts small ruminants and cattle
 ahle_dueto_bruc_cols = [i for i in list(ahle_combo_scensmry_diffs_p) if 'ahle_dueto_bruc' in i]
 _bruc_applies = (ahle_combo_scensmry_diffs_p['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS' ,'CATTLE']))
 for COL in ahle_dueto_bruc_cols:
     ahle_combo_scensmry_diffs_p.loc[~ _bruc_applies ,COL] = \
         ahle_combo_scensmry_diffs_p.loc[~ _bruc_applies ,COL].fillna(0)
 
+# -----------------------------------------------------------------------------
+# AHLE due to Other Diseases
+# -----------------------------------------------------------------------------
+# Will depend on which diseases were estimated for each species
+
 # Calculate ahle due to other disease
 #!!! This is incorrect logic! Individual disease impacts (PPR, Brucellosis, Other) will add up to Infectious component, not to total AHLE!
 #!!! Should be: ahle_dueto_otherdisease_total_mean = ahle_infectious_mean - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
-#!!! We don't get ahle_infectious_mean until we add expert opinion attribution.
-# ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.eval(
-#     '''
-#     ahle_dueto_otherdisease_total_mean = ahle_total_mean - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
-#     ahle_dueto_otherdisease_mortality_mean = ahle_dueto_mortality_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_bruc_mortality_mean
-#     ahle_dueto_otherdisease_healthcost_mean = ahle_dueto_healthcost_mean - ahle_dueto_ppr_healthcost_mean - ahle_dueto_bruc_healthcost_mean
-#     ahle_dueto_otherdisease_productionloss_mean = ahle_dueto_otherdisease_total_mean - ahle_dueto_otherdisease_mortality_mean - ahle_dueto_otherdisease_healthcost_mean
+#!!! We don't know ahle_infectious_mean until we add attribution from expert opinion.
+ahle_combo_scensmry_diffs_p = ahle_combo_scensmry_diffs_p.eval(
+    '''
+    ahle_dueto_otherdisease_total_mean = ahle_total_mean - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
+    ahle_dueto_otherdisease_mortality_mean = ahle_dueto_mortality_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_bruc_mortality_mean
+    ahle_dueto_otherdisease_healthcost_mean = ahle_dueto_healthcost_mean - ahle_dueto_ppr_healthcost_mean - ahle_dueto_bruc_healthcost_mean
+    ahle_dueto_otherdisease_productionloss_mean = ahle_dueto_otherdisease_total_mean - ahle_dueto_otherdisease_mortality_mean - ahle_dueto_otherdisease_healthcost_mean
 
-#     ahle_dueto_otherdisease_total_mean_usd = ahle_total_mean_usd - ahle_dueto_ppr_total_mean_usd - ahle_dueto_bruc_total_mean_usd
-#     ahle_dueto_otherdisease_mortality_mean_usd = ahle_dueto_mortality_mean_usd - ahle_dueto_ppr_mortality_mean_usd - ahle_dueto_bruc_mortality_mean_usd
-#     ahle_dueto_otherdisease_healthcost_mean_usd = ahle_dueto_healthcost_mean_usd - ahle_dueto_ppr_healthcost_mean_usd - ahle_dueto_bruc_healthcost_mean_usd
-#     ahle_dueto_otherdisease_productionloss_mean_usd = ahle_dueto_otherdisease_total_mean_usd - ahle_dueto_otherdisease_mortality_mean_usd - ahle_dueto_otherdisease_healthcost_mean_usd
-#     '''
-# )
+    ahle_dueto_otherdisease_total_mean_usd = ahle_total_mean_usd - ahle_dueto_ppr_total_mean_usd - ahle_dueto_bruc_total_mean_usd
+    ahle_dueto_otherdisease_mortality_mean_usd = ahle_dueto_mortality_mean_usd - ahle_dueto_ppr_mortality_mean_usd - ahle_dueto_bruc_mortality_mean_usd
+    ahle_dueto_otherdisease_healthcost_mean_usd = ahle_dueto_healthcost_mean_usd - ahle_dueto_ppr_healthcost_mean_usd - ahle_dueto_bruc_healthcost_mean_usd
+    ahle_dueto_otherdisease_productionloss_mean_usd = ahle_dueto_otherdisease_total_mean_usd - ahle_dueto_otherdisease_mortality_mean_usd - ahle_dueto_otherdisease_healthcost_mean_usd
+    '''
+)
 
-# # Standard deviations
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_total_stdev']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev']**2
-#     )
+# Standard deviations
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev']**2
+    )
 
-# # In USD
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_total_stdev_usd']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev_usd']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev_usd']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev_usd']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev_usd']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev_usd']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev_usd']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev_usd']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev_usd']**2
-#     )
-# ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev_usd'] = np.sqrt(
-#     ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd']**2 \
-#         + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd']**2 \
-#             + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd']**2
-#     )
+# In USD
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_total_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_total_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_total_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_mortality_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_mortality_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_mortality_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_healthcost_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_ppr_healthcost_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_bruc_healthcost_stdev_usd']**2
+    )
+ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_productionloss_stdev_usd'] = np.sqrt(
+    ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_total_stdev_usd']**2 \
+        + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_mortality_stdev_usd']**2 \
+            + ahle_combo_scensmry_diffs_p['ahle_dueto_otherdisease_healthcost_stdev_usd']**2
+    )
 
 # =============================================================================
 #### Cleanup and export

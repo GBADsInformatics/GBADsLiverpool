@@ -158,9 +158,9 @@ All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Health cost,Non-infe
 All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Mortality,External,349115675.026536,676658305.063747,307176729.421922,391054620.631149
 All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Mortality,Infectious,935935282.685536,1811515636.38425,823658443.448237,1048212121.92284
 All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Mortality,Non-infectious,472467672.981245,919313658.747245,415489069.099118,529446276.863372
-All Poultry,National,Village,2017,juvenile,juvenile,Overall,Production loss,External,,,,
-All Poultry,National,Village,2017,juvenile,juvenile,Overall,Production loss,Infectious,,,,
-All Poultry,National,Village,2017,juvenile,juvenile,Overall,Production loss,Non-infectious,,,,
+All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Production loss,External,466120539.191739,1028810070.66301,402355402.093555,529885676.289923
+All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Production loss,Infectious,925331508.63,2044847255.78927,798592891.53402,1052070125.72598
+All Poultry,National,Village,2017,Juvenile,Juvenile,Overall,Production loss,Non-infectious,872007624.372497,1932634930.57484,752223871.449641,991791377.295353
 All Poultry,National,Village,2018,Adult,Adult,Overall,Health cost,External,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2018,Adult,Adult,Overall,Health cost,Infectious,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2018,Adult,Adult,Overall,Health cost,Non-infectious,0.0,0.0,0.0,0.0
@@ -185,9 +185,9 @@ All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Health cost,Non-infe
 All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Mortality,External,366571458.777862,710491220.316934,322535565.893018,410607351.662706
 All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Mortality,Infectious,982732046.819812,1902091418.20347,864841365.620648,1100622728.01898
 All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Mortality,Non-infectious,496091056.630307,965279341.684607,436263522.554073,555918590.706541
-All Poultry,National,Village,2018,juvenile,juvenile,Overall,Production loss,External,,,,
-All Poultry,National,Village,2018,juvenile,juvenile,Overall,Production loss,Infectious,,,,
-All Poultry,National,Village,2018,juvenile,juvenile,Overall,Production loss,Non-infectious,,,,
+All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Production loss,External,489426566.151326,1080250574.19616,422473172.198233,556379960.104419
+All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Production loss,Infectious,971598084.0615,2147089618.57873,838522536.110721,1104673632.01228
+All Poultry,National,Village,2018,Juvenile,Juvenile,Overall,Production loss,Non-infectious,915608005.591122,2029266677.10359,789835065.022123,1041380946.16012
 All Poultry,National,Village,2019,Adult,Adult,Overall,Health cost,External,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2019,Adult,Adult,Overall,Health cost,Infectious,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2019,Adult,Adult,Overall,Health cost,Non-infectious,0.0,0.0,0.0,0.0
@@ -212,9 +212,9 @@ All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Health cost,Non-infe
 All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Mortality,External,384900031.716755,746015781.332781,338662344.187669,431137719.245841
 All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Mortality,Infectious,1031868649.1608,1997195989.11364,908083433.901679,1155653864.41993
 All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Mortality,Non-infectious,520895609.461822,1013543308.76884,458076698.681776,583714520.241867
-All Poultry,National,Village,2019,juvenile,juvenile,Overall,Production loss,External,,,,
-All Poultry,National,Village,2019,juvenile,juvenile,Overall,Production loss,Infectious,,,,
-All Poultry,National,Village,2019,juvenile,juvenile,Overall,Production loss,Non-infectious,,,,
+All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Production loss,External,513897894.458893,1134263102.90596,443596830.808145,584198958.10964
+All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Production loss,Infectious,1020177988.26458,2254444099.50767,880448662.916258,1159907313.61289
+All Poultry,National,Village,2019,Juvenile,Juvenile,Overall,Production loss,Non-infectious,961388405.870679,2130730010.95877,829326818.27323,1093449993.46813
 All Poultry,National,Village,2020,Adult,Adult,Overall,Health cost,External,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2020,Adult,Adult,Overall,Health cost,Infectious,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2020,Adult,Adult,Overall,Health cost,Non-infectious,0.0,0.0,0.0,0.0
@@ -239,9 +239,9 @@ All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Health cost,Non-infe
 All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Mortality,External,404145033.302593,783316570.39942,355595461.397052,452694605.208134
 All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Mortality,Infectious,1083462081.61884,2097055788.56932,953487605.596765,1213436557.64092
 All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Mortality,Non-infectious,546940389.934914,1064220474.20728,480980533.615866,612900246.253961
-All Poultry,National,Village,2020,juvenile,juvenile,Overall,Production loss,External,,,,
-All Poultry,National,Village,2020,juvenile,juvenile,Overall,Production loss,Infectious,,,,
-All Poultry,National,Village,2020,juvenile,juvenile,Overall,Production loss,Non-infectious,,,,
+All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Production loss,External,539592789.181837,1190976258.05126,465776672.348552,613408906.015122
+All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Production loss,Infectious,1071186887.6778,2367166304.48305,924471096.06207,1217902679.29354
+All Poultry,National,Village,2020,Juvenile,Juvenile,Overall,Production loss,Non-infectious,1009457826.16421,2237266511.5067,870793159.186891,1148122493.14153
 All Poultry,National,Village,2021,Adult,Adult,Overall,Health cost,External,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2021,Adult,Adult,Overall,Health cost,Infectious,0.0,0.0,0.0,0.0
 All Poultry,National,Village,2021,Adult,Adult,Overall,Health cost,Non-infectious,0.0,0.0,0.0,0.0
@@ -266,9 +266,9 @@ All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Health cost,Non-infe
 All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Mortality,External,424352284.967723,822482398.919391,373375234.466905,475329335.46854
 All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Mortality,Infectious,1137635185.69979,2201908577.99779,1001161985.8766,1274108385.52297
 All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Mortality,Non-infectious,574287409.431659,1117431497.91764,505029560.296659,643545258.566659
-All Poultry,National,Village,2021,juvenile,juvenile,Overall,Production loss,External,,,,
-All Poultry,National,Village,2021,juvenile,juvenile,Overall,Production loss,Infectious,,,,
-All Poultry,National,Village,2021,juvenile,juvenile,Overall,Production loss,Non-infectious,,,,
+All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Production loss,External,566572428.640929,1250525070.95383,489065505.96598,644079351.315878
+All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Production loss,Infectious,1124746232.06169,2485524619.7072,970694650.865174,1278797813.25822
+All Poultry,National,Village,2021,Juvenile,Juvenile,Overall,Production loss,Non-infectious,1059930717.47242,2349129837.08204,914332817.146236,1205528617.79861
 All Small Ruminants,National,Crop livestock mixed,2017,Adult female,Adult,Female,Health cost,External,-5759170.354276282,996527.3164096472,-7712363.894439191,-3805976.814113373
 All Small Ruminants,National,Crop livestock mixed,2017,Adult female,Adult,Female,Health cost,Infectious,-5759170.354276282,996527.3164096472,-7712363.894439191,-3805976.814113373
 All Small Ruminants,National,Crop livestock mixed,2017,Adult female,Adult,Female,Health cost,Non-infectious,-5759170.354276282,996527.3164096472,-7712363.894439191,-3805976.814113373

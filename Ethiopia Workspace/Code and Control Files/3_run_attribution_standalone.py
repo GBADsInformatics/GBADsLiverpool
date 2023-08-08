@@ -157,6 +157,22 @@ def cleancolnames(INPUT_DF):
       .str.replace('&' ,'_and_' ,regex=False)
    return None
 
+# To turn column indexes into names. Will remove multi-indexing.
+# Must assign the output to a dataframe e.g. df = colnames_from_index(df).
+def colnames_from_index(INPUT_DF):
+   cols = list(INPUT_DF)
+   cols_new = []
+   for item in cols:
+      if type(item) == str:   # Columns that already have names will be strings. Use unchanged.
+         cols_new.append(item)
+      else:   # Columns that are indexed or multi-indexed will appear as tuples. Turn them into strings joined by underscores.
+         cols_new.append('_'.join(str(i) for i in item))   # Convert each element of tuple to string before joining. Avoids error if an element is nan.
+
+   # Write dataframe with new column names
+   dfmod = INPUT_DF
+   dfmod.columns = cols_new
+   return dfmod
+
 # Create a function to fill values of one column with another for a subset of rows
 # Example usage:
 # _row_select = (df['col'] == 'value')
@@ -281,8 +297,6 @@ rows and must be done carefully to use the correct rows for each distinct BY gro
 ahle_combo_forattr[['age_group' ,'sex']] = \
     ahle_combo_forattr['agesex_scenario'].str.split(' ' ,expand=True)
 
-ahle_combo_forattr['sex'].unique()
-
 # Add variance columns for summing
 ahle_combo_forattr['ahle_total_variance'] = ahle_combo_forattr['ahle_total_stdev']**2
 ahle_combo_forattr['ahle_dueto_mortality_variance'] = ahle_combo_forattr['ahle_dueto_mortality_stdev']**2
@@ -299,6 +313,7 @@ fillsex_byvars = [
     ,'age_group'
     ,'year'
     ]
+
 # Total
 ahle_combo_forattr['ahle_total_mean_combined'] = \
     ahle_combo_forattr.groupby(fillsex_byvars)['ahle_total_mean'].transform('sum')
@@ -306,6 +321,7 @@ ahle_combo_forattr['ahle_total_variance_combined'] = \
     ahle_combo_forattr.groupby(fillsex_byvars)['ahle_total_variance'].transform('sum')
 ahle_combo_forattr['ahle_total_stdev_combined'] = \
     np.sqrt(ahle_combo_forattr['ahle_total_variance_combined'])
+ahle_combo_forattr = ahle_combo_forattr.drop(columns=['ahle_total_variance' ,'ahle_total_variance_combined'])
 
 # Mortality
 ahle_combo_forattr['ahle_dueto_mortality_mean_combined'] = \
@@ -314,6 +330,7 @@ ahle_combo_forattr['ahle_dueto_mortality_variance_combined'] = \
     ahle_combo_forattr.groupby(fillsex_byvars)['ahle_dueto_mortality_variance'].transform('sum')
 ahle_combo_forattr['ahle_dueto_mortality_stdev_combined'] = \
     np.sqrt(ahle_combo_forattr['ahle_dueto_mortality_variance_combined'])
+ahle_combo_forattr = ahle_combo_forattr.drop(columns=['ahle_dueto_mortality_variance' ,'ahle_dueto_mortality_variance_combined'])
 
 # Health cost
 ahle_combo_forattr['ahle_dueto_healthcost_mean_combined'] = \
@@ -322,6 +339,7 @@ ahle_combo_forattr['ahle_dueto_healthcost_variance_combined'] = \
     ahle_combo_forattr.groupby(fillsex_byvars)['ahle_dueto_healthcost_variance'].transform('sum')
 ahle_combo_forattr['ahle_dueto_healthcost_stdev_combined'] = \
     np.sqrt(ahle_combo_forattr['ahle_dueto_healthcost_variance_combined'])
+ahle_combo_forattr = ahle_combo_forattr.drop(columns=['ahle_dueto_healthcost_variance' ,'ahle_dueto_healthcost_variance_combined'])
 
 # -----------------------------------------------------------------------------
 # For Combined sex rows, fill in missing values with sums
@@ -475,29 +493,29 @@ For sheep and goats, expert attribution file:
 # Subset data to correct species
 _row_selection = (ahle_combo_forattr_m['Species'].str.upper().isin(['SHEEP' ,'GOAT']))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_smallrum = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_smallrum = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
-datainfo(ahle_combo_forattr_smallrum)
+datainfo(ahle_combo_forattr_m_smallrum)
 
 # -----------------------------------------------------------------------------
 # Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-groups_for_attribution = {
+groups_for_attribution_smallrum = {
    'Adult Female':'Adult female'
    ,'Adult Male':'Adult male'
    ,'Juvenile Combined':'Juvenile'
    ,'Neonatal Combined':'Neonate'
 }
-groups_for_attribution_upper = [i.upper() for i in list(groups_for_attribution)]
+groups_for_attribution_smallrum_upper = [i.upper() for i in list(groups_for_attribution_smallrum)]
 
 # Filter agesex groups
-_row_selection = (ahle_combo_forattr_smallrum['Age class'].str.upper().isin(groups_for_attribution_upper))
+_row_selection = (ahle_combo_forattr_m_smallrum['Age class'].str.upper().isin(groups_for_attribution_smallrum_upper))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_smallrum = ahle_combo_forattr_smallrum.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_smallrum = ahle_combo_forattr_m_smallrum.loc[_row_selection].reset_index(drop=True)
 
 # Rename groups to match attribution code
-ahle_combo_forattr_smallrum['Age class'] = ahle_combo_forattr_smallrum['Age class'].replace(groups_for_attribution)
+ahle_combo_forattr_m_smallrum['Age class'] = ahle_combo_forattr_m_smallrum['Age class'].replace(groups_for_attribution_smallrum)
 
 # =============================================================================
 #### Cattle
@@ -513,29 +531,29 @@ For cattle, expert attribution file:
 # Subset data to correct species
 _row_selection = (ahle_combo_forattr_m['Species'].str.upper() == 'CATTLE')
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_cattle = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_cattle = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
-datainfo(ahle_combo_forattr_cattle)
+datainfo(ahle_combo_forattr_m_cattle)
 
 # -----------------------------------------------------------------------------
 # Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-groups_for_attribution = {
+groups_for_attribution_cattle = {
    'Adult Combined':'Adult'
    ,'Juvenile Combined':'Sub-adult'
    ,'Neonatal Combined':'Juvenile'
    ,'Oxen':'Oxen'
 }
-groups_for_attribution_upper = [i.upper() for i in list(groups_for_attribution)]
+groups_for_attribution_cattle_upper = [i.upper() for i in list(groups_for_attribution_cattle)]
 
 # Filter
-_row_selection = (ahle_combo_forattr_cattle['Age class'].str.upper().isin(groups_for_attribution_upper))
+_row_selection = (ahle_combo_forattr_m_cattle['Age class'].str.upper().isin(groups_for_attribution_cattle_upper))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_cattle = ahle_combo_forattr_cattle.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_cattle = ahle_combo_forattr_m_cattle.loc[_row_selection].reset_index(drop=True)
 
 # Rename to match attribution code
-ahle_combo_forattr_cattle['Age class'] = ahle_combo_forattr_cattle['Age class'].replace(groups_for_attribution)
+ahle_combo_forattr_m_cattle['Age class'] = ahle_combo_forattr_m_cattle['Age class'].replace(groups_for_attribution_cattle)
 
 # Production systems
 cattle_prodsys_forattribution = {
@@ -546,12 +564,12 @@ cattle_prodsys_forattribution = {
 cattle_prodsys_forattribution_upper = [i.upper() for i in list(cattle_prodsys_forattribution)]
 
 # Filter
-_row_selection = (ahle_combo_forattr_cattle['Production system'].str.upper().isin(cattle_prodsys_forattribution_upper))
+_row_selection = (ahle_combo_forattr_m_cattle['Production system'].str.upper().isin(cattle_prodsys_forattribution_upper))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_cattle = ahle_combo_forattr_cattle.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_cattle = ahle_combo_forattr_m_cattle.loc[_row_selection].reset_index(drop=True)
 
 # Rename to match attribution code
-ahle_combo_forattr_cattle['Production system'] = ahle_combo_forattr_cattle['Production system'].replace(cattle_prodsys_forattribution)
+ahle_combo_forattr_m_cattle['Production system'] = ahle_combo_forattr_m_cattle['Production system'].replace(cattle_prodsys_forattribution)
 
 # =============================================================================
 #### Poultry
@@ -565,28 +583,28 @@ For poultry, expert attribution file:
 # Subset data to correct species
 _row_selection = (ahle_combo_forattr_m['Species'].str.upper() == 'ALL POULTRY')     # Applying attribution to combined poultry species
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_poultry = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_poultry = ahle_combo_forattr_m.loc[_row_selection].reset_index(drop=True)
 
-datainfo(ahle_combo_forattr_poultry)
+datainfo(ahle_combo_forattr_m_poultry)
 
 # -----------------------------------------------------------------------------
 # Filter groups and rename
 # -----------------------------------------------------------------------------
 # Agesex groups
-groups_for_attribution = {
+groups_for_attribution_poultry = {
    'Adult Combined':'Adult'
    ,'Juvenile Combined':'Juvenile'
    ,'Neonatal Combined':'Chick'
 }
-groups_for_attribution_upper = [i.upper() for i in list(groups_for_attribution)]
+groups_for_attribution_poultry_upper = [i.upper() for i in list(groups_for_attribution_poultry)]
 
 # Filter agesex groups
-_row_selection = (ahle_combo_forattr_poultry['Age class'].str.upper().isin(groups_for_attribution_upper))
+_row_selection = (ahle_combo_forattr_m_poultry['Age class'].str.upper().isin(groups_for_attribution_poultry_upper))
 print(f"> Selected {_row_selection.sum() :,} rows.")
-ahle_combo_forattr_poultry = ahle_combo_forattr_poultry.loc[_row_selection].reset_index(drop=True)
+ahle_combo_forattr_m_poultry = ahle_combo_forattr_m_poultry.loc[_row_selection].reset_index(drop=True)
 
 # Rename groups to match attribution code
-ahle_combo_forattr_poultry['Age class'] = ahle_combo_forattr_poultry['Age class'].replace(groups_for_attribution)
+ahle_combo_forattr_m_poultry['Age class'] = ahle_combo_forattr_m_poultry['Age class'].replace(groups_for_attribution_poultry)
 
 #%% Run Attribution
 
@@ -601,22 +619,22 @@ attribution_summary_smallruminants = pd.DataFrame()     # Initialize to hold all
 attr_smallrum_returncodes = []
 
 # Loop over years
-for YEAR in ahle_combo_forattr_smallrum['year'].unique():
+for YEAR in ahle_combo_forattr_m_smallrum['year'].unique():
     # Loop over regions
-    for REGION in ahle_combo_forattr_smallrum.query(f"year == {YEAR}")['region'].unique():
+    for REGION in ahle_combo_forattr_m_smallrum.query(f"year == {YEAR}")['region'].unique():
         print(f'Running attribution for small ruminants, {YEAR=} and {REGION=}...')
 
         # Filter to year
-        ahle_combo_forattr_smallrum_oneyear_oneregion = ahle_combo_forattr_smallrum.query(f"year == {YEAR}").query(f"region == '{REGION}'")
+        ahle_combo_forattr_m_smallrum_oneyear_oneregion = ahle_combo_forattr_m_smallrum.query(f"year == {YEAR}").query(f"region == '{REGION}'")
 
         # Write to CSV
-        ahle_combo_forattr_smallrum_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_smallrum_oneyear_oneregion.csv') ,index=False)
+        ahle_combo_forattr_m_smallrum_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_smallrum_oneyear_oneregion.csv') ,index=False)
 
         # Run attribution
         # Arguments to R function, as list of strings.
         # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
         r_args = [
-           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_smallrum_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
+           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_smallrum_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
            ,os.path.join(ETHIOPIA_CODE_FOLDER ,'attribution_experts_smallruminants.csv')    # String: full path to expert opinion attribution file (csv)
            ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_smallruminants_oneyear_oneregion.csv')    # String: full path to output file (csv)
         ]
@@ -639,10 +657,10 @@ for YEAR in ahle_combo_forattr_smallrum['year'].unique():
 attribution_summary_smallruminants['species'] = 'All Small Ruminants'
 
 # Delete intermediate data frames
-del ahle_combo_forattr_smallrum_oneyear_oneregion ,attribution_summary_smallruminants_oneyear_oneregion
+del ahle_combo_forattr_m_smallrum_oneyear_oneregion ,attribution_summary_smallruminants_oneyear_oneregion
 
 # Delete intermediate CSVs
-os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_smallrum_oneyear_oneregion.csv'))
+os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_smallrum_oneyear_oneregion.csv'))
 os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_smallruminants_oneyear_oneregion.csv'))
 
 # =============================================================================
@@ -654,22 +672,22 @@ attribution_summary_cattle = pd.DataFrame()     # Initialize to hold all years
 attr_cattle_returncodes = []
 
 # Loop over years
-for YEAR in ahle_combo_forattr_cattle['year'].unique():
+for YEAR in ahle_combo_forattr_m_cattle['year'].unique():
     # Loop over regions
-    for REGION in ahle_combo_forattr_cattle.query(f"year == {YEAR}")['region'].unique():
+    for REGION in ahle_combo_forattr_m_cattle.query(f"year == {YEAR}")['region'].unique():
         print(f'Running attribution for cattle, {YEAR=} and {REGION=}...')
 
         # Filter to year and region
-        ahle_combo_forattr_cattle_oneyear_oneregion = ahle_combo_forattr_cattle.query(f"year == {YEAR}").query(f"region == '{REGION}'")
+        ahle_combo_forattr_m_cattle_oneyear_oneregion = ahle_combo_forattr_m_cattle.query(f"year == {YEAR}").query(f"region == '{REGION}'")
 
         # Write to CSV
-        ahle_combo_forattr_cattle_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_cattle_oneyear_oneregion.csv') ,index=False)
+        ahle_combo_forattr_m_cattle_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_cattle_oneyear_oneregion.csv') ,index=False)
 
         # Run attribution
         # Arguments to R function, as list of strings.
         # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
         r_args = [
-           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_cattle_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
+           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_cattle_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
            ,os.path.join(ETHIOPIA_CODE_FOLDER ,'attribution_experts_cattle.csv')    # String: full path to expert opinion attribution file (csv)
            ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_cattle_oneyear_oneregion.csv')    # String: full path to output file (csv)
         ]
@@ -692,10 +710,10 @@ for YEAR in ahle_combo_forattr_cattle['year'].unique():
 attribution_summary_cattle['species'] = 'Cattle'
 
 # Delete intermediate data frames
-del ahle_combo_forattr_cattle_oneyear_oneregion ,attribution_summary_cattle_oneyear_oneregion
+del ahle_combo_forattr_m_cattle_oneyear_oneregion ,attribution_summary_cattle_oneyear_oneregion
 
 # Delete intermediate CSVs
-os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_cattle_oneyear_oneregion.csv'))
+os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_cattle_oneyear_oneregion.csv'))
 os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_cattle_oneyear_oneregion.csv'))
 
 # =============================================================================
@@ -707,22 +725,22 @@ attribution_summary_poultry = pd.DataFrame()     # Initialize to hold all years
 attr_poultry_returncodes = []
 
 # Loop over years
-for YEAR in ahle_combo_forattr_poultry['year'].unique():
+for YEAR in ahle_combo_forattr_m_poultry['year'].unique():
     # Loop over regions
-    for REGION in ahle_combo_forattr_poultry.query(f"year == {YEAR}")['region'].unique():
+    for REGION in ahle_combo_forattr_m_poultry.query(f"year == {YEAR}")['region'].unique():
         print(f'Running attribution for poultry, {YEAR=} and {REGION=}...')
 
         # Filter to year
-        ahle_combo_forattr_poultry_oneyear_oneregion = ahle_combo_forattr_poultry.query(f"year == {YEAR}").query(f"region == '{REGION}'")
+        ahle_combo_forattr_m_poultry_oneyear_oneregion = ahle_combo_forattr_m_poultry.query(f"year == {YEAR}").query(f"region == '{REGION}'")
 
         # Write to CSV
-        ahle_combo_forattr_poultry_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_poultry_oneyear_oneregion.csv') ,index=False)
+        ahle_combo_forattr_m_poultry_oneyear_oneregion.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_poultry_oneyear_oneregion.csv') ,index=False)
 
         # Run attribution
         # Arguments to R function, as list of strings.
         # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
         r_args = [
-           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_poultry_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
+           os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_poultry_oneyear_oneregion.csv')  # String: full path to AHLE estimates file (csv)
            ,os.path.join(ETHIOPIA_CODE_FOLDER ,'attribution_experts_chickens.csv')    # String: full path to expert opinion attribution file (csv)
            ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_poultry_oneyear_oneregion.csv')    # String: full path to output file (csv)
         ]
@@ -745,10 +763,10 @@ for YEAR in ahle_combo_forattr_poultry['year'].unique():
 attribution_summary_poultry['species'] = 'All Poultry'
 
 # Delete intermediate data frames
-del ahle_combo_forattr_poultry_oneyear_oneregion ,attribution_summary_poultry_oneyear_oneregion
+del ahle_combo_forattr_m_poultry_oneyear_oneregion ,attribution_summary_poultry_oneyear_oneregion
 
 # Delete intermediate CSVs
-os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_poultry_oneyear_oneregion.csv'))
+os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_poultry_oneyear_oneregion.csv'))
 os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_poultry_oneyear_oneregion.csv'))
 
 # =============================================================================
@@ -779,9 +797,9 @@ healthcost_category_df = pd.DataFrame(
 #### Small Ruminants
 # =============================================================================
 # Get health cost AHLE rows
-_row_selection = (ahle_combo_forattr_smallrum['AHLE'].str.upper() == 'HEALTH COST')
+_row_selection = (ahle_combo_forattr_m_smallrum['AHLE'].str.upper() == 'HEALTH COST')
 print(f"> Selected {_row_selection.sum() :,} rows.")
-healthcost_smallrum = ahle_combo_forattr_smallrum.loc[_row_selection].reset_index(drop=True).copy()
+healthcost_smallrum = ahle_combo_forattr_m_smallrum.loc[_row_selection].reset_index(drop=True).copy()
 cleancolnames(healthcost_smallrum)
 
 # Sum sheep and goats
@@ -823,9 +841,9 @@ ahle_combo_withattr = pd.concat(
 #### Cattle
 # =============================================================================
 # Get health cost AHLE rows
-_row_selection = (ahle_combo_forattr_cattle['AHLE'].str.upper() == 'HEALTH COST')
+_row_selection = (ahle_combo_forattr_m_cattle['AHLE'].str.upper() == 'HEALTH COST')
 print(f"> Selected {_row_selection.sum() :,} rows.")
-healthcost_cattle = ahle_combo_forattr_cattle.loc[_row_selection].reset_index(drop=True).copy()
+healthcost_cattle = ahle_combo_forattr_m_cattle.loc[_row_selection].reset_index(drop=True).copy()
 cleancolnames(healthcost_cattle)
 
 # Add placeholder attribution categories
@@ -859,9 +877,9 @@ ahle_combo_withattr = pd.concat(
 #### Poultry
 # =============================================================================
 # Get health cost AHLE rows
-_row_selection = (ahle_combo_forattr_poultry['AHLE'].str.upper() == 'HEALTH COST')
+_row_selection = (ahle_combo_forattr_m_poultry['AHLE'].str.upper() == 'HEALTH COST')
 print(f"> Selected {_row_selection.sum() :,} rows.")
-healthcost_poultry = ahle_combo_forattr_poultry.loc[_row_selection].reset_index(drop=True).copy()
+healthcost_poultry = ahle_combo_forattr_m_poultry.loc[_row_selection].reset_index(drop=True).copy()
 cleancolnames(healthcost_poultry)
 
 # Add placeholder attribution categories
@@ -1119,18 +1137,175 @@ THIS MAY NOT WORK.
 
 #%% DEV disease-specific 2
 '''
-Mean AHLE for PPR and Brucellosis over all age/sex groups are estimated with
+Mean AHLE for PPR and Brucellosis over all age/sex groups is estimated with
 the compartmental model, including components of mortality, health cost, and
 production loss.
 
 Objective 1: derive estimates of these impacts for individual age/sex groups.
 - Split among age/sex groups according to their proportions of total AHLE?
-- According to their proportions of Infectious AHLE?
+According to their proportions of Infectious AHLE?
+- THIS IS FLAWED. See brucellosis example in cattle. Should have zero impact
+on sub-adult mortality. I do not believe that the current structure of applying
+disease to individual age/sex groups makes sense for specific diseases.
 
 Objective 2: calculate the AHLE due to "Other Diseases".
 - Use the fact that all disease-specific AHLE estimates must add up to the
 total Infectious AHLE.
 '''
+# =============================================================================
+#### Objective 1: derive estimates of disease-specific impacts for individual age/sex groups
+# =============================================================================
+# Get total AHLE for each ahle_component and cause, separately for each region,
+# species, production system, and year
+agg_separately = [
+    'region'
+    ,'species'
+    ,'production_system'
+    ,'year'
+]
+agg_byvars = [
+    'ahle_component'
+    ,'cause'
+]
+ahle_group_prpns = ahle_combo_withattr.copy()
+ahle_group_prpns['allgroups_total_bycompcause'] = ahle_group_prpns.groupby(agg_separately + agg_byvars)['mean'].transform('sum')
+ahle_group_prpns['group_prpn_bycompcause'] = ahle_group_prpns['mean'] / ahle_group_prpns['allgroups_total_bycompcause']
+
+ahle_group_prpns = ahle_group_prpns.drop(columns=['mean' ,'sd' ,'lower95' ,'upper95' ,'allgroups_total_bycompcause'])
+
+# -----------------------------------------------------------------------------
+# Cause: Infectious
+# -----------------------------------------------------------------------------
+# Get impact of PPR and Brucellosis estimated from compartmental model
+# Separately for each region, species, production system, and year
+# Define dictionary of tuples:
+    # Key: variable name from ahle_combo_forattr
+    # Value: tuple specifying ('Disease label', 'AHLE component')
+disease_inf_labels = {
+    'ahle_dueto_ppr_mortality_mean':('PPR' ,'Mortality')
+    ,'ahle_dueto_ppr_mortality_stdev':('PPR' ,'Mortality')
+    ,'ahle_dueto_ppr_healthcost_mean':('PPR' ,'Health cost')
+    ,'ahle_dueto_ppr_healthcost_stdev':('PPR' ,'Health cost')
+    ,'ahle_dueto_ppr_productionloss_mean':('PPR' ,'Production loss')
+    ,'ahle_dueto_ppr_productionloss_stdev':('PPR' ,'Production loss')
+
+    ,'ahle_dueto_bruc_mortality_mean':('Brucellosis' ,'Mortality')
+    ,'ahle_dueto_bruc_mortality_stdev':('Brucellosis' ,'Mortality')
+    ,'ahle_dueto_bruc_healthcost_mean':('Brucellosis' ,'Health cost')
+    ,'ahle_dueto_bruc_healthcost_stdev':('Brucellosis' ,'Health cost')
+    ,'ahle_dueto_bruc_productionloss_mean':('Brucellosis' ,'Production loss')
+    ,'ahle_dueto_bruc_productionloss_stdev':('Brucellosis' ,'Production loss')
+}
+
+# These are only estimated for the Overall agesex_scenario (we do not specify which age/sex groups are infected)
+ahle_diseases_inf = ahle_combo_forattr.query("agesex_scenario == 'Overall'")[agg_separately + list(disease_inf_labels)]
+ahle_diseases_inf['cause'] = 'Infectious'
+
+# Merge group proportions lookup
+ahle_diseases_inf_prpn = pd.merge(
+    left=ahle_diseases_inf
+    ,right=ahle_group_prpns
+    ,on=agg_separately + ['cause']
+    ,how='left'
+)
+
+# # -----------------------------------------------------------------------------
+# # Melt first - does not work well
+# # -----------------------------------------------------------------------------
+# # Restructure so each disease column becomes a row
+# ahle_diseases_inf_m_means = ahle_diseases_inf.melt(
+#     id_vars=agg_separately + ['cause']
+#     ,value_vars=[i for i in list(disease_inf_labels) if 'mean' in i]
+#     ,var_name='ahle_column'
+#     ,value_name='disease_allagesex_mean'
+# )
+# ahle_diseases_inf_m_stdev = ahle_diseases_inf.melt(
+#     id_vars=agg_separately + ['cause']
+#     ,value_vars=[i for i in list(disease_inf_labels) if 'stdev' in i]
+#     ,var_name='ahle_column'
+#     ,value_name='disease_allagesex_stdev'
+# )
+
+# # Add disease labels and ahle component labels from lookup dictionary
+# def lookup_column_from_dct(INPUT_COL ,DICT):
+#     try:    # If key is found in dictionary, return value
+#         return pd.Series(DICT[INPUT_COL])
+#     except:
+#         print('Data value not found in dictionary keys.')
+#         return None
+# ahle_diseases_inf_m_means[['disease' ,'ahle_component']] = ahle_diseases_inf_m_means['ahle_column'].apply(
+#     lookup_column_from_dct ,DICT=disease_inf_labels
+# )
+# del ahle_diseases_inf_m_means['ahle_column']
+# ahle_diseases_inf_m_stdev[['disease' ,'ahle_component']] = ahle_diseases_inf_m_stdev['ahle_column'].apply(
+#     lookup_column_from_dct ,DICT=disease_inf_labels
+# )
+# del ahle_diseases_inf_m_stdev['ahle_column']
+
+# # Combine disease means and standard deviations
+# ahle_diseases_inf_m = pd.merge(
+#     left=ahle_diseases_inf_m_means
+#     ,right=ahle_diseases_inf_m_stdev
+#     ,on=agg_separately + ['cause'] + ['disease' ,'ahle_component']
+#     ,how='outer'
+# )
+
+# =============================================================================
+#### Objective 2: calculate the AHLE due to "Other Diseases".
+# =============================================================================
+# Restructure expert attribution results to get each component into a column
+ahle_combo_withattr_p = ahle_combo_withattr.pivot(
+	index=['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex','year' ]
+	,columns=['ahle_component' ,'cause']
+	,values='mean'
+)
+ahle_combo_withattr_p = colnames_from_index(ahle_combo_withattr_p)
+ahle_combo_withattr_p = ahle_combo_withattr_p.add_prefix('ahle_dueto_')
+ahle_combo_withattr_p = ahle_combo_withattr_p.reset_index()
+cleancolnames(ahle_combo_withattr_p)
+
+datainfo(ahle_combo_withattr_p)
+
+# -----------------------------------------------------------------------------
+# Merge ahle_combo_forattr onto expert attribution
+# -----------------------------------------------------------------------------
+# Recode agesex_scenario column to match groups, using pre-defined dictionaries
+ahle_combo_forattr_tomerge = ahle_combo_forattr.copy()
+
+_smallrum = (ahle_combo_forattr_tomerge['species'].str.upper() == 'ALL SMALL RUMINANTS')
+ahle_combo_forattr_tomerge.loc[_smallrum ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_smallrum ,'agesex_scenario'].replace(groups_for_attribution_smallrum)
+
+_cattle = (ahle_combo_forattr_tomerge['species'].str.upper() == 'CATTLE')
+ahle_combo_forattr_tomerge.loc[_cattle ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_cattle ,'agesex_scenario'].replace(groups_for_attribution_cattle)
+
+_poultry = (ahle_combo_forattr_tomerge['species'].str.upper() == 'ALL POULTRY')
+ahle_combo_forattr_tomerge.loc[_poultry ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_poultry ,'agesex_scenario'].replace(groups_for_attribution_poultry)
+
+# Merge, keeping all rows from ahle_combo_withattr_p
+#!!! Note: ahle_combo_withattr only has rows for specific age/sex groups, not the "overall" age/sex group,
+# while disease-specific estimates on ahle_combo_forattr only exist for the "overall" age/sex group.
+ahle_combo_forattr_tomerge = ahle_combo_forattr_tomerge.drop(columns=['age_group' ,'sex'])  # Keep age_group and sex from withattr file only
+ahle_combo_withattr_p2 = pd.merge(
+    left=ahle_combo_withattr_p
+    ,right=ahle_combo_forattr_tomerge
+    ,on=['region' ,'species' ,'production_system' ,'group' ,'year']
+    ,how='left'
+)
+datainfo(ahle_combo_withattr_p2)
+
+# -----------------------------------------------------------------------------
+# Calculate AHLE due to "Other Diseases" as difference from total Infectious
+# -----------------------------------------------------------------------------
+ahle_combo_withattr_p2 = ahle_combo_withattr_p2.eval(
+    '''
+    ahle_dueto_otherinf_mortality_mean = ahle_dueto_mortality_infectious - ahle_dueto_ppr_mortality_mean - ahle_dueto_bruc_mortality_mean
+    ahle_dueto_otherinf_healthcost_mean = ahle_dueto_health_cost_infectious - ahle_dueto_ppr_healthcost_mean - ahle_dueto_bruc_healthcost_mean
+    ahle_dueto_otherinf_productionloss_mean = ahle_dueto_production_loss_infectious - ahle_dueto_ppr_productionloss_mean - ahle_dueto_bruc_productionloss_mean
+    '''
+)
 
 #%% Add disease-specific attribution
 
@@ -1138,7 +1313,7 @@ total Infectious AHLE.
 #### Cause: Infectious
 # =============================================================================
 '''
-Infectious disease impacts have been estimated so we will use the AHLE data.
+Infectious disease impacts have been estimated, so we will use the AHLE data.
 '''
 # Disease proportions may differ by region, species, production_system, and year
 disease_byvars = [
@@ -1157,8 +1332,8 @@ ahle_diseases_inf = ahle_combo_forattr.query("agesex_scenario == 'Overall'")[dis
 ahle_diseases_inf['cause'] = 'Infectious'
 
 # Get the proportion each disease makes up of total AHLE
-#!!! This is flawed. We want the proportion each disease makes up of total Infectious AHLE.
 # Note I am overwriting the mean columns with proportions to simplify renaming
+#!!! This is flawed. We want the proportion each disease makes up of total Infectious AHLE.
 for COL in list(disease_inf_vars):
     ahle_diseases_inf[COL] = ahle_diseases_inf[COL] / ahle_diseases_inf['ahle_total_mean']
 
@@ -1178,9 +1353,9 @@ ahle_diseases_inf_m = ahle_diseases_inf.melt(
 # Rename diseases
 ahle_diseases_inf_m['disease'] = ahle_diseases_inf_m['disease'].replace(disease_inf_vars)
 
-# =============================================================================
-#### Merge onto attribution file
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Merge onto attribution file
+# -----------------------------------------------------------------------------
 '''
 Note this will duplicate rows, creating a new row for each disease.
 '''
@@ -1248,9 +1423,9 @@ disease_plhd = pd.concat(
     ,ignore_index=True   # True: do not keep index values on concatenation axis
 )
 
-# =============================================================================
-#### Merge onto attribution file
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Merge onto attribution file
+# -----------------------------------------------------------------------------
 ahle_combo_withattr_diseases = pd.merge(
     left=ahle_combo_withattr_diseases
     ,right=disease_plhd

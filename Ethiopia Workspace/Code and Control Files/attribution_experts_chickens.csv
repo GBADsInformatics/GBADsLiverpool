@@ -2,288 +2,288 @@ Expert,AHLE,Production system,Age class,Cause,min,avg,max
 R_2woxqznYHz8tEmO,Mortality,Village,Chick,Infectious,45,55,65
 R_2woxqznYHz8tEmO,Mortality,Village,Chick,Non-infectious,10,15,45
 R_2woxqznYHz8tEmO,Mortality,Village,Chick,External,10,30,35
-R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,Infectious,45,50,70
-R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,Non-infectious,10,30,40
-R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,External,10,20,35
+R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,Infectious,45,50,70
+R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,Non-infectious,10,30,40
+R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,External,10,20,35
 R_2woxqznYHz8tEmO,Mortality,Village,Adult,Infectious,40,50,70
 R_2woxqznYHz8tEmO,Mortality,Village,Adult,Non-infectious,20,40,45
 R_2woxqznYHz8tEmO,Mortality,Village,Adult,External,5,10,25
 R_2woxqznYHz8tEmO,Mortality,Small holder,Chick,Infectious,45,55,65
 R_2woxqznYHz8tEmO,Mortality,Small holder,Chick,Non-infectious,10,25,45
 R_2woxqznYHz8tEmO,Mortality,Small holder,Chick,External,10,20,35
-R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,Infectious,45,50,70
-R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,Non-infectious,10,30,40
-R_2woxqznYHz8tEmO,Mortality,Small holder,Juvenile,External,10,20,35
+R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,Infectious,40,60,70
+R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,Non-infectious,10,15,25
+R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,External,8,25,35
 R_2woxqznYHz8tEmO,Mortality,Small holder,Adult,Infectious,40,55,70
 R_2woxqznYHz8tEmO,Mortality,Small holder,Adult,Non-infectious,15,25,45
 R_2woxqznYHz8tEmO,Mortality,Small holder,Adult,External,5,20,25
 R_1N5qwunMmEi0VPU,Mortality,Village,Chick,Infectious,30,60,70
 R_1N5qwunMmEi0VPU,Mortality,Village,Chick,Non-infectious,10,15,25
 R_1N5qwunMmEi0VPU,Mortality,Village,Chick,External,20,25,50
-R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,Infectious,40,60,80
-R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,Non-infectious,10,15,25
-R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,External,8,25,35
+R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,Infectious,30,70,80
+R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,Non-infectious,5,10,20
+R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,External,10,20,30
 R_1N5qwunMmEi0VPU,Mortality,Village,Adult,Infectious,25,55,70
 R_1N5qwunMmEi0VPU,Mortality,Village,Adult,Non-infectious,5,25,35
 R_1N5qwunMmEi0VPU,Mortality,Village,Adult,External,10,20,30
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Chick,Infectious,30,60,80
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Chick,Non-infectious,8,15,25
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Chick,External,20,25,50
-R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,Infectious,40,60,70
-R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,Non-infectious,10,15,25
-R_1N5qwunMmEi0VPU,Mortality,Small holder,Juvenile,External,8,25,35
+R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,Infectious,25,50,60
+R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,Non-infectious,10,25,35
+R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,External,15,25,40
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Adult,Infectious,25,55,70
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Adult,Non-infectious,5,25,35
 R_1N5qwunMmEi0VPU,Mortality,Small holder,Adult,External,10,20,30
 R_3npytEwsljd4nvR,Mortality,Village,Chick,Infectious,20,50,75
 R_3npytEwsljd4nvR,Mortality,Village,Chick,Non-infectious,10,20,30
 R_3npytEwsljd4nvR,Mortality,Village,Chick,External,25,30,85
-R_3npytEwsljd4nvR,Mortality,Village,Juvenile,Infectious,30,70,80
-R_3npytEwsljd4nvR,Mortality,Village,Juvenile,Non-infectious,5,10,20
-R_3npytEwsljd4nvR,Mortality,Village,Juvenile,External,10,20,30
+R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,Infectious,10,20,30
+R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,Non-infectious,40,75,80
+R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,External,2.5,5,10
 R_3npytEwsljd4nvR,Mortality,Village,Adult,Infectious,30,80,85
 R_3npytEwsljd4nvR,Mortality,Village,Adult,Non-infectious,5,10,30
 R_3npytEwsljd4nvR,Mortality,Village,Adult,External,5,10,30
 R_3npytEwsljd4nvR,Mortality,Small holder,Chick,Infectious,20,50,75
 R_3npytEwsljd4nvR,Mortality,Small holder,Chick,Non-infectious,10,20,30
 R_3npytEwsljd4nvR,Mortality,Small holder,Chick,External,25,30,85
-R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,Infectious,30,70,80
-R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,Non-infectious,5,10,20
-R_3npytEwsljd4nvR,Mortality,Small holder,Juvenile,External,10,20,30
+R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,Infectious,70,72,80
+R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,Non-infectious,3,8,10
+R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,External,10,20,25
 R_3npytEwsljd4nvR,Mortality,Small holder,Adult,Infectious,30,70,85
 R_3npytEwsljd4nvR,Mortality,Small holder,Adult,Non-infectious,5,20,30
 R_3npytEwsljd4nvR,Mortality,Small holder,Adult,External,5,10,20
 R_8IDMjflbMJdM6Gd,Mortality,Village,Chick,Infectious,25,55,60
 R_8IDMjflbMJdM6Gd,Mortality,Village,Chick,Non-infectious,15,20,30
 R_8IDMjflbMJdM6Gd,Mortality,Village,Chick,External,20,25,45
-R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,Infectious,25,50,60
-R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,Non-infectious,10,25,35
-R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,External,15,25,40
+R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,Infectious,40,45,60
+R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,Non-infectious,25,30,45
+R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,External,15,25,30
 R_8IDMjflbMJdM6Gd,Mortality,Village,Adult,Infectious,20,45,65
 R_8IDMjflbMJdM6Gd,Mortality,Village,Adult,Non-infectious,15,30,45
 R_8IDMjflbMJdM6Gd,Mortality,Village,Adult,External,20,25,40
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Chick,Infectious,25,55,60
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Chick,Non-infectious,15,20,30
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Chick,External,20,25,45
-R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,Infectious,25,50,60
-R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,Non-infectious,10,25,35
-R_8IDMjflbMJdM6Gd,Mortality,Small holder,Juvenile,External,15,25,40
+R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,Infectious,20,60,70
+R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,Non-infectious,20,25,30
+R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,External,10,15,20
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Adult,Infectious,20,45,65
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Adult,Non-infectious,15,30,45
 R_8IDMjflbMJdM6Gd,Mortality,Small holder,Adult,External,20,25,40
 R_3nvF6ANVNcFNI2u,Mortality,Village,Chick,Infectious,20,30,40
 R_3nvF6ANVNcFNI2u,Mortality,Village,Chick,Non-infectious,5,10,20
 R_3nvF6ANVNcFNI2u,Mortality,Village,Chick,External,40,60,80
-R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,Infectious,10,20,30
-R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,Non-infectious,60,75,80
-R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,External,2.5,5,10
+R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,Infectious,45,50,70
+R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,Non-infectious,10,30,40
+R_2woxqznYHz8tEmO,Mortality,Village,Juvenile,External,10,20,35
 R_3nvF6ANVNcFNI2u,Mortality,Village,Adult,Infectious,50,55,80
 R_3nvF6ANVNcFNI2u,Mortality,Village,Adult,Non-infectious,5,10,15
 R_3nvF6ANVNcFNI2u,Mortality,Village,Adult,External,30,35,40
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Chick,Infectious,20,30,40
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Chick,Non-infectious,40,60,80
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Chick,External,5,10,20
-R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,Infectious,10,20,30
-R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,Non-infectious,40,75,80
-R_3nvF6ANVNcFNI2u,Mortality,Small holder,Juvenile,External,2.5,5,10
+R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,Infectious,40,60,80
+R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,Non-infectious,10,15,25
+R_1N5qwunMmEi0VPU,Mortality,Village,Juvenile,External,8,25,35
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Adult,Infectious,50,55,80
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Adult,Non-infectious,5,10,15
 R_3nvF6ANVNcFNI2u,Mortality,Small holder,Adult,External,30,35,40
 R_2zwLC3OqGOEdQdz,Mortality,Village,Chick,Infectious,60,64,80
 R_2zwLC3OqGOEdQdz,Mortality,Village,Chick,Non-infectious,5,6,10
 R_2zwLC3OqGOEdQdz,Mortality,Village,Chick,External,25,30,50
-R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,Infectious,70,75,80
-R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,Non-infectious,3,5,10
-R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,External,10,20,25
+R_3npytEwsljd4nvR,Mortality,Village,Juvenile,Infectious,30,70,80
+R_3npytEwsljd4nvR,Mortality,Village,Juvenile,Non-infectious,5,10,20
+R_3npytEwsljd4nvR,Mortality,Village,Juvenile,External,10,20,30
 R_2zwLC3OqGOEdQdz,Mortality,Village,Adult,Infectious,60,70,80
 R_2zwLC3OqGOEdQdz,Mortality,Village,Adult,Non-infectious,15,20,25
 R_2zwLC3OqGOEdQdz,Mortality,Village,Adult,External,2,10,20
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Chick,Infectious,60,64,80
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Chick,Non-infectious,5,6,10
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Chick,External,25,30,50
-R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,Infectious,70,72,80
-R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,Non-infectious,3,8,10
-R_2zwLC3OqGOEdQdz,Mortality,Small holder,Juvenile,External,10,20,25
+R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,Infectious,25,50,60
+R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,Non-infectious,10,25,35
+R_8IDMjflbMJdM6Gd,Mortality,Village,Juvenile,External,15,25,40
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Adult,Infectious,60,70,80
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Adult,Non-infectious,15,20,25
 R_2zwLC3OqGOEdQdz,Mortality,Small holder,Adult,External,2,10,20
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Chick,Infectious,40,50,70
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Chick,Non-infectious,15,20,40
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Chick,External,25,30,40
-R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,Infectious,40,45,60
-R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,Non-infectious,25,30,45
-R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,External,15,25,30
+R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,Infectious,10,20,30
+R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,Non-infectious,60,75,80
+R_3nvF6ANVNcFNI2u,Mortality,Village,Juvenile,External,2.5,5,10
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Adult,Infectious,40,45,60
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Adult,Non-infectious,25,40,50
 R_2dsWYsr4WjSEw4Z,Mortality,Village,Adult,External,10,15,20
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Chick,Infectious,40,50,70
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Chick,Non-infectious,15,20,40
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Chick,External,25,30,40
-R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,Infectious,40,45,60
-R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,Non-infectious,25,30,45
-R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Juvenile,External,15,25,30
+R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,Infectious,70,75,80
+R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,Non-infectious,3,5,10
+R_2zwLC3OqGOEdQdz,Mortality,Village,Juvenile,External,10,20,25
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Adult,Infectious,40,45,60
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Adult,Non-infectious,25,30,50
 R_2dsWYsr4WjSEw4Z,Mortality,Small holder,Adult,External,15,25,35
 R_vTwlygzPRKC7f8J,Mortality,Village,Chick,Infectious,20,80,90
 R_vTwlygzPRKC7f8J,Mortality,Village,Chick,Non-infectious,1,5,8
 R_vTwlygzPRKC7f8J,Mortality,Village,Chick,External,4,15,18
-R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,Infectious,20,60,70
-R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,Non-infectious,20,25,30
-R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,External,10,15,20
+R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,Infectious,40,45,60
+R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,Non-infectious,25,30,45
+R_2dsWYsr4WjSEw4Z,Mortality,Village,Juvenile,External,15,25,30
 R_vTwlygzPRKC7f8J,Mortality,Village,Adult,Infectious,20,70,75
 R_vTwlygzPRKC7f8J,Mortality,Village,Adult,Non-infectious,4,5,10
 R_vTwlygzPRKC7f8J,Mortality,Village,Adult,External,15,25,30
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Chick,Infectious,60,80,90
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Chick,Non-infectious,1,5,8
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Chick,External,4,15,18
-R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,Infectious,20,60,70
-R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,Non-infectious,20,25,30
-R_vTwlygzPRKC7f8J,Mortality,Small holder,Juvenile,External,10,15,20
+R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,Infectious,20,60,70
+R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,Non-infectious,20,25,30
+R_vTwlygzPRKC7f8J,Mortality,Village,Juvenile,External,10,15,20
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Adult,Infectious,20,70,75
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Adult,Non-infectious,4,5,10
 R_vTwlygzPRKC7f8J,Mortality,Small holder,Adult,External,15,25,30
 R_2woxqznYHz8tEmO,Production loss,Village,Chick,Infectious,40,50,70
 R_2woxqznYHz8tEmO,Production loss,Village,Chick,Non-infectious,25,35,45
 R_2woxqznYHz8tEmO,Production loss,Village,Chick,External,10,15,20
-R_2woxqznYHz8tEmO,Production loss,Village,juvenile,Infectious,30,45,60
-R_2woxqznYHz8tEmO,Production loss,Village,juvenile,Non-infectious,35,40,50
-R_2woxqznYHz8tEmO,Production loss,Village,juvenile,External,10,15,25
+R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,Infectious,30,55,60
+R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,Non-infectious,25,30,50
+R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,External,10,15,25
 R_2woxqznYHz8tEmO,Production loss,Village,Adult,Infectious,35,45,50
 R_2woxqznYHz8tEmO,Production loss,Village,Adult,Non-infectious,30,35,50
 R_2woxqznYHz8tEmO,Production loss,Village,Adult,External,10,20,30
 R_2woxqznYHz8tEmO,Production loss,Small holder,Chick,Infectious,40,50,70
 R_2woxqznYHz8tEmO,Production loss,Small holder,Chick,Non-infectious,25,35,45
 R_2woxqznYHz8tEmO,Production loss,Small holder,Chick,External,10,15,20
-R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,Infectious,30,55,60
-R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,Non-infectious,25,30,50
-R_2woxqznYHz8tEmO,Production loss,Small holder,Juvenile,External,10,15,25
+R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,Infectious,40,50,60
+R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,Non-infectious,20,30,35
+R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,External,15,20,25
 R_2woxqznYHz8tEmO,Production loss,Small holder,Adult,Infectious,35,45,65
 R_2woxqznYHz8tEmO,Production loss,Small holder,Adult,Non-infectious,30,35,50
 R_2woxqznYHz8tEmO,Production loss,Small holder,Adult,External,10,20,30
 R_1N5qwunMmEi0VPU,Production loss,Village,Chick,Infectious,30,55,70
 R_1N5qwunMmEi0VPU,Production loss,Village,Chick,Non-infectious,10,30,35
 R_1N5qwunMmEi0VPU,Production loss,Village,Chick,External,10,15,25
-R_1N5qwunMmEi0VPU,Production loss,Village,juvenile,Infectious,40,50,60
-R_1N5qwunMmEi0VPU,Production loss,Village,juvenile,Non-infectious,20,30,35
-R_1N5qwunMmEi0VPU,Production loss,Village,juvenile,External,15,20,25
+R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,Infectious,40,60,70
+R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,Non-infectious,5,30,50
+R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,External,5,10,30
 R_1N5qwunMmEi0VPU,Production loss,Village,Adult,Infectious,30,45,50
 R_1N5qwunMmEi0VPU,Production loss,Village,Adult,Non-infectious,20,35,45
 R_1N5qwunMmEi0VPU,Production loss,Village,Adult,External,15,20,30
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Chick,Infectious,30,55,70
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Chick,Non-infectious,10,30,35
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Chick,External,10,15,25
-R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,Infectious,40,50,60
-R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,Non-infectious,20,30,35
-R_1N5qwunMmEi0VPU,Production loss,Small holder,Juvenile,External,15,20,25
+R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,Infectious,40,50,60
+R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,Non-infectious,25,40,50
+R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,External,5,10,30
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Adult,Infectious,30,45,50
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Adult,Non-infectious,20,35,45
 R_1N5qwunMmEi0VPU,Production loss,Small holder,Adult,External,15,20,30
 R_3npytEwsljd4nvR,Production loss,Village,Chick,Infectious,10,50,60
 R_3npytEwsljd4nvR,Production loss,Village,Chick,Non-infectious,15,40,50
 R_3npytEwsljd4nvR,Production loss,Village,Chick,External,5,10,30
-R_3npytEwsljd4nvR,Production loss,Village,juvenile,Infectious,40,60,70
-R_3npytEwsljd4nvR,Production loss,Village,juvenile,Non-infectious,5,30,50
-R_3npytEwsljd4nvR,Production loss,Village,juvenile,External,5,10,30
+R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,Infectious,15,17,20
+R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,Non-infectious,45,55,65
+R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,External,8,28,30
 R_3npytEwsljd4nvR,Production loss,Village,Adult,Infectious,30,70,85
 R_3npytEwsljd4nvR,Production loss,Village,Adult,Non-infectious,5,20,30
 R_3npytEwsljd4nvR,Production loss,Village,Adult,External,5,10,20
 R_3npytEwsljd4nvR,Production loss,Small holder,Chick,Infectious,10,50,60
 R_3npytEwsljd4nvR,Production loss,Small holder,Chick,Non-infectious,15,40,50
 R_3npytEwsljd4nvR,Production loss,Small holder,Chick,External,5,10,30
-R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,Infectious,40,60,70
-R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,Non-infectious,5,30,50
-R_3npytEwsljd4nvR,Production loss,Small holder,Juvenile,External,5,10,30
+R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,Infectious,10,30,50
+R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,Non-infectious,20,30,50
+R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,External,30,40,60
 R_3npytEwsljd4nvR,Production loss,Small holder,Adult,Infectious,30,70,85
 R_3npytEwsljd4nvR,Production loss,Small holder,Adult,Non-infectious,5,20,30
 R_3npytEwsljd4nvR,Production loss,Small holder,Adult,External,5,10,20
 R_8IDMjflbMJdM6Gd,Production loss,Village,Chick,Infectious,25,55,60
 R_8IDMjflbMJdM6Gd,Production loss,Village,Chick,Non-infectious,15,20,40
 R_8IDMjflbMJdM6Gd,Production loss,Village,Chick,External,5,25,30
-R_8IDMjflbMJdM6Gd,Production loss,Village,juvenile,Infectious,45,50,65
-R_8IDMjflbMJdM6Gd,Production loss,Village,juvenile,Non-infectious,25,30,40
-R_8IDMjflbMJdM6Gd,Production loss,Village,juvenile,External,5,20,30
+R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,Infectious,35,40,60
+R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,Non-infectious,30,35,55
+R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,External,20,25,40
 R_8IDMjflbMJdM6Gd,Production loss,Village,Adult,Infectious,40,50,60
 R_8IDMjflbMJdM6Gd,Production loss,Village,Adult,Non-infectious,20,40,55
 R_8IDMjflbMJdM6Gd,Production loss,Village,Adult,External,5,10,30
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Chick,Infectious,40,55,60
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Chick,Non-infectious,20,25,40
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Chick,External,5,20,25
-R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,Infectious,40,50,60
-R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,Non-infectious,25,40,50
-R_8IDMjflbMJdM6Gd,Production loss,Small holder,Juvenile,External,5,10,30
+R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,Infectious,20,35,40
+R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,Non-infectious,50,60,65
+R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,External,0,5,10
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Adult,Infectious,40,50,55
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Adult,Non-infectious,20,40,50
 R_8IDMjflbMJdM6Gd,Production loss,Small holder,Adult,External,5,10,30
 R_3nvF6ANVNcFNI2u,Production loss,Village,Chick,Infectious,10,15,20
 R_3nvF6ANVNcFNI2u,Production loss,Village,Chick,Non-infectious,20,30,50
 R_3nvF6ANVNcFNI2u,Production loss,Village,Chick,External,40,55,80
-R_3nvF6ANVNcFNI2u,Production loss,Village,juvenile,Infectious,15,17,20
-R_3nvF6ANVNcFNI2u,Production loss,Village,juvenile,Non-infectious,45,55,65
-R_3nvF6ANVNcFNI2u,Production loss,Village,juvenile,External,8,28,30
+R_2woxqznYHz8tEmO,Production loss,Village,Juvenile,Infectious,30,45,60
+R_2woxqznYHz8tEmO,Production loss,Village,Juvenile,Non-infectious,35,40,50
+R_2woxqznYHz8tEmO,Production loss,Village,Juvenile,External,10,15,25
 R_3nvF6ANVNcFNI2u,Production loss,Village,Adult,Infectious,40,48,50
 R_3nvF6ANVNcFNI2u,Production loss,Village,Adult,Non-infectious,40,48,50
 R_3nvF6ANVNcFNI2u,Production loss,Village,Adult,External,2.5,4,5
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Chick,Infectious,10,15,20
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Chick,Non-infectious,20,30,50
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Chick,External,40,55,80
-R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,Infectious,15,17,20
-R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,Non-infectious,45,55,65
-R_3nvF6ANVNcFNI2u,Production loss,Small holder,Juvenile,External,8,28,30
+R_1N5qwunMmEi0VPU,Production loss,Village,Juvenile,Infectious,40,50,60
+R_1N5qwunMmEi0VPU,Production loss,Village,Juvenile,Non-infectious,20,30,35
+R_1N5qwunMmEi0VPU,Production loss,Village,Juvenile,External,15,20,25
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Adult,Infectious,40,48,50
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Adult,Non-infectious,40,48,50
 R_3nvF6ANVNcFNI2u,Production loss,Small holder,Adult,External,2.5,4,5
 R_2zwLC3OqGOEdQdz,Production loss,Village,Chick,Infectious,10,30,50
 R_2zwLC3OqGOEdQdz,Production loss,Village,Chick,Non-infectious,30,50,80
 R_2zwLC3OqGOEdQdz,Production loss,Village,Chick,External,9,20,25
-R_2zwLC3OqGOEdQdz,Production loss,Village,juvenile,Infectious,10,30,50
-R_2zwLC3OqGOEdQdz,Production loss,Village,juvenile,Non-infectious,20,30,50
-R_2zwLC3OqGOEdQdz,Production loss,Village,juvenile,External,30,40,60
+R_3npytEwsljd4nvR,Production loss,Village,Juvenile,Infectious,40,60,70
+R_3npytEwsljd4nvR,Production loss,Village,Juvenile,Non-infectious,5,30,50
+R_3npytEwsljd4nvR,Production loss,Village,Juvenile,External,5,10,30
 R_2zwLC3OqGOEdQdz,Production loss,Village,Adult,Infectious,20,40,50
 R_2zwLC3OqGOEdQdz,Production loss,Village,Adult,Non-infectious,30,40,90
 R_2zwLC3OqGOEdQdz,Production loss,Village,Adult,External,15,20,35
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Chick,Infectious,10,30,50
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Chick,Non-infectious,30,50,80
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Chick,External,9,20,25
-R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,Infectious,10,30,50
-R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,Non-infectious,20,30,50
-R_2zwLC3OqGOEdQdz,Production loss,Small holder,Juvenile,External,30,40,60
+R_8IDMjflbMJdM6Gd,Production loss,Village,Juvenile,Infectious,45,50,65
+R_8IDMjflbMJdM6Gd,Production loss,Village,Juvenile,Non-infectious,25,30,40
+R_8IDMjflbMJdM6Gd,Production loss,Village,Juvenile,External,5,20,30
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Adult,Infectious,10,30,50
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Adult,Non-infectious,30,40,90
 R_2zwLC3OqGOEdQdz,Production loss,Small holder,Adult,External,20,30,35
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Chick,Infectious,20,25,50
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Chick,Non-infectious,30,35,55
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Chick,External,35,40,60
-R_2dsWYsr4WjSEw4Z,Production loss,Village,juvenile,Infectious,35,40,60
-R_2dsWYsr4WjSEw4Z,Production loss,Village,juvenile,Non-infectious,30,35,55
-R_2dsWYsr4WjSEw4Z,Production loss,Village,juvenile,External,20,25,40
+R_3nvF6ANVNcFNI2u,Production loss,Village,Juvenile,Infectious,15,17,20
+R_3nvF6ANVNcFNI2u,Production loss,Village,Juvenile,Non-infectious,45,55,65
+R_3nvF6ANVNcFNI2u,Production loss,Village,Juvenile,External,8,28,30
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Adult,Infectious,35,45,60
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Adult,Non-infectious,30,35,50
 R_2dsWYsr4WjSEw4Z,Production loss,Village,Adult,External,15,20,30
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Chick,Infectious,20,25,50
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Chick,Non-infectious,30,35,55
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Chick,External,35,40,60
-R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,Infectious,35,40,60
-R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,Non-infectious,30,35,55
-R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Juvenile,External,20,25,40
+R_2zwLC3OqGOEdQdz,Production loss,Village,Juvenile,Infectious,10,30,50
+R_2zwLC3OqGOEdQdz,Production loss,Village,Juvenile,Non-infectious,20,30,50
+R_2zwLC3OqGOEdQdz,Production loss,Village,Juvenile,External,30,40,60
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Adult,Infectious,35,40,60
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Adult,Non-infectious,30,35,55
 R_2dsWYsr4WjSEw4Z,Production loss,Small holder,Adult,External,20,25,50
 R_vTwlygzPRKC7f8J,Production loss,Village,Chick,Infectious,25,50,65
 R_vTwlygzPRKC7f8J,Production loss,Village,Chick,Non-infectious,5,45,50
 R_vTwlygzPRKC7f8J,Production loss,Village,Chick,External,1,5,10
-R_vTwlygzPRKC7f8J,Production loss,Village,juvenile,Infectious,20,35,40
-R_vTwlygzPRKC7f8J,Production loss,Village,juvenile,Non-infectious,50,60,65
-R_vTwlygzPRKC7f8J,Production loss,Village,juvenile,External,0,5,10
+R_2dsWYsr4WjSEw4Z,Production loss,Village,Juvenile,Infectious,35,40,60
+R_2dsWYsr4WjSEw4Z,Production loss,Village,Juvenile,Non-infectious,30,35,55
+R_2dsWYsr4WjSEw4Z,Production loss,Village,Juvenile,External,20,25,40
 R_vTwlygzPRKC7f8J,Production loss,Village,Adult,Infectious,45,53,60
 R_vTwlygzPRKC7f8J,Production loss,Village,Adult,Non-infectious,40,45,55
 R_vTwlygzPRKC7f8J,Production loss,Village,Adult,External,0,2,10
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Chick,Infectious,25,50,65
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Chick,Non-infectious,5,45,50
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Chick,External,1,5,10
-R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,Infectious,20,35,40
-R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,Non-infectious,50,60,65
-R_vTwlygzPRKC7f8J,Production loss,Small holder,Juvenile,External,0,5,10
+R_vTwlygzPRKC7f8J,Production loss,Village,Juvenile,Infectious,20,35,40
+R_vTwlygzPRKC7f8J,Production loss,Village,Juvenile,Non-infectious,50,60,65
+R_vTwlygzPRKC7f8J,Production loss,Village,Juvenile,External,0,5,10
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Adult,Infectious,45,53,60
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Adult,Non-infectious,40,45,55
 R_vTwlygzPRKC7f8J,Production loss,Small holder,Adult,External,0,2,10
