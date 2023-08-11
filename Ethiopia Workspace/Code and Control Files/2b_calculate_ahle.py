@@ -163,7 +163,7 @@ datainfo(exchg_data_tomerge)
 # Export
 exchg_data_tomerge.to_pickle(os.path.join(ETHIOPIA_DATA_FOLDER ,'wb_exchg_data_processed.pkl.gz'))
 
-#%% READ SIMULATION DATA
+#%% READ COMBINED SIMULATION DATA
 
 ahle_combo_adj = pd.read_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_stacked_adj.csv'))
 datainfo(ahle_combo_adj)
@@ -172,9 +172,9 @@ datainfo(ahle_combo_adj)
 '''
 Creating aggregate groups for filtering in the dashboard.
 
-Note: this handles all items the same, whether they are animal (head) counts,
-mass (kg), or dollar values. Be careful when using the results that you are not
-mixing apples and oranges.
+Note: aggregate groups are already created for many items in the compartmental
+model, but not all. For simplicity, and to ensure the totals are correct, I'm
+recalculating the aggregate for all items.
 '''
 mean_cols = [i for i in list(ahle_combo_adj) if 'mean' in i]
 sd_cols = [i for i in list(ahle_combo_adj) if 'stdev' in i]
@@ -225,7 +225,7 @@ placeholders.
 #### Build aggregate age/sex groups
 # =============================================================================
 # Define full set of key variables
-all_byvars = ['region' ,'species' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year']
+all_byvars = ['species' ,'region' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year']
 
 # Only using mean and standard deviaion of each item, as the other statistics
 # cannot be summed.
@@ -339,6 +339,7 @@ ahle_combo_withagg = pd.concat(
    ,join='outer'        # 'outer': keep all columns
    ,ignore_index=True   # True: do not keep index values on concatenation axis
 )
+del ahle_combo_indiv ,ahle_combo_sum_groups ,ahle_combo_sum_sexes ,ahle_combo_sum_ages ,ahle_combo_overall
 
 # De-Dup
 ahle_combo_withagg = ahle_combo_withagg.drop_duplicates(subset=all_byvars ,keep='first')
@@ -466,6 +467,11 @@ keepcols = [
     ,'mean_ideal'
     ,'stdev_ideal'
 
+    ,'mean_ppr'
+    ,'stdev_ppr'
+    ,'mean_bruc'
+    ,'stdev_bruc'
+
     ,'mean_all_mort_25_imp'
     ,'stdev_all_mort_25_imp'
     ,'mean_all_mort_50_imp'
@@ -500,6 +506,11 @@ keepcols = [
     ,'stdev_current_usd'
     ,'mean_ideal_usd'
     ,'stdev_ideal_usd'
+
+    ,'mean_ppr_usd'
+    ,'stdev_ppr_usd'
+    ,'mean_bruc_usd'
+    ,'stdev_bruc_usd'
 
     ,'mean_all_mort_25_imp_usd'
     ,'stdev_all_mort_25_imp_usd'
@@ -549,9 +560,6 @@ ahle_combo_withagg_smry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_su
 mean_cols_agg = [i for i in list(ahle_combo_withagg) if 'mean' in i]
 sd_cols_agg = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
 
-# Only need the system total for each item: 'Overall' group
-_groups_for_summary = (ahle_combo_withagg['group'].str.upper() == 'OVERALL')
-
 # Only need some of the items
 keep_items = [
     'gross margin'
@@ -561,7 +569,7 @@ keep_items = [
 keep_items_upper = [i.upper() for i in keep_items]
 _items_for_ahle = (ahle_combo_withagg['item'].str.upper().isin(keep_items_upper))
 
-ahle_combo_withagg_p = ahle_combo_withagg.loc[(_items_for_ahle & _groups_for_summary)].pivot(
+ahle_combo_withagg_p = ahle_combo_withagg.loc[(_items_for_ahle)].pivot(
     index=['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year' ,'exchg_rate_lcuperusdol']
     ,columns='item'
     ,values=mean_cols_agg + sd_cols_agg
@@ -618,21 +626,20 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     # Disease-specific
     '''
     ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
-    ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality
-    ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost
+    ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
+    ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost * -1
     ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
 
     ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
-    ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality
-    ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost
+    ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
+    ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost * -1
     ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
     '''
     # AHLE due to Other Disease will depend on which diseases were estimated.
-    # E.g. PPR only impacts small ruminants, so should not be part of the calculation for Cattle.
     # Don't calculate this here. Handle it when needed (attribution).
     # Should be: ahle_dueto_otherdisease_total_mean = ahle_total_infectious - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
 
-    # Scenarios applied to specific age/sex groups
+    # Ideal scenario applied to specific age/sex groups
     '''
     ahle_when_af_ideal_mean = mean_ideal_af_gross_margin - mean_current_gross_margin
     ahle_when_am_ideal_mean = mean_ideal_am_gross_margin - mean_current_gross_margin
@@ -641,12 +648,9 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     ahle_when_nf_ideal_mean = mean_ideal_nf_gross_margin - mean_current_gross_margin
     ahle_when_nm_ideal_mean = mean_ideal_nm_gross_margin - mean_current_gross_margin
     ahle_when_o_ideal_mean = mean_ideal_o_gross_margin - mean_current_gross_margin
-
-    ahle_when_af_repro_imp25_mean = mean_current_repro_25_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp50_mean = mean_current_repro_50_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp75_mean = mean_current_repro_75_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp100_mean = mean_current_repro_100_imp_gross_margin - mean_current_gross_margin
-
+    '''
+    # Mortality scenario applied to specific age/sex groups
+    '''
     ahle_when_af_mort_imp25_mean = mean_mort_25_imp_af_gross_margin - mean_current_gross_margin
     ahle_when_am_mort_imp25_mean = mean_mort_25_imp_am_gross_margin - mean_current_gross_margin
     ahle_when_j_mort_imp25_mean = mean_mort_25_imp_j_gross_margin - mean_current_gross_margin
@@ -666,6 +670,23 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     ahle_when_am_mort_imp100_mean = mean_mortality_zero_am_gross_margin - mean_current_gross_margin
     ahle_when_j_mort_imp100_mean = mean_mortality_zero_j_gross_margin - mean_current_gross_margin
     ahle_when_n_mort_imp100_mean = mean_mortality_zero_n_gross_margin - mean_current_gross_margin
+    '''
+    # These apply to poultry
+    '''
+    ahle_when_a_ideal_mean = mean_ideal_a_gross_margin - mean_current_gross_margin
+    ahle_when_j_ideal_mean = mean_ideal_j_gross_margin - mean_current_gross_margin
+    ahle_when_n_ideal_mean = mean_ideal_n_gross_margin - mean_current_gross_margin
+
+    ahle_when_a_mort_imp100_mean = mean_mortality_zero_a_gross_margin - mean_current_gross_margin
+    ahle_when_j_mort_imp100_mean = mean_mortality_zero_j_gross_margin - mean_current_gross_margin
+    ahle_when_n_mort_imp100_mean = mean_mortality_zero_n_gross_margin - mean_current_gross_margin
+    '''
+    # Other scenarios applied to specific age/sex groups
+    '''
+    ahle_when_af_repro_imp25_mean = mean_current_repro_25_imp_gross_margin - mean_current_gross_margin
+    ahle_when_af_repro_imp50_mean = mean_current_repro_50_imp_gross_margin - mean_current_gross_margin
+    ahle_when_af_repro_imp75_mean = mean_current_repro_75_imp_gross_margin - mean_current_gross_margin
+    ahle_when_af_repro_imp100_mean = mean_current_repro_100_imp_gross_margin - mean_current_gross_margin
 
     ahle_when_all_growth_imp25_mean = mean_current_growth_25_imp_all_gross_margin - mean_current_gross_margin
     ahle_when_af_growth_imp25_mean = mean_current_growth_25_imp_af_gross_margin - mean_current_gross_margin
@@ -698,16 +719,6 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     ahle_when_jm_growth_imp100_mean = mean_current_growth_100_imp_jm_gross_margin - mean_current_gross_margin
     ahle_when_nf_growth_imp100_mean = mean_current_growth_100_imp_nf_gross_margin - mean_current_gross_margin
     ahle_when_nm_growth_imp100_mean = mean_current_growth_100_imp_nm_gross_margin - mean_current_gross_margin
-    '''
-    # These apply to poultry
-    '''
-    ahle_when_a_ideal_mean = mean_ideal_a_gross_margin - mean_current_gross_margin
-    ahle_when_j_ideal_mean = mean_ideal_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_ideal_mean = mean_ideal_n_gross_margin - mean_current_gross_margin
-
-    ahle_when_a_mort_imp100_mean = mean_mortality_zero_a_gross_margin - mean_current_gross_margin
-    ahle_when_j_mort_imp100_mean = mean_mortality_zero_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_mort_imp100_mean = mean_mortality_zero_n_gross_margin - mean_current_gross_margin
     '''
 )
 
@@ -747,6 +758,23 @@ ahle_combo_withahle['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_dueto_bruc_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev']**2
     )
 
+# -----------------------------------------------------------------------------
+# Set disease-specific AHLE to zero where it does not apply
+# -----------------------------------------------------------------------------
+# PPR only impacts small ruminants
+ahle_dueto_ppr_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_ppr' in i]
+_ppr_applies = (ahle_combo_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS']))
+for COL in ahle_dueto_ppr_cols:
+    ahle_combo_withahle.loc[~ _ppr_applies ,COL] = \
+        ahle_combo_withahle.loc[~ _ppr_applies ,COL].fillna(0)
+
+# Brucellosis impacts small ruminants and cattle
+ahle_dueto_bruc_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_bruc' in i]
+_bruc_applies = (ahle_combo_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS' ,'CATTLE']))
+for COL in ahle_dueto_bruc_cols:
+    ahle_combo_withahle.loc[~ _bruc_applies ,COL] = \
+        ahle_combo_withahle.loc[~ _bruc_applies ,COL].fillna(0)
+
 # =============================================================================
 #### Add currency conversion
 # =============================================================================
@@ -770,13 +798,13 @@ datainfo(ahle_combo_withahle)
 
 # Keep only key columns and AHLE calcs
 _ahle_cols = [i for i in list(ahle_combo_withahle) if 'ahle' in i]
-_cols_for_summary = ['region' ,'species' ,'production_system' ,'group' ,'year'] + _ahle_cols
+_cols_for_summary = ['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year'] + _ahle_cols
 
 ahle_combo_withahle_smry = ahle_combo_withahle[_cols_for_summary].reset_index(drop=True)
 datainfo(ahle_combo_withahle_smry)
 
 ahle_combo_withahle_smry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary2.csv') ,index=False)
-# ahle_combo_withahle_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary2.pkl.gz'))
+ahle_combo_withahle_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary2.pkl.gz'))
 
 # Output for Dash
 ahle_combo_withahle_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary2.csv') ,index=False)

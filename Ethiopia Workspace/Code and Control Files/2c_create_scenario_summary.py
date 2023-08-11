@@ -740,7 +740,7 @@ for i ,VARCOL in enumerate(var_cols):
 
 datainfo(ahle_combo_scensmry)
 
-#%% ADD CALCS TO SCENARIO SUMMARY TABLE
+#%% ADD CALCS
 
 ahle_combo_scensmry_diffs = ahle_combo_scensmry.copy()
 
