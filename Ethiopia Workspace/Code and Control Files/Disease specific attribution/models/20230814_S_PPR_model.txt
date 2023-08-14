@@ -1,0 +1,20 @@
+model{
+  #=== LIKELIHOOD	===#
+  for (i in 1:Nstudies) {
+  pos[i] ~ dbin(AP[i], n[i])  # Positive from a distribution of apparent prevalence and number tested
+  AP[i] = ((1-V)*P[i]/IAff)*Se + (1-(1-V)*P[i]/IAff)*(1-Sp)   # Correct AP for test performance, vaccination, and probability affected
+
+  logit(P[i]) = logit.P[i]                    
+  logit.P[i] ~ dnorm(logit.CP, tau.CP) # Study prevalence is a normal distribution with a mean of the true population CP and its precision
+  }
+  
+  #=== PRIORS ===#
+  Se ~ dunif(0.9, 0.97)
+  Sp ~ dunif(0.97, 0.99)
+  IAff ~ dunif(0.95, 1)
+  V ~ dunif(0.25, 0.5)
+  tau.CP = sqrt(1/precision.CP)
+  precision.CP ~ dgamma(1,1)
+  logit(CP) = logit.CP
+  logit.CP ~ dnorm(0,0.001)
+  }
