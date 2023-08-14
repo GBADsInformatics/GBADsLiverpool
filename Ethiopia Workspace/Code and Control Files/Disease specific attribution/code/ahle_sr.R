@@ -5,7 +5,7 @@ source("code/ahle_sr_fns.R")
 
 # Set user, number of runs, scenario file location, and list scenario columns to run
 user <- "AL"
-n <- 1
+n <- 10000
 scenario_file <- paste0("scenarios/sr_disease_scenarios.xlsx")
 # Comment (#) out a line if you don't want to run that set of scenarios
 scenario_list <- list("CLM_S_Ideal", "Past_S_Ideal", "CLM_G_Ideal", "Past_G_Ideal"
@@ -25,11 +25,11 @@ names(results_list) <- scenario_list
 csv_list <- lapply(scenario_list, csv_to_output)
 export_results_list <- mapply(write_csv, x=results_list, file=csv_list)
 
-# Combine list of results into one table and export csv ("output/YYYYMMDD_ahle_sr.csv")
+# Combine list of results into one table and export csv
 results_long <- map_df(results_list, ~as.data.frame(.x), .id="id") %>%
+  relocate(., id, .after=nruns) %>%
   separate_wider_delim(., cols=id, delim="_", names=c("system","species","scenario"))
 export_results_long <- write_csv(results_long, "output/ahle_sr.csv")
 
-# Add results to tracker
-new_tracker_data <- results_long 
-export_tracker <- write_csv(new_tracker_data, "output/ahle_results_tracker.csv", append = TRUE)
+# Add results to tracker csv
+export_tracker <- write_csv(results_long, "output/ahle_results_tracker.csv", append = TRUE)
