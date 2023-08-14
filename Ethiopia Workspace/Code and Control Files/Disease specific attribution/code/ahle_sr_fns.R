@@ -1,3 +1,6 @@
+# Required packages
+lapply(c("tidyverse", "readxl", "freedom", "truncnorm","data.table", "doParallel", "abind"), require, character.only = T)
+
 # Population model
 ahle_sr <- function(
     file, sheet = 1, par_names = "AHLE Parameter", ignore = "Notes", nruns = 1000, Num_months = 12, 
