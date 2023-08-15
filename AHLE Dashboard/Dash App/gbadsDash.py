@@ -31,7 +31,6 @@ import dash_bootstrap_components as dbc  # Allows easy access to all bootstrap t
 import dash_daq as daq
 import dash_auth
 import numpy as np
-import scipy as sp
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -220,16 +219,6 @@ geojson_ecs = r.json()
 ecs_expertattr_smallrum = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'attribution_experts_smallruminants.csv'))
 ecs_expertattr_cattle = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'attribution_experts_cattle.csv'))
 ecs_expertattr_poultry = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'attribution_experts_chickens.csv'))
-
-# Economic data is very simple. From Dashboard WEI 08082023.xlsx shared by Tom Marsh
-wei_ethiopia_raw = pd.DataFrame({
-    'species':'Cattle and Small Ruminants'
-    ,'scenario':['Current' ,'Zero Mortality' ,'Ideal']
-    ,'scenario_numeric':[0 ,0.5 ,1]
-    ,'production_change_pct':[0 ,40.2 ,180.48]
-    ,'gdp_change_pct':[0 ,2.51 ,3.57]
-    ,'economic_surplus_usd':[0 ,1760050000 ,2452180000]
-})
 
 # -----------------------------------------------------------------------------
 # Global Aggregate
@@ -1800,43 +1789,6 @@ def create_map_display_ecs(input_df, geojson, location, featurekey, color_by, co
                                        )
 
     return ecs_map_fig
-
-# Wider Economic Impact charts for Ethiopia
-def create_wei_chart_1(
-        input_df
-        ,plot_xvar
-        ,plot_yvar
-        ,plot_yvar_color
-        ,hover_list=None         # List of variable names to add to hover-over
-    ):
-    # Generate range of x-axis values
-    gen_end = input_df[plot_xvar].max()
-    step_size = 0.1
-    gen_num = int(input_df[plot_xvar].max() / step_size)
-    if gen_num < 200:
-        gen_num = 200
-    gen_x = np.linspace(
-    	start=0 				# Start value. Can be integer or float.
-    	,stop=gen_end 				# Stop value. Can be integer or float.
-    	,num=gen_num 				# Number of elements to generate. Will be evenly spaced from START to STOP.
-    )
-
-    # Get quadratic fit line
-    quadratic_interp = sp.interpolate.interp1d(input_df[plot_xvar] ,input_df[plot_yvar] ,kind='quadratic')
-    interp_y = quadratic_interp(gen_x)		# Calculate y-axis values on fit line
-
-    # Plot data
-    fig = px.scatter(input_df ,x=plot_xvar ,y=plot_yvar ,hover_data=hover_list)
-    fig.update_traces(marker_size=20 ,marker_color=plot_yvar_color)
-
-    # Plot fit line
-    fig_quadratic = px.scatter(x=gen_x ,y=interp_y)
-    fig_quadratic.update_traces(marker_size=2 ,marker_color=plot_yvar_color)
-    fig.add_trace(fig_quadratic.data[0])
-
-    # Draw
-    fig.update_layout(xaxis_title=plot_xvar ,yaxis_title=plot_yvar)
-    return fig
 
 # Define the Biomass map
 def create_biomass_map_ga(input_df, iso_alpha3, value, country, display):
@@ -3549,38 +3501,6 @@ gbadsDash.layout = html.Div([
             ### END OF FOOTNOTES
 
             html.Hr(style={'margin-right':'10px',}),
-
-            #### -- WIDER ECONOMIC IMPACT
-            dbc.Row([
-                html.H3("Wider Economic Impact"),
-                html.Label(["Impact currently estimated for cattle and small ruminants combined."]),
-                dbc.Col([
-                    dbc.Spinner(children=[
-                    dcc.Graph(id='ecs-wei-chart-1',
-                              style = {"height":"650px"},
-                              )
-                        ],size="md", color="#393375", fullscreen=False),    # End of Spinner
-                    ]),
-                dbc.Col([
-                    dbc.Spinner(children=[
-                    dcc.Graph(id='ecs-wei-chart-2',
-                              style = {"height":"650px"},
-                              )
-                        ],size="md", color="#393375", fullscreen=False),    # End of Spinner
-                    ]),
-                ]),
-
-            #### -- WEI FOOTNOTES
-            dbc.Row([
-                dbc.Col([   # Chart 1 footnote
-                    html.P("Chart 1 footnote."),
-                ]),
-                dbc.Col([   # Chart 2 footnote
-                    html.P("Chart 2 footnote."),
-                ]),
-            ], style={'font-style': 'italic'}
-            ),
-            ### END OF FOOTNOTES
 
             #### -- MAP
             dbc.Card([
@@ -9165,20 +9085,6 @@ def update_stacked_bar_ecs(
     #     ahle_bar_ecs_fig.update_traces(hovertemplate='Category=%{color}<br>Value=%{y:,.0f} USD<extra></extra>')
 
     return ahle_bar_ecs_fig
-
-@gbadsDash.callback(
-    Output('ecs-wei-chart-1','figure'),
-    Input('select-species-ecs','value'),    # Dummy input
-    )
-def update_wei_display_ecs(species):
-    wei_chart_1 = create_wei_chart_1(
-        input_df=wei_ethiopia_raw
-        ,plot_xvar='scenario_numeric'
-        ,plot_yvar='gdp_change_pct'
-        ,plot_yvar_color='green'
-        ,hover_list=['scenario']         # List of variable names to add to hover-over
-        )
-    return wei_chart_1
 
 # Update subnational map
 @gbadsDash.callback(
