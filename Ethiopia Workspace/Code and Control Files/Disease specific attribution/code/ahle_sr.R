@@ -31,4 +31,5 @@ results_long <- map_df(results_list, ~as.data.frame(.x), .id="id") %>%
 export_results_long <- write_csv(results_long, "output/ahle_sr.csv")
 
 # Add results to tracker csv
-export_tracker <- write_csv(results_long, "output/ahle_results_tracker.csv", append = TRUE, escape="double")
+cat("\n", file="output/ahle_results_tracker.csv", append=TRUE) # wrtite_csv and write.table were having issues without this line to fix
+export_tracker <- write_csv(results_long, "output/ahle_results_tracker.csv", append = TRUE)
