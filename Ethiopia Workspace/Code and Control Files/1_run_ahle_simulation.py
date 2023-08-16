@@ -247,7 +247,7 @@ r_args = [
 
     # Arg 2: Folder location for saving output files
     # Note putting this in year 2021 folder although it has only been produced for a single year.
-    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'2021')
+    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,'2021')
 
     # Arg 3: full path to scenario control file
     ,os.path.join(ETHIOPIA_CODE_FOLDER ,'Bruc_AHLE scenario parameters CATTLE.xlsx')
@@ -280,7 +280,7 @@ for YEAR in list_years:
         )
 
     # Create subfolder for results if it doesn't exist
-    OUTFOLDER = os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,f'{YEAR}')
+    OUTFOLDER = os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f'{YEAR}')
     os.makedirs(OUTFOLDER ,exist_ok=True)
 
     # Arguments to R function, as list of strings.

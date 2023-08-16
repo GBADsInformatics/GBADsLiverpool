@@ -133,6 +133,9 @@ DASH_DATA_FOLDER = os.path.join(GRANDPARENT_FOLDER, 'AHLE Dashboard' ,'Dash App'
 '''
 This imports CSV files that are output from the compartmental model.
 '''
+# This function reads all CSV files with the given prefix_suffix pattern in the given folder
+# and merges them into a single dataframe. It also adds labels for species, production system,
+# year, and region.
 def combine_ahle_scenarios(
         input_folder
         ,input_file_prefix      # String
@@ -356,7 +359,7 @@ ahle_cattle_yearly_aslist = []         # Initialize
 for YEAR in range(2017 ,2022):
     # Import CLM
     ahle_cattle_clm = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,f"{YEAR}")
+        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
         ,input_file_prefix='ahle_cattle_trial_CLM'
         ,input_file_suffixes=cattle_suffixes
         ,label_species='Cattle'
@@ -373,7 +376,7 @@ for YEAR in range(2017 ,2022):
 
     # Import pastoral
     ahle_cattle_past = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,f"{YEAR}")
+        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
         ,input_file_prefix='ahle_cattle_trial_past'
         ,input_file_suffixes=cattle_suffixes
         ,label_species='Cattle'
@@ -390,7 +393,7 @@ for YEAR in range(2017 ,2022):
 
     # Import periurban dairy
     ahle_cattle_peri = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,f"{YEAR}")
+        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
         ,input_file_prefix='ahle_cattle_trial_periurban_dairy'
         ,input_file_suffixes=cattle_suffixes
         ,label_species='Cattle'
