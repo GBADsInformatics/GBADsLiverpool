@@ -294,11 +294,12 @@ attr_byvars = ['species' ,'region' ,'production_system' ,'group' ,'age_group' ,'
 # Define ahle variables to use and their labels to match expert attribution file
 ahle_component_labels = {
    "ahle_dueto_mortality_mean":"Mortality"
-   ,"ahle_dueto_healthcost_mean":"Health cost"
-   ,"ahle_dueto_productionloss_mean":"Production loss"
-
    ,"ahle_dueto_mortality_stdev":"Mortality"
+
+   ,"ahle_dueto_healthcost_mean":"Health cost"
    ,"ahle_dueto_healthcost_stdev":"Health cost"
+
+   ,"ahle_dueto_productionloss_mean":"Production loss"
    ,"ahle_dueto_productionloss_stdev":"Production loss"
 }
 
@@ -828,8 +829,6 @@ recode_prodsys = {
 }
 ahle_combo_withattr['production_system'] = ahle_combo_withattr['production_system'].replace(recode_prodsys)
 
-datainfo(ahle_combo_withattr)
-
 # -----------------------------------------------------------------------------
 # Drop and reorder columns
 # -----------------------------------------------------------------------------
@@ -837,17 +836,7 @@ datainfo(ahle_combo_withattr)
 del ahle_combo_withattr['median']
 
 # Reorder columns
-cols_first = [
-    'species'
-    ,'region'
-    ,'production_system'
-    ,'group'
-    ,'age_group'
-    ,'sex'
-    ,'year'
-    ,'ahle_component'
-    ,'cause'
-]
+cols_first = attr_byvars + ['ahle_component' ,'cause']
 cols_other = [i for i in list(ahle_combo_withattr) if i not in cols_first]
 ahle_combo_withattr = ahle_combo_withattr.reindex(columns=cols_first + cols_other)
 ahle_combo_withattr = ahle_combo_withattr.sort_values(by=cols_first ,ignore_index=True)
@@ -857,17 +846,158 @@ datainfo(ahle_combo_withattr)
 ahle_combo_withattr.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr.csv') ,index=False)
 # ahle_combo_withattr.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr.csv') ,index=False)
 
-#%% ADD DISEASE-SPECIFIC COMPONENTS
+#%% *DEV A* ADD DISEASE-SPECIFIC COMPONENTS
+
+# =============================================================================
+#### Assemble disease-specific columns
+# =============================================================================
+# -----------------------------------------------------------------------------
+# Cause: Infectious
+# -----------------------------------------------------------------------------
 '''
-AHLE for PPR and Brucellosis is estimated with the compartmental model,
-including components of mortality, health cost, and production loss.
+AHLE for infectious diseases PPR and Brucellosis has been estimated with the
+compartmental model, including components of mortality, health cost, and
+production loss.
 '''
+# Define lookup dictionary for infectious diseases
+# Key: disease label - whatever you want
+# Value: dictionary with all columns from ahle_combo_forattr due to that disease and the ahle_component label for each
+diseases_infectious = {
+    'PPR':{
+        'ahle_dueto_ppr_mortality_mean':'Mortality'
+        ,'ahle_dueto_ppr_mortality_stdev':'Mortality'
+        ,'ahle_dueto_ppr_healthcost_mean':'Health cost'
+        ,'ahle_dueto_ppr_healthcost_stdev':'Health cost'
+        ,'ahle_dueto_ppr_productionloss_mean':'Production loss'
+        ,'ahle_dueto_ppr_productionloss_stdev':'Production loss'
+    }
+    ,'Brucellosis':{
+        'ahle_dueto_bruc_mortality_mean':'Mortality'
+        ,'ahle_dueto_bruc_mortality_stdev':'Mortality'
+        ,'ahle_dueto_bruc_healthcost_mean':'Health cost'
+        ,'ahle_dueto_bruc_healthcost_stdev':'Health cost'
+        ,'ahle_dueto_bruc_productionloss_mean':'Production loss'
+        ,'ahle_dueto_bruc_productionloss_stdev':'Production loss'
+    }
+}
+
+# For each disease, melt columns of mortality, health cost, and production loss
+# and merge onto ahle_combo_withattr
+for DISEASE in list(diseases_infectious):
+    single_disease_means = ahle_combo_forattr.melt(
+        id_vars=attr_byvars
+        ,value_vars=[i for i in list(diseases_infectious[DISEASE]) if 'mean' in i]
+        ,var_name='ahle_column'
+        ,value_name=f'ahle_dueto_{DISEASE}_mean'
+        )
+    single_disease_stdev = ahle_combo_forattr.melt(
+        id_vars=attr_byvars
+        ,value_vars=[i for i in list(diseases_infectious[DISEASE]) if 'stdev' in i]
+        ,var_name='ahle_column'
+        ,value_name=f'ahle_dueto_{DISEASE}_stdev'
+        )
+
+    # Add ahle component labels
+    single_disease_means['ahle_component'] = single_disease_means['ahle_column'].replace(diseases_infectious[DISEASE])
+    del single_disease_means['ahle_column']
+    single_disease_stdev['ahle_component'] = single_disease_stdev['ahle_column'].replace(diseases_infectious[DISEASE])
+    del single_disease_stdev['ahle_column']
+
+    # Merge means and standard deviations
+    single_disease_ahle = pd.merge(
+        left=single_disease_means
+        ,right=single_disease_stdev
+        ,on=attr_byvars + ['ahle_component']
+        ,how='left'
+    )
+
+    # Merge onto master disease-specific dataframe
+    if DISEASE == list(diseases_infectious)[0]:     # If first disease, copy
+        disease_inf_ahle = single_disease_ahle.copy()
+    else:       # Otherwise, merge
+        disease_inf_ahle = pd.merge(
+            left=disease_inf_ahle
+            ,right=single_disease_ahle
+            ,on=attr_byvars + ['ahle_component']
+            ,how='left'
+        )
+del single_disease_means ,single_disease_stdev ,single_disease_ahle
+disease_inf_ahle['cause'] = 'Infectious'
+cleancolnames(disease_inf_ahle)
+
+# Calculate total contribution of known diseases
+disease_inf_ahle['ahle_dueto_known_infectious_mean'] = \
+    disease_inf_ahle['ahle_dueto_ppr_mean'] + disease_inf_ahle['ahle_dueto_brucellosis_mean']
+
+disease_inf_ahle['ahle_dueto_known_infectious_stdev'] = \
+    np.sqrt(disease_inf_ahle['ahle_dueto_ppr_stdev']**2 + disease_inf_ahle['ahle_dueto_brucellosis_stdev']**2)
+
+datainfo(disease_inf_ahle)
+
+# -----------------------------------------------------------------------------
+# Cause: Non-Infectious
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Cause: External
+# -----------------------------------------------------------------------------
+
+# =============================================================================
+#### Merge and calcs
+# =============================================================================
+# Apply species-specific group labels
+## NOTE species-specific filters will be taken care of by left-merging onto attribution results
+_row_selection = (disease_inf_ahle['species'].str.upper() == 'ALL SMALL RUMINANTS')
+disease_inf_ahle.loc[_row_selection ,'group'] = \
+    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_smallrum)
+
+_row_selection = (disease_inf_ahle['species'].str.upper() == 'CATTLE')
+disease_inf_ahle.loc[_row_selection ,'group'] = \
+    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_cattle)
+
+_row_selection = (disease_inf_ahle['species'].str.upper() == 'ALL POULTRY')
+disease_inf_ahle.loc[_row_selection ,'group'] = \
+    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_poultry)
+
+# Remove age_group and sex as these no longer match group labels
+del disease_inf_ahle['age_group'] ,disease_inf_ahle['sex']
+
+# Merge disease-specific columns onto ahle_combo_withattr
+merge_on = attr_byvars + ['ahle_component' ,'cause']
+merge_on.remove('age_group')
+merge_on.remove('sex')
+ahle_combo_withattr_diseases = pd.merge(
+    left=ahle_combo_withattr
+    ,right=disease_inf_ahle
+    ,on=merge_on
+    ,how='left'
+)
+
+# Calculate ahle due to "other" diseases
+ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.eval(
+    '''
+    ahle_dueto_otherinfectious_mean = mean - ahle_dueto_known_infectious_mean
+    '''
+)
+datainfo(ahle_combo_withattr_diseases)
+
+# =============================================================================
+#### Melt disease-specific columns into rows
+# =============================================================================
+
+#%% *DEV B* ADD DISEASE-SPECIFIC COMPONENTS - MELT FIRST
+
 # =============================================================================
 #### Cause: Infectious
 # =============================================================================
+'''
+AHLE for infectious diseases PPR and Brucellosis has been estimated with the
+compartmental model, including components of mortality, health cost, and
+production loss.
+'''
 # Get impact of PPR and Brucellosis estimated from compartmental model
 # Separately for each region, species, production system, and year
-# Define dictionary of tuples:
+# Define dictionary:
     # Key: variable name from ahle_combo_forattr
     # Value: tuple specifying ('Disease label', 'AHLE component')
 disease_inf_labels = {
@@ -953,6 +1083,15 @@ ahle_combo_withattr_diseases = pd.merge(
     ,on=merge_on
     ,how='left'
 )
+
+# -----------------------------------------------------------------------------
+# Add calcs
+# -----------------------------------------------------------------------------
+# Calculate total due to specific diseases by ahle_component and cause
+ahle_combo_withattr_diseases['specific_disease_total'] = \
+    ahle_combo_withattr_diseases.groupby(attr_byvars + ['ahle_component' ,'cause'])['disease_mean'].transform('sum')
+
+# Get total due to other diseases as difference from total by cause
 
 #%% DISEASE-SPECIFIC PLACEHOLDERS
 
