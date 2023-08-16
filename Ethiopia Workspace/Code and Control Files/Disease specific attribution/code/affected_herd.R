@@ -230,3 +230,10 @@ update_AHLE_scenarios(AHLE_scenario_file= "scenarios/sr_disease_scenarios.xlsx",
                       affected_parameters_object=Past_G_Bruc,
                       col_name = "Past_G_Bruc",
                       new_file_name = "scenarios/sr_disease_scenarios.xlsx")
+
+# 3 - Foot-and-mouth disease ====
+## Cattle CLM ----
+
+## Cattle Pastoral ----
+
+## Cattle Periurban Dairy ----
