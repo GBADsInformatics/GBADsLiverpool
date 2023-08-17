@@ -97,6 +97,11 @@ ETHIOPIA_CODE_FOLDER = CURRENT_FOLDER
 ETHIOPIA_OUTPUT_FOLDER = os.path.join(PARENT_FOLDER ,'Program outputs')
 ETHIOPIA_DATA_FOLDER = os.path.join(PARENT_FOLDER ,'Data')
 
+# Folder managed by Murdoch University with disease-specific parameters and other updates
+MURDOCH_BASE_FOLDER = os.path.join(CURRENT_FOLDER ,'Disease specific attribution')
+MURDOCH_SCENARIO_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'scenarios')
+MURDOCH_OUTPUT_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'output')
+
 # Full path to rscript.exe
 r_executable = 'C:\\Program Files\\R\\R-4.3.1\\bin\\x64\\Rscript.exe'
 
@@ -105,7 +110,7 @@ N_RUNS = '1000'   # String: number of simulation runs for each scenario
 #%% Small ruminants
 
 # Full path to the AHLE function in R
-r_script = os.path.join(PARENT_FOLDER ,'Run AHLE with control table_SMALLRUMINANTS.R')
+r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Run AHLE with control table_SMALLRUMINANTS.R')
 
 # =============================================================================
 #### Base scenarios
@@ -201,15 +206,13 @@ run_cmd([r_executable ,r_script] ,SHOW_MAXLINES=999)
 #%% Cattle
 
 # Full path to the AHLE function in R
-r_script = os.path.join(PARENT_FOLDER ,'Run AHLE with control table_CATTLE.R')
+r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Run AHLE with control table_CATTLE.R')
 
 # =============================================================================
 #### Base scenarios
 # =============================================================================
 '''
-#!!! WARNING: since moving to yearly cattle scenarios, the base ahle CATTLE folder
-is no longer used. Any scenarios stored here will not be read in by
-2_process_simulation_results_standalone.py.
+August 2023: Using updated parameters provided by Murdoch University.
 '''
 # Arguments to R function, as list of strings.
 # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
@@ -221,7 +224,8 @@ r_args = [
     ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE')
 
     # Arg 3: full path to scenario control file
-    ,os.path.join(ETHIOPIA_CODE_FOLDER ,'AHLE scenario parameters CATTLE.xlsx')
+    # ,os.path.join(ETHIOPIA_CODE_FOLDER ,'AHLE scenario parameters CATTLE.xlsx')
+    ,os.path.join(MURDOCH_SCENARIO_FOLDER ,'AHLE scenario parameters CATTLE.xlsx')
 
     # Arg 4: only run the first N scenarios from the control file
     # -1: use all scenarios
@@ -236,8 +240,10 @@ timerstop()
 # =============================================================================
 '''
 Note: any scenarios that exist in this file will overwrite results of previous
-run. As of April 2023, this includes ideal and current scenarios in addition to
+run. As of August 2023, this includes ideal and current scenarios in addition to
 PPR.
+
+August 2023: Using updated parameters provided by Murdoch University.
 '''
 # Arguments to R function, as list of strings.
 # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
@@ -247,10 +253,12 @@ r_args = [
 
     # Arg 2: Folder location for saving output files
     # Note putting this in year 2021 folder although it has only been produced for a single year.
-    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,'2021')
+    # ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,'2021')
+    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE')
 
     # Arg 3: full path to scenario control file
-    ,os.path.join(ETHIOPIA_CODE_FOLDER ,'Bruc_AHLE scenario parameters CATTLE.xlsx')
+    # ,os.path.join(ETHIOPIA_CODE_FOLDER ,'Bruc_AHLE scenario parameters CATTLE.xlsx')
+    ,os.path.join(MURDOCH_SCENARIO_FOLDER ,'cattle_disease_scenarios.xlsx')
 
     # Arg 4: only run the first N scenarios from the control file
     # -1: use all scenarios
@@ -263,6 +271,10 @@ timerstop()
 # =============================================================================
 #### Yearly scenarios
 # =============================================================================
+'''
+#!!! As of August 2023, yearly scenarios are not being updated. Murdoch University
+is providing updated cattle scenarios for the base single-year.
+'''
 list_years = list(range(2017, 2022))
 
 # Initialize list to save return codes
@@ -309,6 +321,10 @@ for YEAR in list_years:
 # =============================================================================
 #### Subnational/regional scenarios
 # =============================================================================
+'''
+#!!! As of August 2023, regional scenarios are not being updated. Murdoch University
+is providing updated cattle scenarios for the national level only.
+'''
 # List names as they appear in regional scenario files
 list_eth_regions = [
     'Afar'
@@ -366,7 +382,7 @@ for REGION in list_eth_regions:
 #%% Poultry
 
 # Full path to the AHLE function in R
-r_script = os.path.join(PARENT_FOLDER ,'Run AHLE with control table _ POULTRY.R')
+r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Run AHLE with control table _ POULTRY.R')
 
 # Arguments to R function, as list of strings.
 # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
