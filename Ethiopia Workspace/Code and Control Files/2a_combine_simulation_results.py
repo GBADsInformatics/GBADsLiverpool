@@ -3,6 +3,15 @@
 This program combines the output files for all scenarios created by the AHLE
 simulation model and adds basic adjustments.
 
+UPDATE August 2023: this program has been updated to work with updated AHLE
+scenario results. Murdoch University has updated the compartmental model code
+for small ruminants (sheep and goats) and the parameters for both small
+ruminants and cattle. The relevant changes for this code are:
+    - The small ruminant results from the updated compartmental model contain
+    all scenarios in a single file instead of separate files.
+    - The updated parameters for cattle are for a single year and for the
+    national level only.
+
 IMPORTANT: before running this, set Python's working directory to the folder
 where this code is stored.
 '''
@@ -127,6 +136,11 @@ ETHIOPIA_CODE_FOLDER = CURRENT_FOLDER
 ETHIOPIA_OUTPUT_FOLDER = os.path.join(PARENT_FOLDER ,'Program outputs')
 ETHIOPIA_DATA_FOLDER = os.path.join(PARENT_FOLDER ,'Data')
 
+# Folder managed by Murdoch University with disease-specific parameters and other updates
+MURDOCH_BASE_FOLDER = os.path.join(CURRENT_FOLDER ,'Disease specific attribution')
+MURDOCH_SCENARIO_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'scenarios')
+MURDOCH_OUTPUT_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'output')
+
 DASH_DATA_FOLDER = os.path.join(GRANDPARENT_FOLDER, 'AHLE Dashboard' ,'Dash App' ,'data')
 
 #%% COMBINE SCENARIO RESULT FILES
@@ -145,8 +159,9 @@ def combine_ahle_scenarios(
         ,label_year             # Numeric: add column 'year' with this value
         ,label_region           # String: add column 'region' with this value
     ):
-    dfcombined = pd.DataFrame()   # Initialize merged data
+    funcname = inspect.currentframe().f_code.co_name
 
+    dfcombined = pd.DataFrame()   # Initialize merged data
     for i ,suffix in enumerate(input_file_suffixes):
         # Read file if it exists
         try:
@@ -155,7 +170,6 @@ def combine_ahle_scenarios(
             # Add column suffixes
             if suffix.upper() == 'ALL_MORTALITY_ZERO':      # Recode for consistency
                 suffix = 'MORTALITY_ZERO'
-
             df = df.add_suffix(f'_{suffix}')
             df = df.rename(columns={f'Item_{suffix}':'Item' ,f'Group_{suffix}':'Group'})
 
@@ -165,8 +179,8 @@ def combine_ahle_scenarios(
             else:
                 dfcombined = pd.merge(left=dfcombined ,right=df, on=['Item' ,'Group'] ,how='outer')
         except FileNotFoundError:
-            print('> File not found: ' ,os.path.join(input_folder ,f'{input_file_prefix}_{suffix}.csv'))
-            print('> Moving to next file.')
+            print(f'<{funcname}> File not found: ' ,os.path.join(input_folder ,f'{input_file_prefix}_{suffix}.csv'))
+            print(f'<{funcname}> Moving to next file.')
 
     # Add label columns
     dfcombined['species'] = label_species
@@ -185,13 +199,196 @@ def combine_ahle_scenarios(
     return dfcombined
 
 # =============================================================================
-#### Small ruminants
+#### *ORIGINAL* Small ruminants
 # =============================================================================
 '''
 These scenarios have only been produced for a single year (2021) and at the
 national level.
+
+Update August 2023: these have been replaced with results from Murdoch's updated
+compartmental model code, which saves all results in a single file.
 '''
-small_rum_suffixes=[
+# small_rum_suffixes=[
+#     'Current'
+
+#     ,'Ideal'
+#     ,'ideal_AF'
+#     ,'ideal_AM'
+#     ,'ideal_JF'
+#     ,'ideal_JM'
+#     ,'ideal_NF'
+#     ,'ideal_NM'
+
+#     # Disease-specific scenarios
+#     ,'PPR'
+#     ,'Bruc'
+
+#     ,'all_mortality_zero'
+#     ,'mortality_zero_AF'
+#     ,'mortality_zero_AM'
+#     ,'mortality_zero_J'
+#     ,'mortality_zero_N'
+
+#     ,'all_mort_25_imp'
+#     ,'mort_25_imp_AF'
+#     ,'mort_25_imp_AM'
+#     ,'mort_25_imp_J'
+#     ,'mort_25_imp_N'
+
+#     ,'all_mort_50_imp'
+#     ,'mort_50_imp_AF'
+#     ,'mort_50_imp_AM'
+#     ,'mort_50_imp_J'
+#     ,'mort_50_imp_N'
+
+#     ,'all_mort_75_imp'
+#     ,'mort_75_imp_AF'
+#     ,'mort_75_imp_AM'
+#     ,'mort_75_imp_J'
+#     ,'mort_75_imp_N'
+
+#     ,'Current_growth_25_imp_All'
+#     ,'Current_growth_25_imp_AF'
+#     ,'Current_growth_25_imp_AM'
+#     ,'Current_growth_25_imp_JF'
+#     ,'Current_growth_25_imp_JM'
+#     ,'Current_growth_25_imp_NF'
+#     ,'Current_growth_25_imp_NM'
+
+#     ,'Current_growth_50_imp_All'
+#     ,'Current_growth_50_imp_AF'
+#     ,'Current_growth_50_imp_AM'
+#     ,'Current_growth_50_imp_JF'
+#     ,'Current_growth_50_imp_JM'
+#     ,'Current_growth_50_imp_NF'
+#     ,'Current_growth_50_imp_NM'
+
+#     ,'Current_growth_75_imp_All'
+#     ,'Current_growth_75_imp_AF'
+#     ,'Current_growth_75_imp_AM'
+#     ,'Current_growth_75_imp_JF'
+#     ,'Current_growth_75_imp_JM'
+#     ,'Current_growth_75_imp_NF'
+#     ,'Current_growth_75_imp_NM'
+
+#     ,'Current_growth_100_imp_All'
+#     ,'Current_growth_100_imp_AF'
+#     ,'Current_growth_100_imp_AM'
+#     ,'Current_growth_100_imp_JF'
+#     ,'Current_growth_100_imp_JM'
+#     ,'Current_growth_100_imp_NF'
+#     ,'Current_growth_100_imp_NM'
+
+#     ,'Current_repro_25_imp'
+#     ,'Current_repro_50_imp'
+#     ,'Current_repro_75_imp'
+#     ,'Current_repro_100_imp'
+# ]
+
+# ahle_sheep_clm = combine_ahle_scenarios(
+#     input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
+#     ,input_file_prefix='ahle_CLM_S'
+#     ,input_file_suffixes=small_rum_suffixes
+#     ,label_species='Sheep'
+#     ,label_prodsys='Crop livestock mixed'
+#     ,label_year=2021
+#     ,label_region='National'
+# )
+# datainfo(ahle_sheep_clm)
+
+# ahle_sheep_past = combine_ahle_scenarios(
+#     input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
+#     ,input_file_prefix='ahle_Past_S'
+#     ,input_file_suffixes=small_rum_suffixes
+#     ,label_species='Sheep'
+#     ,label_prodsys='Pastoral'
+#     ,label_year=2021
+#     ,label_region='National'
+# )
+# datainfo(ahle_sheep_past)
+
+# ahle_goat_clm = combine_ahle_scenarios(
+#     input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
+#     ,input_file_prefix='ahle_CLM_G'
+#     ,input_file_suffixes=small_rum_suffixes
+#     ,label_species='Goat'
+#     ,label_prodsys='Crop livestock mixed'
+#     ,label_year=2021
+#     ,label_region='National'
+# )
+# datainfo(ahle_goat_clm)
+
+# ahle_goat_past = combine_ahle_scenarios(
+#     input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
+#     ,input_file_prefix='ahle_Past_G'
+#     ,input_file_suffixes=small_rum_suffixes
+#     ,label_species='Goat'
+#     ,label_prodsys='Pastoral'
+#     ,label_year=2021
+#     ,label_region='National'
+# )
+# datainfo(ahle_goat_past)
+
+# # Adjust column names to match other species
+# ahle_sheep_clm.columns = ahle_sheep_clm.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
+# ahle_sheep_past.columns = ahle_sheep_past.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
+# ahle_goat_clm.columns = ahle_goat_clm.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
+# ahle_goat_past.columns = ahle_goat_past.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
+
+# =============================================================================
+#### Small ruminants
+# =============================================================================
+'''
+Updated small ruminant results have all scenarios in a single file.
+'''
+# Import
+ahle_sr_imp = pd.read_csv(os.path.join(MURDOCH_OUTPUT_FOLDER ,'ahle_sr.csv'))
+cleancolnames(ahle_sr_imp)
+datainfo(ahle_sr_imp)
+
+# -----------------------------------------------------------------------------
+# Modify for consistency with later data processing
+# -----------------------------------------------------------------------------
+# Pivot scenario labels into columns
+# To match cattle and poultry files
+ahle_sr_p = ahle_sr_imp.pivot(
+	index=['species' ,'system' ,'item' ,'group']
+	,columns=['scenario']
+	,values=['mean' ,'stdev' ,'min' ,'q1' ,'median' ,'q3' ,'max']
+)
+ahle_sr_p = colnames_from_index(ahle_sr_p) 	# If multi-indexed columns were created, flatten index
+ahle_sr_p = ahle_sr_p.reset_index()           # Pivoting will change columns to indexes. Change them back.
+cleancolnames(ahle_sr_p)
+
+# Rename columns
+ahle_sr_p = ahle_sr_p.rename(columns={'system':'production_system'})
+ahle_sr_p['year'] = 2021
+ahle_sr_p['region'] = 'National'
+
+# Recode species and production systems
+# Note items and groups already match
+recode_sr_species = {
+    "G":"Goat"
+    ,"S":"Sheep"
+}
+ahle_sr_p['species'] = ahle_sr_p['species'].replace(recode_sr_species)
+
+recode_sr_prodsys = {
+    "CLM":"Crop livestock mixed"
+    ,"Past":"Pastoral"
+}
+ahle_sr_p['production_system'] = ahle_sr_p['production_system'].replace(recode_sr_prodsys)
+
+datainfo(ahle_sr_p)
+
+# =============================================================================
+#### Cattle base
+# =============================================================================
+'''
+August 2023: These are based on the most recent cattle parameters from Murdoch
+University.
+'''
+cattle_suffixes = [
     'Current'
 
     ,'Ideal'
@@ -201,137 +398,67 @@ small_rum_suffixes=[
     ,'ideal_JM'
     ,'ideal_NF'
     ,'ideal_NM'
+    ,'ideal_O'
 
-    # Disease-specific scenarios
-    ,'PPR'
-    ,'Bruc'
-
-    ,'all_mortality_zero'
+    ,'mortality_zero'
     ,'mortality_zero_AF'
     ,'mortality_zero_AM'
     ,'mortality_zero_J'
     ,'mortality_zero_N'
+    ,'mortality_zero_O'
 
-    ,'all_mort_25_imp'
-    ,'mort_25_imp_AF'
-    ,'mort_25_imp_AM'
-    ,'mort_25_imp_J'
-    ,'mort_25_imp_N'
-
-    ,'all_mort_50_imp'
-    ,'mort_50_imp_AF'
-    ,'mort_50_imp_AM'
-    ,'mort_50_imp_J'
-    ,'mort_50_imp_N'
-
-    ,'all_mort_75_imp'
-    ,'mort_75_imp_AF'
-    ,'mort_75_imp_AM'
-    ,'mort_75_imp_J'
-    ,'mort_75_imp_N'
-
-    ,'Current_growth_25_imp_All'
-    ,'Current_growth_25_imp_AF'
-    ,'Current_growth_25_imp_AM'
-    ,'Current_growth_25_imp_JF'
-    ,'Current_growth_25_imp_JM'
-    ,'Current_growth_25_imp_NF'
-    ,'Current_growth_25_imp_NM'
-
-    ,'Current_growth_50_imp_All'
-    ,'Current_growth_50_imp_AF'
-    ,'Current_growth_50_imp_AM'
-    ,'Current_growth_50_imp_JF'
-    ,'Current_growth_50_imp_JM'
-    ,'Current_growth_50_imp_NF'
-    ,'Current_growth_50_imp_NM'
-
-    ,'Current_growth_75_imp_All'
-    ,'Current_growth_75_imp_AF'
-    ,'Current_growth_75_imp_AM'
-    ,'Current_growth_75_imp_JF'
-    ,'Current_growth_75_imp_JM'
-    ,'Current_growth_75_imp_NF'
-    ,'Current_growth_75_imp_NM'
-
-    ,'Current_growth_100_imp_All'
-    ,'Current_growth_100_imp_AF'
-    ,'Current_growth_100_imp_AM'
-    ,'Current_growth_100_imp_JF'
-    ,'Current_growth_100_imp_JM'
-    ,'Current_growth_100_imp_NF'
-    ,'Current_growth_100_imp_NM'
-
-    ,'Current_repro_25_imp'
-    ,'Current_repro_50_imp'
-    ,'Current_repro_75_imp'
-    ,'Current_repro_100_imp'
+    # Disease-specific scenarios
+    ,'Bruc'
 ]
 
-ahle_sheep_clm = combine_ahle_scenarios(
-    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
-    ,input_file_prefix='ahle_CLM_S'
-    ,input_file_suffixes=small_rum_suffixes
-    ,label_species='Sheep'
+# Import CLM
+ahle_cattle_clm = combine_ahle_scenarios(
+    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE')
+    ,input_file_prefix='ahle_CLM_C'
+    ,input_file_suffixes=cattle_suffixes
+    ,label_species='Cattle'
     ,label_prodsys='Crop livestock mixed'
     ,label_year=2021
     ,label_region='National'
-)
-datainfo(ahle_sheep_clm)
+    )
+datainfo(ahle_cattle_clm ,120)
 
-ahle_sheep_past = combine_ahle_scenarios(
-    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
-    ,input_file_prefix='ahle_Past_S'
-    ,input_file_suffixes=small_rum_suffixes
-    ,label_species='Sheep'
+# Import pastoral
+ahle_cattle_past = combine_ahle_scenarios(
+    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE')
+    ,input_file_prefix='ahle_Past_C'
+    ,input_file_suffixes=cattle_suffixes
+    ,label_species='Cattle'
     ,label_prodsys='Pastoral'
     ,label_year=2021
     ,label_region='National'
-)
-datainfo(ahle_sheep_past)
+    )
+datainfo(ahle_cattle_past ,120)
 
-ahle_goat_clm = combine_ahle_scenarios(
-    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
-    ,input_file_prefix='ahle_CLM_G'
-    ,input_file_suffixes=small_rum_suffixes
-    ,label_species='Goat'
-    ,label_prodsys='Crop livestock mixed'
+# Import periurban dairy
+ahle_cattle_peri = combine_ahle_scenarios(
+    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE')
+    ,input_file_prefix='ahle_PUD_C'
+    ,input_file_suffixes=cattle_suffixes
+    ,label_species='Cattle'
+    ,label_prodsys='Periurban dairy'
     ,label_year=2021
     ,label_region='National'
-)
-datainfo(ahle_goat_clm)
+    )
+datainfo(ahle_cattle_peri ,120)
 
-ahle_goat_past = combine_ahle_scenarios(
-    input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle SMALL RUMINANTS')
-    ,input_file_prefix='ahle_Past_G'
-    ,input_file_suffixes=small_rum_suffixes
-    ,label_species='Goat'
-    ,label_prodsys='Pastoral'
-    ,label_year=2021
-    ,label_region='National'
-)
-datainfo(ahle_goat_past)
-
-# Adjust column names to match other species
-ahle_sheep_clm.columns = ahle_sheep_clm.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
-ahle_sheep_past.columns = ahle_sheep_past.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
-ahle_goat_clm.columns = ahle_goat_clm.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
-ahle_goat_past.columns = ahle_goat_past.columns.str.replace('_all_mortality_zero' ,'_mortality_zero')
-
-# =============================================================================
-#### Cattle base
-# =============================================================================
-'''
-These are not being used as they have been replaced by year-specific scenarios.
-'''
 # =============================================================================
 #### Cattle Yearly
 # =============================================================================
 '''
+August 2023: Yearly scenarios have not been updated, so may be inconsistent with
+the single-year results. I am excluding these for now, and will rely on the yearly
+placeholder values calculated later in this program.
+
 These scenarios have been run for 5 years (2017-2021), so this includes a loop
 to import each year and append to a master cattle dataframe.
 '''
-cattle_suffixes = [
+cattle_suffixes_yearlyandregional = [
     'current'
 
     ,'ideal'
@@ -355,63 +482,63 @@ cattle_suffixes = [
     ,'Bruc'
 ]
 
-ahle_cattle_yearly_aslist = []         # Initialize
-for YEAR in range(2017 ,2022):
-    # Import CLM
-    ahle_cattle_clm = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
-        ,input_file_prefix='ahle_cattle_trial_CLM'
-        ,input_file_suffixes=cattle_suffixes
-        ,label_species='Cattle'
-        ,label_prodsys='Crop livestock mixed'
-        ,label_year=YEAR
-        ,label_region='National'
-        )
-    datainfo(ahle_cattle_clm ,120)
+# ahle_cattle_yearly_aslist = []         # Initialize
+# for YEAR in range(2017 ,2022):
+#     # Import CLM
+#     ahle_cattle_clm = combine_ahle_scenarios(
+#         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
+#         ,input_file_prefix='ahle_cattle_trial_CLM'
+#         ,input_file_suffixes=cattle_suffixes_yearlyandregional
+#         ,label_species='Cattle'
+#         ,label_prodsys='Crop livestock mixed'
+#         ,label_year=YEAR
+#         ,label_region='National'
+#         )
+#     datainfo(ahle_cattle_clm ,120)
 
-	# Turn into list and append to master
-    ahle_cattle_clm_aslist = ahle_cattle_clm.to_dict(orient='records')
-    ahle_cattle_yearly_aslist.extend(ahle_cattle_clm_aslist)
-    del ahle_cattle_clm_aslist
+# 	# Turn into list and append to master
+#     ahle_cattle_clm_aslist = ahle_cattle_clm.to_dict(orient='records')
+#     ahle_cattle_yearly_aslist.extend(ahle_cattle_clm_aslist)
+#     del ahle_cattle_clm_aslist
 
-    # Import pastoral
-    ahle_cattle_past = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
-        ,input_file_prefix='ahle_cattle_trial_past'
-        ,input_file_suffixes=cattle_suffixes
-        ,label_species='Cattle'
-        ,label_prodsys='Pastoral'
-        ,label_year=YEAR
-        ,label_region='National'
-        )
-    datainfo(ahle_cattle_past ,120)
+#     # Import pastoral
+#     ahle_cattle_past = combine_ahle_scenarios(
+#         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
+#         ,input_file_prefix='ahle_cattle_trial_past'
+#         ,input_file_suffixes=cattle_suffixes_yearlyandregional
+#         ,label_species='Cattle'
+#         ,label_prodsys='Pastoral'
+#         ,label_year=YEAR
+#         ,label_region='National'
+#         )
+#     datainfo(ahle_cattle_past ,120)
 
-	# Turn into list and append to master
-    ahle_cattle_past_aslist = ahle_cattle_past.to_dict(orient='records')
-    ahle_cattle_yearly_aslist.extend(ahle_cattle_past_aslist)
-    del ahle_cattle_past_aslist
+# 	# Turn into list and append to master
+#     ahle_cattle_past_aslist = ahle_cattle_past.to_dict(orient='records')
+#     ahle_cattle_yearly_aslist.extend(ahle_cattle_past_aslist)
+#     del ahle_cattle_past_aslist
 
-    # Import periurban dairy
-    ahle_cattle_peri = combine_ahle_scenarios(
-        input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
-        ,input_file_prefix='ahle_cattle_trial_periurban_dairy'
-        ,input_file_suffixes=cattle_suffixes
-        ,label_species='Cattle'
-        ,label_prodsys='Periurban dairy'
-        ,label_year=YEAR
-        ,label_region='National'
-        )
-    datainfo(ahle_cattle_peri ,120)
+#     # Import periurban dairy
+#     ahle_cattle_peri = combine_ahle_scenarios(
+#         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f"{YEAR}")
+#         ,input_file_prefix='ahle_cattle_trial_periurban_dairy'
+#         ,input_file_suffixes=cattle_suffixes_yearlyandregional
+#         ,label_species='Cattle'
+#         ,label_prodsys='Periurban dairy'
+#         ,label_year=YEAR
+#         ,label_region='National'
+#         )
+#     datainfo(ahle_cattle_peri ,120)
 
-	# Turn into list and append to master
-    ahle_cattle_peri_aslist = ahle_cattle_peri.to_dict(orient='records')
-    ahle_cattle_yearly_aslist.extend(ahle_cattle_peri_aslist)
-    del ahle_cattle_peri_aslist
+# 	# Turn into list and append to master
+#     ahle_cattle_peri_aslist = ahle_cattle_peri.to_dict(orient='records')
+#     ahle_cattle_yearly_aslist.extend(ahle_cattle_peri_aslist)
+#     del ahle_cattle_peri_aslist
 
-# Convert master list into data frame
-ahle_cattle_yearly = pd.DataFrame.from_dict(ahle_cattle_yearly_aslist ,orient='columns')
-del ahle_cattle_yearly_aslist
-datainfo(ahle_cattle_yearly ,120)
+# # Convert master list into data frame
+# ahle_cattle_yearly = pd.DataFrame.from_dict(ahle_cattle_yearly_aslist ,orient='columns')
+# del ahle_cattle_yearly_aslist
+# datainfo(ahle_cattle_yearly ,120)
 
 # =============================================================================
 #### Cattle Regional
@@ -441,7 +568,7 @@ for REGION in list_eth_regions:
     ahle_cattle_regional_clm = combine_ahle_scenarios(
         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Subnational results' ,f'{REGION}')
         ,input_file_prefix='ahle_cattle_trial_CLM'
-        ,input_file_suffixes=cattle_suffixes
+        ,input_file_suffixes=cattle_suffixes_yearlyandregional
         ,label_species='Cattle'
         ,label_prodsys='Crop livestock mixed'
         ,label_year=2021
@@ -458,7 +585,7 @@ for REGION in list_eth_regions:
     ahle_cattle_regional_past = combine_ahle_scenarios(
         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Subnational results' ,f'{REGION}')
         ,input_file_prefix='ahle_cattle_trial_past'
-        ,input_file_suffixes=cattle_suffixes
+        ,input_file_suffixes=cattle_suffixes_yearlyandregional
         ,label_species='Cattle'
         ,label_prodsys='Pastoral'
         ,label_year=2021
@@ -475,7 +602,7 @@ for REGION in list_eth_regions:
     ahle_cattle_regional_peri = combine_ahle_scenarios(
         input_folder=os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Subnational results' ,f'{REGION}')
         ,input_file_prefix='ahle_cattle_trial_periurban_dairy'
-        ,input_file_suffixes=cattle_suffixes
+        ,input_file_suffixes=cattle_suffixes_yearlyandregional
         ,label_species='Cattle'
         ,label_prodsys='Periurban dairy'
         ,label_year=2021
@@ -568,12 +695,16 @@ datainfo(ahle_poultry_villageindig)
 #### Stack all
 # =============================================================================
 concat_list = [
-    ahle_sheep_clm
-    ,ahle_sheep_past
-    ,ahle_goat_clm
-    ,ahle_goat_past
+    # ahle_sheep_clm
+    # ,ahle_sheep_past
+    # ,ahle_goat_clm
+    # ,ahle_goat_past
+    ahle_sr_p
 
-    ,ahle_cattle_yearly
+    ,ahle_cattle_clm
+    ,ahle_cattle_past
+    ,ahle_cattle_peri
+    # ,ahle_cattle_yearly
     ,ahle_cattle_regional
 
     ,ahle_poultry_smallholder
@@ -606,14 +737,14 @@ ahle_combo.loc[ahle_combo['group'].str.upper() == 'OXEN' ,'age_group'] = 'Oxen'
 ahle_combo.loc[ahle_combo['group'].str.upper() == 'OXEN' ,'sex'] = 'Male'
 
 # Reorder columns
-cols_first = ['species' ,'production_system' ,'item' ,'group' ,'age_group' ,'sex']
+cols_first = ['species' ,'region' ,'production_system' ,'item' ,'group' ,'age_group' ,'sex' ,'year']
 cols_other = [i for i in list(ahle_combo) if i not in cols_first]
 ahle_combo = ahle_combo.reindex(columns=cols_first + cols_other)
 
 # =============================================================================
 #### Export
 # =============================================================================
-datainfo(ahle_combo)
+datainfo(ahle_combo ,200)
 
 ahle_combo.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_stacked.csv') ,index=False)
 
@@ -783,11 +914,9 @@ for COL in float_cols:
     )
 
 # Reorder columns
-cols_first = ['species' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex']
+cols_first = ['species' ,'region' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year']
 cols_other = [i for i in list(ahle_combo_adj) if i not in cols_first]
 ahle_combo_adj = ahle_combo_adj.reindex(columns=cols_first + cols_other)
-
-datainfo(ahle_combo_adj)
 
 # =============================================================================
 #### Add yearly placeholder rows
@@ -832,13 +961,13 @@ del ahle_combo_adj_plhdyear
 
 # Remove duplicate values, keeping the first (the first is the actual value for that year if it exists)
 ahle_combo_adj = ahle_combo_adj.drop_duplicates(
-    subset=['region' ,'species' ,'production_system' ,'item' ,'group' ,'age_group' ,'sex' ,'year']
+    subset=['species' ,'region' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year']
     ,keep='first'
-)
+).reset_index(drop=True)
 
 # =============================================================================
 #### Export
 # =============================================================================
-datainfo(ahle_combo_adj)
+datainfo(ahle_combo_adj ,200)
 
 ahle_combo_adj.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_stacked_adj.csv') ,index=False)

@@ -196,7 +196,10 @@ returncode_smallrum_bruc = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLI
 timerstop()
 
 #%% Small Ruminants using Murdoch's updated function
-
+'''
+August 2023: this is not needed because Murdoch is running the model with their
+updated function and providing the outputs in Github.
+'''
 # Full path to the AHLE function in R
 r_script = os.path.join(CURRENT_FOLDER ,'ahle_sr.R')
 run_cmd([r_executable ,r_script] ,SHOW_MAXLINES=999)
