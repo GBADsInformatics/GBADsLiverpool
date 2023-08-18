@@ -384,14 +384,14 @@ datainfo(ahle_sr_p)
 # =============================================================================
 #### Cattle base
 # =============================================================================
-'''
-August 2023: These are based on the most recent cattle parameters from Murdoch
-University.
-'''
 cattle_suffixes = [
+    # August 2023: these are based on the most recent cattle parameters from Murdoch University
     'Current'
-
     ,'Ideal'
+    ,'Bruc'
+    ,'FMD'
+
+    # August 2023: these are based on legacy scenario parameters
     ,'ideal_AF'
     ,'ideal_AM'
     ,'ideal_JF'
@@ -406,9 +406,6 @@ cattle_suffixes = [
     ,'mortality_zero_J'
     ,'mortality_zero_N'
     ,'mortality_zero_O'
-
-    # Disease-specific scenarios
-    ,'Bruc'
 ]
 
 # Import CLM
@@ -455,8 +452,7 @@ August 2023: Yearly scenarios have not been updated, so may be inconsistent with
 the single-year results. I am excluding these for now, and will rely on the yearly
 placeholder values calculated later in this program.
 
-These scenarios have been run for 5 years (2017-2021), so this includes a loop
-to import each year and append to a master cattle dataframe.
+This includes a loop to import each year and append to a master cattle dataframe.
 '''
 cattle_suffixes_yearlyandregional = [
     'current'
@@ -544,8 +540,11 @@ cattle_suffixes_yearlyandregional = [
 #### Cattle Regional
 # =============================================================================
 '''
+August 2023: Regional scenarios have not been updated, but I am keeping these
+in the data for the regional map in Dash.
+
 These scenarios have been run for regions within Ethiopia, so this uses a loop
-to import each region and append to a master regional dataframe.
+to import each region and append to a master dataframe.
 
 These have not been run for different years. They are being assigned year 2021.
 '''
@@ -695,18 +694,27 @@ datainfo(ahle_poultry_villageindig)
 #### Stack all
 # =============================================================================
 concat_list = [
+    # *ORIGINAL Small ruminants*
     # ahle_sheep_clm
     # ,ahle_sheep_past
     # ,ahle_goat_clm
     # ,ahle_goat_past
+
+    # Small ruminants
     ahle_sr_p
 
+    # Cattle base
     ,ahle_cattle_clm
     ,ahle_cattle_past
     ,ahle_cattle_peri
+
+    # Cattle Yearly
     # ,ahle_cattle_yearly
+
+    # Cattle Regional
     ,ahle_cattle_regional
 
+    # Poultry
     ,ahle_poultry_smallholder
     ,ahle_poultry_villagehybrid
     ,ahle_poultry_villageindig
@@ -881,6 +889,18 @@ item_type_code = {
     ,'Cml Dry Matter':'pq'
     ,'Eggs Sold':'pq'
     ,'Eggs Consumed':'pq'
+
+    ,'Births':'pq'
+    ,'Culls':'pq'
+    ,'Deaths':'pq'
+    ,'Difference':'pq'
+    ,'Growth in':'pq'
+    ,'Growth out':'pq'
+    ,'Inflow':'pq'
+    ,'Offtakes':'pq'
+    ,'Outflow':'pq'
+    ,'Population':'pq'
+    ,'Sum':'pq'
 
     ,'Value of Offtake':'mv'
     ,'Value of Herd Increase':'mv'

@@ -173,8 +173,8 @@ datainfo(ahle_combo_adj)
 Creating aggregate groups for filtering in the dashboard.
 
 Note: many aggregate groups are already created in the compartmental model,
-but not all. For simplicity, and to ensure the totals are correct, I'm
-recalculating all aggregate groups.
+but not all. For simplicity, and to ensure consistency, I'm recalculating
+all aggregate groups.
 '''
 mean_cols = [i for i in list(ahle_combo_adj) if 'mean' in i]
 sd_cols = [i for i in list(ahle_combo_adj) if 'stdev' in i]
@@ -448,18 +448,9 @@ datainfo(ahle_combo_withagg)
 # Subset and rename columns
 # -----------------------------------------------------------------------------
 # In this file, keeping only scenarios that apply to all groups
-keepcols = [
-    'region'
-    ,'species'
-    ,'production_system'
-    ,'item'
-    ,'group'
-    ,'age_group'
-    ,'sex'
-    ,'year'
-
+keepcols = all_byvars + [
     # In Birr
-    ,'mean_current'
+    'mean_current'
     ,'stdev_current'
     ,'mean_ideal'
     ,'stdev_ideal'
@@ -468,33 +459,35 @@ keepcols = [
     ,'stdev_ppr'
     ,'mean_bruc'
     ,'stdev_bruc'
+    ,'mean_fmd'
+    ,'stdev_fmd'
 
-    ,'mean_all_mort_25_imp'
-    ,'stdev_all_mort_25_imp'
-    ,'mean_all_mort_50_imp'
-    ,'stdev_all_mort_50_imp'
-    ,'mean_all_mort_75_imp'
-    ,'stdev_all_mort_75_imp'
-    ,'mean_mortality_zero'
-    ,'stdev_mortality_zero'
+    # ,'mean_all_mort_25_imp'
+    # ,'stdev_all_mort_25_imp'
+    # ,'mean_all_mort_50_imp'
+    # ,'stdev_all_mort_50_imp'
+    # ,'mean_all_mort_75_imp'
+    # ,'stdev_all_mort_75_imp'
+    # ,'mean_mortality_zero'
+    # ,'stdev_mortality_zero'
 
-    ,'mean_current_repro_25_imp'
-    ,'stdev_current_repro_25_imp'
-    ,'stdev_current_repro_50_imp'
-    ,'mean_current_repro_50_imp'
-    ,'mean_current_repro_75_imp'
-    ,'stdev_current_repro_75_imp'
-    ,'mean_current_repro_100_imp'
-    ,'stdev_current_repro_100_imp'
+    # ,'mean_current_repro_25_imp'
+    # ,'stdev_current_repro_25_imp'
+    # ,'stdev_current_repro_50_imp'
+    # ,'mean_current_repro_50_imp'
+    # ,'mean_current_repro_75_imp'
+    # ,'stdev_current_repro_75_imp'
+    # ,'mean_current_repro_100_imp'
+    # ,'stdev_current_repro_100_imp'
 
-    ,'mean_current_growth_25_imp_all'
-    ,'stdev_current_growth_25_imp_all'
-    ,'mean_current_growth_50_imp_all'
-    ,'stdev_current_growth_50_imp_all'
-    ,'mean_current_growth_75_imp_all'
-    ,'stdev_current_growth_75_imp_all'
-    ,'mean_current_growth_100_imp_all'
-    ,'stdev_current_growth_100_imp_all'
+    # ,'mean_current_growth_25_imp_all'
+    # ,'stdev_current_growth_25_imp_all'
+    # ,'mean_current_growth_50_imp_all'
+    # ,'stdev_current_growth_50_imp_all'
+    # ,'mean_current_growth_75_imp_all'
+    # ,'stdev_current_growth_75_imp_all'
+    # ,'mean_current_growth_100_imp_all'
+    # ,'stdev_current_growth_100_imp_all'
 
     # In USD
     ,'exchg_rate_lcuperusdol'
@@ -508,33 +501,35 @@ keepcols = [
     ,'stdev_ppr_usd'
     ,'mean_bruc_usd'
     ,'stdev_bruc_usd'
+    ,'mean_fmd_usd'
+    ,'stdev_fmd_usd'
 
-    ,'mean_all_mort_25_imp_usd'
-    ,'stdev_all_mort_25_imp_usd'
-    ,'mean_all_mort_50_imp_usd'
-    ,'stdev_all_mort_50_imp_usd'
-    ,'mean_all_mort_75_imp_usd'
-    ,'stdev_all_mort_75_imp_usd'
-    ,'mean_mortality_zero_usd'
-    ,'stdev_mortality_zero_usd'
+    # ,'mean_all_mort_25_imp_usd'
+    # ,'stdev_all_mort_25_imp_usd'
+    # ,'mean_all_mort_50_imp_usd'
+    # ,'stdev_all_mort_50_imp_usd'
+    # ,'mean_all_mort_75_imp_usd'
+    # ,'stdev_all_mort_75_imp_usd'
+    # ,'mean_mortality_zero_usd'
+    # ,'stdev_mortality_zero_usd'
 
-    ,'mean_current_repro_25_imp_usd'
-    ,'stdev_current_repro_25_imp_usd'
-    ,'mean_current_repro_50_imp_usd'
-    ,'stdev_current_repro_50_imp_usd'
-    ,'mean_current_repro_75_imp_usd'
-    ,'stdev_current_repro_75_imp_usd'
-    ,'mean_current_repro_100_imp_usd'
-    ,'stdev_current_repro_100_imp_usd'
+    # ,'mean_current_repro_25_imp_usd'
+    # ,'stdev_current_repro_25_imp_usd'
+    # ,'mean_current_repro_50_imp_usd'
+    # ,'stdev_current_repro_50_imp_usd'
+    # ,'mean_current_repro_75_imp_usd'
+    # ,'stdev_current_repro_75_imp_usd'
+    # ,'mean_current_repro_100_imp_usd'
+    # ,'stdev_current_repro_100_imp_usd'
 
-    ,'mean_current_growth_25_imp_all_usd'
-    ,'stdev_current_growth_25_imp_all_usd'
-    ,'mean_current_growth_50_imp_all_usd'
-    ,'stdev_current_growth_50_imp_all_usd'
-    ,'mean_current_growth_75_imp_all_usd'
-    ,'stdev_current_growth_75_imp_all_usd'
-    ,'mean_current_growth_100_imp_all_usd'
-    ,'stdev_current_growth_100_imp_all_usd'
+    # ,'mean_current_growth_25_imp_all_usd'
+    # ,'stdev_current_growth_25_imp_all_usd'
+    # ,'mean_current_growth_50_imp_all_usd'
+    # ,'stdev_current_growth_50_imp_all_usd'
+    # ,'mean_current_growth_75_imp_all_usd'
+    # ,'stdev_current_growth_75_imp_all_usd'
+    # ,'mean_current_growth_100_imp_all_usd'
+    # ,'stdev_current_growth_100_imp_all_usd'
 ]
 
 ahle_combo_withagg_smry = ahle_combo_withagg[keepcols].copy()
@@ -561,13 +556,18 @@ sd_cols_agg = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
 keep_items = [
     'gross margin'
     ,'health cost'
-    ,'value of total mortality'
+    # ,'value of total mortality'   # August 2023: this item does not exist for latest small ruminant and cattle results
+    ,'deaths'
+    ,'value of offtake'
+    ,'offtakes'
+    ,'value of herd increase'
+    ,'cml pop growth'
     ]
 keep_items_upper = [i.upper() for i in keep_items]
 _items_for_ahle = (ahle_combo_withagg['item'].str.upper().isin(keep_items_upper))
 
 ahle_combo_withagg_p = ahle_combo_withagg.loc[(_items_for_ahle)].pivot(
-    index=['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year' ,'exchg_rate_lcuperusdol']
+    index=['species' ,'region' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year' ,'exchg_rate_lcuperusdol']
     ,columns='item'
     ,values=mean_cols_agg + sd_cols_agg
 ).reset_index()
@@ -577,8 +577,8 @@ cleancolnames(ahle_combo_withagg_p)
 # Remove underscores added when collapsing column index
 ahle_combo_withagg_p = ahle_combo_withagg_p.rename(
     columns={
-        'region_':'region'
-        ,'species_':'species'
+        'species_':'species'
+        ,'region_':'region'
         ,'production_system_':'production_system'
         ,'group_':'group'
         ,'age_group_':'age_group'
@@ -594,11 +594,25 @@ datainfo(ahle_combo_withagg_p)
 # =============================================================================
 '''
 Approach:
-    - Total AHLE is difference in gross margin between ideal and current scenario
-    - AHLE due to mortality is difference in gross margin between zero mortality and current scenario
+    - Total AHLE is difference in gross margin between ideal scenario and current scenario.
+    - AHLE due to mortality is difference in gross margin between zero mortality scenario and
+        current scenario.
+        Update August 2023: the zero mortality scenario is no longer being run for Small
+        Ruminants or Cattle. I am going to take the same approach as I did for disease-specific
+        ahle due to mortality, estimating it as (number of deaths) * (value per head).
+
+        Number of deaths is simply Deaths a.k.a. Total Mortality
+        Value per head can be estimated 3 ways:
+            (Value of Herd Increase) / (Cml Pop Growth)
+            (Value of Offtake) / (Offtakes a.k.a. Num Offtake)
+            (Value of Herd Increase plus Offtake) / (Total Number Increase)
+            These 3 methods should give the same estimate.
+
     - AHLE due to health cost is current health cost (ideal health cost is zero)
-    - AHLE due to production loss is the remainder needed to make total AHLE after accounting for mortality and health cost
-        Note production loss is hardest to measure because it is the lost potential production among the animals that survived
+    - AHLE due to production loss is the remainder needed to make total AHLE after accounting
+        for mortality and health cost.
+        Note production loss is hardest to measure because it is the lost potential production
+        among the animals that survived.
 
         It's tempting to take the difference in "total production value" between the current
         and ideal scenario as the production loss. However, this includes lost value due to
@@ -616,21 +630,36 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     # Note health cost is negative, but the AHLE due to health cost is expressed as a positive.
     '''
     ahle_total_mean = mean_ideal_gross_margin - mean_current_gross_margin
-    ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
+    '''
+    # ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
+    '''
+    mean_current_valueperhead = mean_current_value_of_offtake / mean_current_offtakes
+    ahle_dueto_mortality_mean = mean_current_deaths * mean_current_valueperhead
     ahle_dueto_healthcost_mean = mean_current_health_cost * -1
     ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
     '''
     # Disease-specific
+    # ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
+    # ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
+    # ahle_dueto_fmd_mortality_mean = mean_fmd_value_of_total_mortality * -1
     '''
     ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
-    ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
+    mean_ppr_valueperhead = mean_ppr_value_of_offtake / mean_ppr_offtakes
+    ahle_dueto_ppr_mortality_mean = mean_ppr_deaths * mean_ppr_valueperhead
     ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost * -1
     ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
 
     ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
-    ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
+    mean_bruc_valueperhead = mean_bruc_value_of_offtake / mean_bruc_offtakes
+    ahle_dueto_bruc_mortality_mean = mean_bruc_deaths * mean_bruc_valueperhead
     ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost * -1
     ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
+
+    ahle_dueto_fmd_total_mean = mean_ideal_gross_margin - mean_fmd_gross_margin
+    mean_fmd_valueperhead = mean_fmd_value_of_offtake / mean_fmd_offtakes
+    ahle_dueto_fmd_mortality_mean = mean_fmd_deaths * mean_fmd_valueperhead
+    ahle_dueto_fmd_healthcost_mean = mean_fmd_health_cost * -1
+    ahle_dueto_fmd_productionloss_mean = ahle_dueto_fmd_total_mean - ahle_dueto_fmd_mortality_mean - ahle_dueto_fmd_healthcost_mean
     '''
     # AHLE due to Other Disease will depend on which diseases were estimated.
     # Don't calculate this here. Handle it when needed (attribution).
@@ -755,6 +784,16 @@ ahle_combo_withahle['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_dueto_bruc_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev']**2
     )
 
+# FMD
+ahle_combo_withahle['ahle_dueto_fmd_total_stdev'] = np.sqrt(
+    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_fmd_gross_margin']**2
+    )
+ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev'] = ahle_combo_withahle['stdev_fmd_value_of_total_mortality']
+ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev'] = ahle_combo_withahle['stdev_fmd_health_cost']
+ahle_combo_withahle['ahle_dueto_fmd_productionloss_stdev'] = np.sqrt(
+    ahle_combo_withahle['ahle_dueto_fmd_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev']**2
+    )
+
 # -----------------------------------------------------------------------------
 # Set disease-specific AHLE to zero where it does not apply
 # -----------------------------------------------------------------------------
@@ -771,6 +810,13 @@ _bruc_applies = (ahle_combo_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT
 for COL in ahle_dueto_bruc_cols:
     ahle_combo_withahle.loc[~ _bruc_applies ,COL] = \
         ahle_combo_withahle.loc[~ _bruc_applies ,COL].fillna(0)
+
+# FMD only impacts cattle
+ahle_dueto_fmd_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_fmd' in i]
+_fmd_applies = (ahle_combo_withahle['species'].str.upper().isin(['CATTLE']))
+for COL in ahle_dueto_fmd_cols:
+    ahle_combo_withahle.loc[~ _fmd_applies ,COL] = \
+        ahle_combo_withahle.loc[~ _fmd_applies ,COL].fillna(0)
 
 # =============================================================================
 #### Add currency conversion
@@ -834,6 +880,7 @@ check_ahle_combo_withahle.eval(
     '''
     ahle_dueto_ppr_vs_total = ahle_dueto_ppr_total_mean / ahle_total_mean
     ahle_dueto_bruc_vs_total = ahle_dueto_bruc_total_mean / ahle_total_mean
+    ahle_dueto_fmd_vs_total = ahle_dueto_fmd_total_mean / ahle_total_mean
     '''
     ,inplace=True
 )
@@ -842,3 +889,6 @@ print(check_ahle_combo_withahle.query("ahle_dueto_ppr_total_mean.notnull()")[['s
 
 print('\n> Checking the AHLE for Brucellosis against the overall')
 print(check_ahle_combo_withahle.query("ahle_dueto_bruc_total_mean.notnull()")[['species' ,'production_system' ,'year' ,'ahle_dueto_bruc_vs_total']])
+
+print('\n> Checking the AHLE for FMD against the overall')
+print(check_ahle_combo_withahle.query("ahle_dueto_fmd_total_mean.notnull()")[['species' ,'production_system' ,'year' ,'ahle_dueto_fmd_vs_total']])

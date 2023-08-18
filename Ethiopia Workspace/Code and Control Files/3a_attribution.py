@@ -879,6 +879,14 @@ diseases_infectious = {
         ,'ahle_dueto_bruc_productionloss_mean':'Production loss'
         ,'ahle_dueto_bruc_productionloss_stdev':'Production loss'
     }
+    ,'FMD':{
+        'ahle_dueto_fmd_mortality_mean':'Mortality'
+        ,'ahle_dueto_fmd_mortality_stdev':'Mortality'
+        ,'ahle_dueto_fmd_healthcost_mean':'Health cost'
+        ,'ahle_dueto_fmd_healthcost_stdev':'Health cost'
+        ,'ahle_dueto_fmd_productionloss_mean':'Production loss'
+        ,'ahle_dueto_fmd_productionloss_stdev':'Production loss'
+    }
 }
 
 # For each disease, melt columns of mortality, health cost, and production loss
@@ -927,10 +935,10 @@ cleancolnames(disease_inf_ahle)
 
 # Calculate total contribution of known diseases
 disease_inf_ahle['ahle_dueto_known_infectious_mean'] = \
-    disease_inf_ahle['ahle_dueto_ppr_mean'] + disease_inf_ahle['ahle_dueto_brucellosis_mean']
+    disease_inf_ahle['ahle_dueto_ppr_mean'] + disease_inf_ahle['ahle_dueto_brucellosis_mean'] + disease_inf_ahle['ahle_dueto_fmd_mean']
 
 disease_inf_ahle['ahle_dueto_known_infectious_stdev'] = \
-    np.sqrt(disease_inf_ahle['ahle_dueto_ppr_stdev']**2 + disease_inf_ahle['ahle_dueto_brucellosis_stdev']**2)
+    np.sqrt(disease_inf_ahle['ahle_dueto_ppr_stdev']**2 + disease_inf_ahle['ahle_dueto_brucellosis_stdev']**2 + disease_inf_ahle['ahle_dueto_fmd_stdev']**2)
 
 datainfo(disease_inf_ahle)
 
@@ -1014,6 +1022,13 @@ disease_inf_labels = {
     ,'ahle_dueto_bruc_healthcost_stdev':('Brucellosis' ,'Health cost')
     ,'ahle_dueto_bruc_productionloss_mean':('Brucellosis' ,'Production loss')
     ,'ahle_dueto_bruc_productionloss_stdev':('Brucellosis' ,'Production loss')
+
+    ,'ahle_dueto_fmd_mortality_mean':('FMD' ,'Mortality')
+    ,'ahle_dueto_fmd_mortality_stdev':('FMD' ,'Mortality')
+    ,'ahle_dueto_fmd_healthcost_mean':('FMD' ,'Health cost')
+    ,'ahle_dueto_fmd_healthcost_stdev':('FMD' ,'Health cost')
+    ,'ahle_dueto_fmd_productionloss_mean':('FMD' ,'Production loss')
+    ,'ahle_dueto_fmd_productionloss_stdev':('FMD' ,'Production loss')
 }
 
 # -----------------------------------------------------------------------------
