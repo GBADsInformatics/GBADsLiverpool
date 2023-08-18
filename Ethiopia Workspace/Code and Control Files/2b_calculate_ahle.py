@@ -172,9 +172,9 @@ datainfo(ahle_combo_adj)
 '''
 Creating aggregate groups for filtering in the dashboard.
 
-Note: aggregate groups are already created for many items in the compartmental
-model, but not all. For simplicity, and to ensure the totals are correct, I'm
-recalculating the aggregate for all items.
+Note: many aggregate groups are already created in the compartmental model,
+but not all. For simplicity, and to ensure the totals are correct, I'm
+recalculating all aggregate groups.
 '''
 mean_cols = [i for i in list(ahle_combo_adj) if 'mean' in i]
 sd_cols = [i for i in list(ahle_combo_adj) if 'stdev' in i]
@@ -186,9 +186,6 @@ sd_cols = [i for i in list(ahle_combo_adj) if 'stdev' in i]
 _combined_rows = (ahle_combo_adj['group'].str.upper() == 'OVERALL')\
     | (ahle_combo_adj['group'].str.contains('COMBINED' ,case=False ,na=False))
 ahle_combo_overall = ahle_combo_adj.loc[_combined_rows].copy()
-
-list_items_all = ahle_combo_adj['item'].value_counts()
-list_items_overall = ahle_combo_adj.loc[_combined_rows]['item'].value_counts()
 
 # Create version without any aggregate groups
 ahle_combo_indiv = ahle_combo_adj.loc[~ _combined_rows].copy()
