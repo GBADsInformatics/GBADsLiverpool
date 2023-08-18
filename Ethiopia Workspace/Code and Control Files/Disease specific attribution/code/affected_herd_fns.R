@@ -146,39 +146,58 @@ convert_to_sample <- function(object, disease) {
 }
 
 combined_production <- function(production_system_code, species_code, cause_code, ahle_scenario_file, impact_file, affected_value, affected_change, distribution_type="pert") {
-  # diseased animal production based on diseased value
-  minus_value_CP <- lapply(affected_value, function(x){1-x})
+  impact_code <- paste0(production_system_code, "_", species_code, "_", cause_code) # name of cause column
+  AHLE_utopia_code <- paste0(production_system_code, "_", species_code, "_Ideal") # name of ideal column
+  AHLE_utopia_parameters <- import_AHLE_parameters(ahle_scenario_file, AHLE_utopia_code) # import ideal scenario
+  AHLE_current_code <- paste0(production_system_code, "_", species_code, "_Current") # name of current column
+  AHLE_current_parameters <- import_AHLE_parameters(ahle_scenario_file, AHLE_current_code) # import current scenario
   
-  impact_code <- paste0(production_system_code, "_", species_code, "_", cause_code)
-  impact_value <- read_xlsx(impact_file, sheet=1, na="NA") %>% dplyr::select(., DiseaseParameter, !! sym(impact_code)) %>% filter(!is.na(!! sym(impact_code)))
-  impact_value_samples <- convert_to_sample(impact_value, impact_code)
-  affected_value_production <- mapply('*', impact_value_samples, affected_value, SIMPLIFY = FALSE)
+  minus_value_CP <- lapply(affected_value, function(x){1-x}) # proportion of animals unaffected/ideal (1 - incidence)
   
-  AHLE_utopia_code <- paste0(production_system_code, "_", species_code, "_Ideal")
-  AHLE_utopia_parameters <- import_AHLE_parameters(ahle_scenario_file, AHLE_utopia_code)
-  utopia_value_parmeters_to_change <- subset(AHLE_utopia_parameters, `AHLE Parameter` %in% c(impact_value$DiseaseParameter))
-  utopia_value_samples <- convert_to_sample(utopia_value_parmeters_to_change, AHLE_utopia_code)
-  utopia_production <- mapply('*', utopia_value_samples, minus_value_CP, SIMPLIFY=FALSE)
+  impact_value_duration <- read_xlsx(impact_file, sheet="ImpactValueDuration", na="NA") %>%
+    dplyr::select(., `AHLE Parameter`, !! sym(impact_code)) %>%
+    filter(!is.na(!! sym(impact_code)))
+  impact_value_duration_s <- convert_to_sample(impact_value_duration, impact_code)
   
-  results1 <- mapply('+', utopia_production, affected_value_production) %>% as.data.frame() %>% as.list()
+  impact_value <- read_xlsx(impact_file, sheet="ImpactValue", na="NA") %>% 
+    dplyr::select(., `AHLE Parameter`, !! sym(impact_code)) %>% 
+    filter(!is.na(!! sym(impact_code))) 
+  impact_value_s <- convert_to_sample(impact_value, impact_code)
+
+  utopia_value <- subset(AHLE_utopia_parameters, `AHLE Parameter` %in% c(impact_value$`AHLE Parameter`))
+  utopia_value_s <- convert_to_sample(utopia_value, AHLE_utopia_code)
+  utopia_production <- mapply('*', utopia_value_s, minus_value_CP, SIMPLIFY=FALSE)
+    
+  aff_prod <- mapply(function(a,b,c){a*b*c}, affected_value, impact_value_s, impact_value_duration_s, SIMPLIFY = FALSE)
+  aff_uto_prod <- mapply(function(a,b,c){a*b*(1-c)}, affected_value, utopia_value_s, impact_value_duration_s, SIMPLIFY = FALSE)
+
+  results1 <- mapply(function(a,b,c){a+b+c}, utopia_production, aff_prod, aff_uto_prod) %>% as.data.frame() %>% as.list()
   
   # diseased animal production based on change in current values 
   minus_change_CP <- lapply(affected_change, function(x){1-x})
   
-  impact_change <- read_xlsx(impact_file, sheet=2, na="NA") %>% dplyr::select(., DiseaseParameter, !! sym(impact_code)) %>% filter(!is.na(!! sym(impact_code)))
-  impact_change_samples <- convert_to_sample(impact_change, impact_code)
-  AHLE_current_code <- paste0(production_system_code, "_", species_code, "_Current")
-  AHLE_current_parameters <- import_AHLE_parameters(ahle_scenario_file, AHLE_current_code)
-  AHLE_current_parmeters_to_change <- subset(AHLE_current_parameters, `AHLE Parameter` %in% c(impact_change$DiseaseParameter))
-  AHLE_current_samples <- convert_to_sample(AHLE_current_parmeters_to_change, AHLE_current_code)
-  affected_change_production <- mapply(function(a,b,c){a*b*c}, AHLE_current_samples, impact_change_samples, affected_change, SIMPLIFY = FALSE)
-  
   # utopia animal production for unaffected animals using change production method
-  AHLE_utopia_parmeters_impact_change <- subset(AHLE_utopia_parameters, `AHLE Parameter` %in% c(impact_change$DiseaseParameter))
-  current_value_samples <- convert_to_sample(AHLE_utopia_parmeters_impact_change, AHLE_utopia_code)
-  utopia_change_production <- mapply('*', current_value_samples, minus_change_CP, SIMPLIFY = FALSE)
+  impact_change_duration <- read_xlsx(impact_file, sheet="ImpactChangeDuration", na="NA") %>%
+    dplyr::select(., `AHLE Parameter`, !! sym(impact_code)) %>%
+    filter(!is.na(!! sym(impact_code)))
+  impact_change_duration_s <- convert_to_sample(impact_change_duration, impact_code)
   
-  results2 <- mapply('+', utopia_change_production, affected_change_production) %>% as.data.frame() %>% as.list()
+  impact_change <- read_xlsx(impact_file, sheet="ImpactChange", na="NA") %>% 
+    dplyr::select(., `AHLE Parameter`, !! sym(impact_code)) %>% 
+    filter(!is.na(!! sym(impact_code)))
+  impact_change_s <- convert_to_sample(impact_change, impact_code)
+  
+  utopia_change <- subset(AHLE_utopia_parameters, `AHLE Parameter` %in% c(impact_change$`AHLE Parameter`))
+  utopia_change_s <- convert_to_sample(utopia_change, AHLE_utopia_code)
+  utopia_change_production <- mapply('*', utopia_change_s, minus_change_CP, SIMPLIFY = FALSE)
+  
+  current_change <- subset(AHLE_current_parameters, `AHLE Parameter` %in% c(impact_change$`AHLE Parameter`))
+  current_change_s <- convert_to_sample(current_change, AHLE_current_code)
+  
+  aff_change_prod <- mapply(function(a,b,c,d){a*b*c*d}, affected_change, impact_change_s, current_change_s, impact_change_duration_s, SIMPLIFY = FALSE)
+  aff_uto_change_prod <- mapply(function(a,b,c){a*b*(1-c)}, affected_change, utopia_change_s, impact_change_duration_s, SIMPLIFY = FALSE)
+  
+  results2 <- mapply(function(a,b,c){a+b+c}, utopia_change_production, aff_change_prod, aff_uto_change_prod) %>% as.data.frame() %>% as.list()
   
   results <- c(results1, results2)
   histo <- mapply(function(x, y)hist(x, main=y, breaks=10), x=results, y=paste0(impact_code,": ", names(results)))
@@ -216,7 +235,9 @@ pert_distributions <- function(system_species_cause, samples) {
 # Write new disease parameters into an AHLE spreadsheet
 update_AHLE_scenarios <- function(AHLE_scenario_file, ideal_col, affected_parameters_object, col_name, new_file_name) {
   require(writexl)
-  read <- read_xlsx(AHLE_scenario_file) %>% select(any_of(ends_with(c("AHLE Parameter","Notes","Ideal","Current","PPR","Bruc")))) %>% select(-any_of((!!col_name)))
+  read <- read_xlsx(AHLE_scenario_file) %>%
+    # select(any_of(ends_with(c("AHLE Parameter","Notes","Ideal","Current","PPR","Bruc","FMD")))) %>%
+    select(-any_of((!!col_name)))
   join <- left_join(read, affected_parameters_object$dist, by="AHLE Parameter") 
   mute <- mutate(join, !!col_name := ifelse(is.na(!! sym(col_name)), !! sym(ideal_col), !! sym(col_name)))
   write <- write_xlsx(mute, new_file_name)
@@ -224,8 +245,9 @@ update_AHLE_scenarios <- function(AHLE_scenario_file, ideal_col, affected_parame
     }
 
 # TO DO ====
+# CHANGE COMBINED PRODUCTION FUNCTION TO USE DATA.FRAMES RATHER THAN LISTS
 # Write up summary documentation and user guide
-# CHANGE PER FUNCTION TO HAVE IFELSE SO THAT AFFECTED SCENARIO ALWAYS =< IDEAL for production.
+# CHANGE PERT_DISTRIBUTIONS FUNCTION TO HAVE IFELSE SO THAT AFFECTED SCENARIO ALWAYS =< IDEAL for production.
 ## This is hard to code due to format of AHLE cells (e.g. "rpert(10000, 0.52, 1.8, 0.8)" for parturition. Not always rpert. Some will also be single values or other distributions.)
 ## Can't just truncate as different parameters have different number of decimals. E.g. disease mortality is often 6 decimals compared to milk being 2
 ## Currently checking and changing these manually.
