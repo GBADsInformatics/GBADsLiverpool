@@ -365,8 +365,8 @@ ahle_sr_p = ahle_sr_p.rename(columns={'system':'production_system'})
 ahle_sr_p['year'] = 2021
 ahle_sr_p['region'] = 'National'
 
-# Recode species and production systems
-# Note items and groups already match
+# Recode species, production systems, and groups
+# Note items already match
 recode_sr_species = {
     "G":"Goat"
     ,"S":"Sheep"
@@ -376,6 +376,12 @@ ahle_sr_p['species'] = ahle_sr_p['species'].replace(recode_sr_species)
 recode_sr_prodsys = {
     "CLM":"Crop livestock mixed"
     ,"Past":"Pastoral"
+}
+ahle_sr_p['production_system'] = ahle_sr_p['production_system'].replace(recode_sr_prodsys)
+
+recode_sr_groups = {
+    "Female Combined":"Overall Female"
+    ,"Male Combined":"Overall Male"
 }
 ahle_sr_p['production_system'] = ahle_sr_p['production_system'].replace(recode_sr_prodsys)
 

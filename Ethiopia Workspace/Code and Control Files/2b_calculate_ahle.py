@@ -427,16 +427,17 @@ ahle_combo_withagg = pd.merge(
 del ahle_combo_withagg['country_name']
 
 # Add columns in USD for currency items
+_currency_items = (ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']))
 for MEANCOL in mean_cols:
    MEANCOL_USD = MEANCOL + '_usd'
-   ahle_combo_withagg.loc[ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']) ,MEANCOL_USD] = \
+   ahle_combo_withagg.loc[_currency_items ,MEANCOL_USD] = \
       ahle_combo_withagg[MEANCOL] / ahle_combo_withagg['exchg_rate_lcuperusdol']
 
 # For standard deviations, scale variances by the squared exchange rate
 # VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
 for SDCOL in sd_cols:
    SDCOL_USD = SDCOL + '_usd'
-   ahle_combo_withagg.loc[ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']) ,SDCOL_USD] = \
+   ahle_combo_withagg.loc[_currency_items ,SDCOL_USD] = \
       np.sqrt(ahle_combo_withagg[SDCOL]**2 / ahle_combo_withagg['exchg_rate_lcuperusdol']**2)
 
 datainfo(ahle_combo_withagg)
@@ -557,9 +558,7 @@ keep_items = [
     'gross margin'
     ,'health cost'
     # ,'value of total mortality'   # August 2023: this item does not exist for latest small ruminant and cattle results
-    ,'deaths'
-    ,'value of offtake'
-    ,'offtakes'
+    ,'total mortality'
     ,'value of herd increase'
     ,'cml pop growth'
     ]
@@ -606,9 +605,11 @@ Approach:
             (Value of Herd Increase) / (Cml Pop Growth)
             (Value of Offtake) / (Offtakes a.k.a. Num Offtake)
             (Value of Herd Increase plus Offtake) / (Total Number Increase)
-            These 3 methods should give the same estimate.
+            These 3 methods should give the same estimate for any age/sex groups that have
+            non-zero values. WARNING: juveniles and neonates have zero offtake! Use the herd
+            increase version.
 
-    - AHLE due to health cost is current health cost (ideal health cost is zero)
+    - AHLE due to health cost is simply current health cost (ideal health cost is zero)
     - AHLE due to production loss is the remainder needed to make total AHLE after accounting
         for mortality and health cost.
         Note production loss is hardest to measure because it is the lost potential production
@@ -633,31 +634,28 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     '''
     # ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
     '''
-    mean_current_valueperhead = mean_current_value_of_offtake / mean_current_offtakes
-    ahle_dueto_mortality_mean = mean_current_deaths * mean_current_valueperhead
+    mean_current_valueperhead = mean_current_value_of_herd_increase / mean_current_cml_pop_growth
+    ahle_dueto_mortality_mean = mean_current_total_mortality * mean_current_valueperhead
     ahle_dueto_healthcost_mean = mean_current_health_cost * -1
     ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
     '''
     # Disease-specific
-    # ahle_dueto_ppr_mortality_mean = mean_ppr_value_of_total_mortality * -1
-    # ahle_dueto_bruc_mortality_mean = mean_bruc_value_of_total_mortality * -1
-    # ahle_dueto_fmd_mortality_mean = mean_fmd_value_of_total_mortality * -1
     '''
     ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
-    mean_ppr_valueperhead = mean_ppr_value_of_offtake / mean_ppr_offtakes
-    ahle_dueto_ppr_mortality_mean = mean_ppr_deaths * mean_ppr_valueperhead
+    mean_ppr_valueperhead = mean_ppr_value_of_herd_increase / mean_ppr_cml_pop_growth
+    ahle_dueto_ppr_mortality_mean = mean_ppr_total_mortality * mean_ppr_valueperhead
     ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost * -1
     ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
 
     ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
-    mean_bruc_valueperhead = mean_bruc_value_of_offtake / mean_bruc_offtakes
-    ahle_dueto_bruc_mortality_mean = mean_bruc_deaths * mean_bruc_valueperhead
+    mean_bruc_valueperhead = mean_bruc_value_of_herd_increase / mean_bruc_cml_pop_growth
+    ahle_dueto_bruc_mortality_mean = mean_bruc_total_mortality * mean_bruc_valueperhead
     ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost * -1
     ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
 
     ahle_dueto_fmd_total_mean = mean_ideal_gross_margin - mean_fmd_gross_margin
-    mean_fmd_valueperhead = mean_fmd_value_of_offtake / mean_fmd_offtakes
-    ahle_dueto_fmd_mortality_mean = mean_fmd_deaths * mean_fmd_valueperhead
+    mean_fmd_valueperhead = mean_fmd_value_of_herd_increase / mean_fmd_cml_pop_growth
+    ahle_dueto_fmd_mortality_mean = mean_fmd_total_mortality * mean_fmd_valueperhead
     ahle_dueto_fmd_healthcost_mean = mean_fmd_health_cost * -1
     ahle_dueto_fmd_productionloss_mean = ahle_dueto_fmd_total_mean - ahle_dueto_fmd_mortality_mean - ahle_dueto_fmd_healthcost_mean
     '''
@@ -674,146 +672,173 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     ahle_when_nf_ideal_mean = mean_ideal_nf_gross_margin - mean_current_gross_margin
     ahle_when_nm_ideal_mean = mean_ideal_nm_gross_margin - mean_current_gross_margin
     ahle_when_o_ideal_mean = mean_ideal_o_gross_margin - mean_current_gross_margin
+
+    ahle_when_a_ideal_mean = mean_ideal_a_gross_margin - mean_current_gross_margin
+    ahle_when_j_ideal_mean = mean_ideal_j_gross_margin - mean_current_gross_margin
+    ahle_when_n_ideal_mean = mean_ideal_n_gross_margin - mean_current_gross_margin
     '''
     # Mortality scenario applied to specific age/sex groups
     '''
-    ahle_when_af_mort_imp25_mean = mean_mort_25_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_mort_imp25_mean = mean_mort_25_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_j_mort_imp25_mean = mean_mort_25_imp_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_mort_imp25_mean = mean_mort_25_imp_n_gross_margin - mean_current_gross_margin
-
-    ahle_when_af_mort_imp50_mean = mean_mort_50_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_mort_imp50_mean = mean_mort_50_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_j_mort_imp50_mean = mean_mort_50_imp_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_mort_imp50_mean = mean_mort_50_imp_n_gross_margin - mean_current_gross_margin
-
-    ahle_when_af_mort_imp75_mean = mean_mort_75_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_mort_imp75_mean = mean_mort_75_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_j_mort_imp75_mean = mean_mort_75_imp_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_mort_imp75_mean = mean_mort_75_imp_n_gross_margin - mean_current_gross_margin
-
     ahle_when_af_mort_imp100_mean = mean_mortality_zero_af_gross_margin - mean_current_gross_margin
     ahle_when_am_mort_imp100_mean = mean_mortality_zero_am_gross_margin - mean_current_gross_margin
     ahle_when_j_mort_imp100_mean = mean_mortality_zero_j_gross_margin - mean_current_gross_margin
     ahle_when_n_mort_imp100_mean = mean_mortality_zero_n_gross_margin - mean_current_gross_margin
-    '''
-    # These apply to poultry
-    '''
-    ahle_when_a_ideal_mean = mean_ideal_a_gross_margin - mean_current_gross_margin
-    ahle_when_j_ideal_mean = mean_ideal_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_ideal_mean = mean_ideal_n_gross_margin - mean_current_gross_margin
 
     ahle_when_a_mort_imp100_mean = mean_mortality_zero_a_gross_margin - mean_current_gross_margin
-    ahle_when_j_mort_imp100_mean = mean_mortality_zero_j_gross_margin - mean_current_gross_margin
-    ahle_when_n_mort_imp100_mean = mean_mortality_zero_n_gross_margin - mean_current_gross_margin
     '''
     # Other scenarios applied to specific age/sex groups
-    '''
-    ahle_when_af_repro_imp25_mean = mean_current_repro_25_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp50_mean = mean_current_repro_50_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp75_mean = mean_current_repro_75_imp_gross_margin - mean_current_gross_margin
-    ahle_when_af_repro_imp100_mean = mean_current_repro_100_imp_gross_margin - mean_current_gross_margin
+    # NOTE these only applied to small ruminants, and only with the legacy scenario parameters.
+    # These scenarios do not exist in the updated small ruminant results.
+    # '''
+    # ahle_when_af_mort_imp25_mean = mean_mort_25_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_mort_imp25_mean = mean_mort_25_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_j_mort_imp25_mean = mean_mort_25_imp_j_gross_margin - mean_current_gross_margin
+    # ahle_when_n_mort_imp25_mean = mean_mort_25_imp_n_gross_margin - mean_current_gross_margin
 
-    ahle_when_all_growth_imp25_mean = mean_current_growth_25_imp_all_gross_margin - mean_current_gross_margin
-    ahle_when_af_growth_imp25_mean = mean_current_growth_25_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_growth_imp25_mean = mean_current_growth_25_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_jf_growth_imp25_mean = mean_current_growth_25_imp_jf_gross_margin - mean_current_gross_margin
-    ahle_when_jm_growth_imp25_mean = mean_current_growth_25_imp_jm_gross_margin - mean_current_gross_margin
-    ahle_when_nf_growth_imp25_mean = mean_current_growth_25_imp_nf_gross_margin - mean_current_gross_margin
-    ahle_when_nm_growth_imp25_mean = mean_current_growth_25_imp_nm_gross_margin - mean_current_gross_margin
+    # ahle_when_af_mort_imp50_mean = mean_mort_50_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_mort_imp50_mean = mean_mort_50_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_j_mort_imp50_mean = mean_mort_50_imp_j_gross_margin - mean_current_gross_margin
+    # ahle_when_n_mort_imp50_mean = mean_mort_50_imp_n_gross_margin - mean_current_gross_margin
 
-    ahle_when_all_growth_imp50_mean = mean_current_growth_50_imp_all_gross_margin - mean_current_gross_margin
-    ahle_when_af_growth_imp50_mean = mean_current_growth_50_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_growth_imp50_mean = mean_current_growth_50_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_jf_growth_imp50_mean = mean_current_growth_50_imp_jf_gross_margin - mean_current_gross_margin
-    ahle_when_jm_growth_imp50_mean = mean_current_growth_50_imp_jm_gross_margin - mean_current_gross_margin
-    ahle_when_nf_growth_imp50_mean = mean_current_growth_50_imp_nf_gross_margin - mean_current_gross_margin
-    ahle_when_nm_growth_imp50_mean = mean_current_growth_50_imp_nm_gross_margin - mean_current_gross_margin
+    # ahle_when_af_mort_imp75_mean = mean_mort_75_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_mort_imp75_mean = mean_mort_75_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_j_mort_imp75_mean = mean_mort_75_imp_j_gross_margin - mean_current_gross_margin
+    # ahle_when_n_mort_imp75_mean = mean_mort_75_imp_n_gross_margin - mean_current_gross_margin
 
-    ahle_when_all_growth_imp75_mean = mean_current_growth_75_imp_all_gross_margin - mean_current_gross_margin
-    ahle_when_af_growth_imp75_mean = mean_current_growth_75_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_growth_imp75_mean = mean_current_growth_75_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_jf_growth_imp75_mean = mean_current_growth_75_imp_jf_gross_margin - mean_current_gross_margin
-    ahle_when_jm_growth_imp75_mean = mean_current_growth_75_imp_jm_gross_margin - mean_current_gross_margin
-    ahle_when_nf_growth_imp75_mean = mean_current_growth_75_imp_nf_gross_margin - mean_current_gross_margin
-    ahle_when_nm_growth_imp75_mean = mean_current_growth_75_imp_nm_gross_margin - mean_current_gross_margin
+    # ahle_when_af_repro_imp25_mean = mean_current_repro_25_imp_gross_margin - mean_current_gross_margin
+    # ahle_when_af_repro_imp50_mean = mean_current_repro_50_imp_gross_margin - mean_current_gross_margin
+    # ahle_when_af_repro_imp75_mean = mean_current_repro_75_imp_gross_margin - mean_current_gross_margin
+    # ahle_when_af_repro_imp100_mean = mean_current_repro_100_imp_gross_margin - mean_current_gross_margin
 
-    ahle_when_all_growth_imp100_mean = mean_current_growth_100_imp_all_gross_margin - mean_current_gross_margin
-    ahle_when_af_growth_imp100_mean = mean_current_growth_100_imp_af_gross_margin - mean_current_gross_margin
-    ahle_when_am_growth_imp100_mean = mean_current_growth_100_imp_am_gross_margin - mean_current_gross_margin
-    ahle_when_jf_growth_imp100_mean = mean_current_growth_100_imp_jf_gross_margin - mean_current_gross_margin
-    ahle_when_jm_growth_imp100_mean = mean_current_growth_100_imp_jm_gross_margin - mean_current_gross_margin
-    ahle_when_nf_growth_imp100_mean = mean_current_growth_100_imp_nf_gross_margin - mean_current_gross_margin
-    ahle_when_nm_growth_imp100_mean = mean_current_growth_100_imp_nm_gross_margin - mean_current_gross_margin
-    '''
+    # ahle_when_all_growth_imp25_mean = mean_current_growth_25_imp_all_gross_margin - mean_current_gross_margin
+    # ahle_when_af_growth_imp25_mean = mean_current_growth_25_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_growth_imp25_mean = mean_current_growth_25_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_jf_growth_imp25_mean = mean_current_growth_25_imp_jf_gross_margin - mean_current_gross_margin
+    # ahle_when_jm_growth_imp25_mean = mean_current_growth_25_imp_jm_gross_margin - mean_current_gross_margin
+    # ahle_when_nf_growth_imp25_mean = mean_current_growth_25_imp_nf_gross_margin - mean_current_gross_margin
+    # ahle_when_nm_growth_imp25_mean = mean_current_growth_25_imp_nm_gross_margin - mean_current_gross_margin
+
+    # ahle_when_all_growth_imp50_mean = mean_current_growth_50_imp_all_gross_margin - mean_current_gross_margin
+    # ahle_when_af_growth_imp50_mean = mean_current_growth_50_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_growth_imp50_mean = mean_current_growth_50_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_jf_growth_imp50_mean = mean_current_growth_50_imp_jf_gross_margin - mean_current_gross_margin
+    # ahle_when_jm_growth_imp50_mean = mean_current_growth_50_imp_jm_gross_margin - mean_current_gross_margin
+    # ahle_when_nf_growth_imp50_mean = mean_current_growth_50_imp_nf_gross_margin - mean_current_gross_margin
+    # ahle_when_nm_growth_imp50_mean = mean_current_growth_50_imp_nm_gross_margin - mean_current_gross_margin
+
+    # ahle_when_all_growth_imp75_mean = mean_current_growth_75_imp_all_gross_margin - mean_current_gross_margin
+    # ahle_when_af_growth_imp75_mean = mean_current_growth_75_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_growth_imp75_mean = mean_current_growth_75_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_jf_growth_imp75_mean = mean_current_growth_75_imp_jf_gross_margin - mean_current_gross_margin
+    # ahle_when_jm_growth_imp75_mean = mean_current_growth_75_imp_jm_gross_margin - mean_current_gross_margin
+    # ahle_when_nf_growth_imp75_mean = mean_current_growth_75_imp_nf_gross_margin - mean_current_gross_margin
+    # ahle_when_nm_growth_imp75_mean = mean_current_growth_75_imp_nm_gross_margin - mean_current_gross_margin
+
+    # ahle_when_all_growth_imp100_mean = mean_current_growth_100_imp_all_gross_margin - mean_current_gross_margin
+    # ahle_when_af_growth_imp100_mean = mean_current_growth_100_imp_af_gross_margin - mean_current_gross_margin
+    # ahle_when_am_growth_imp100_mean = mean_current_growth_100_imp_am_gross_margin - mean_current_gross_margin
+    # ahle_when_jf_growth_imp100_mean = mean_current_growth_100_imp_jf_gross_margin - mean_current_gross_margin
+    # ahle_when_jm_growth_imp100_mean = mean_current_growth_100_imp_jm_gross_margin - mean_current_gross_margin
+    # ahle_when_nf_growth_imp100_mean = mean_current_growth_100_imp_nf_gross_margin - mean_current_gross_margin
+    # ahle_when_nm_growth_imp100_mean = mean_current_growth_100_imp_nm_gross_margin - mean_current_gross_margin
+    # '''
 )
 
 # -----------------------------------------------------------------------------
 # Standard deviations
 # -----------------------------------------------------------------------------
 # Require summing variances and taking square root. Must be done outside eval().
+# VAR(aX) = a^2 * VAR(X)
+# The variance of a product of random variables (XY) is more complex, and the variance of (X/Y) can only be found through simulation.
+# So, to calculate ahle_dueto_mortality_stdev I'm going to pretend mean_current_valueperhead is constant.
+
 # Base
 ahle_combo_withahle['ahle_total_stdev'] = np.sqrt(
     ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_current_gross_margin']**2
-    )
+)
 ahle_combo_withahle['ahle_dueto_mortality_stdev'] = np.sqrt(
-    ahle_combo_withahle['stdev_mortality_zero_gross_margin']**2 + ahle_combo_withahle['stdev_current_gross_margin']**2
-    )
+    ahle_combo_withahle['mean_current_valueperhead']**2 + ahle_combo_withahle['stdev_current_total_mortality']**2
+)
 ahle_combo_withahle['ahle_dueto_healthcost_stdev'] = ahle_combo_withahle['stdev_current_health_cost']
 ahle_combo_withahle['ahle_dueto_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_healthcost_stdev']**2
-    )
+)
 
 # PPR
 ahle_combo_withahle['ahle_dueto_ppr_total_stdev'] = np.sqrt(
     ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_ppr_gross_margin']**2
-    )
-ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev'] = ahle_combo_withahle['stdev_ppr_value_of_total_mortality']
+)
+ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_ppr_valueperhead']**2 + ahle_combo_withahle['stdev_ppr_total_mortality']**2
+)
 ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev'] = ahle_combo_withahle['stdev_ppr_health_cost']
 ahle_combo_withahle['ahle_dueto_ppr_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_dueto_ppr_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev']**2
-    )
+)
 
 # Brucellosis
 ahle_combo_withahle['ahle_dueto_bruc_total_stdev'] = np.sqrt(
     ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_bruc_gross_margin']**2
-    )
-ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev'] = ahle_combo_withahle['stdev_bruc_value_of_total_mortality']
+)
+ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_bruc_valueperhead']**2 + ahle_combo_withahle['stdev_bruc_total_mortality']**2
+)
 ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev'] = ahle_combo_withahle['stdev_bruc_health_cost']
 ahle_combo_withahle['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_dueto_bruc_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev']**2
-    )
+)
 
 # FMD
 ahle_combo_withahle['ahle_dueto_fmd_total_stdev'] = np.sqrt(
     ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_fmd_gross_margin']**2
-    )
-ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev'] = ahle_combo_withahle['stdev_fmd_value_of_total_mortality']
+)
+ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_fmd_valueperhead']**2 + ahle_combo_withahle['stdev_fmd_total_mortality']**2
+)
 ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev'] = ahle_combo_withahle['stdev_fmd_health_cost']
 ahle_combo_withahle['ahle_dueto_fmd_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_dueto_fmd_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev']**2
-    )
+)
+
+# -----------------------------------------------------------------------------
+# Set AHLE components to zero where appropriate
+# -----------------------------------------------------------------------------
+# Some age/sex groups for some species (e.g. Oxen in Cattle) have zero mortality, but due to zero
+# cml pop growth, get a missing value for ahle_dueto_mortality.
+# Set ahle_dueto_mortality to zero if mortality is zero.
+#!!! This should happen BEFORE calculating ahle_dueto_productionloss_mean!
+mortzero_ahle_lookup = {
+    'mean_current_total_mortality':('ahle_dueto_mortality_mean' ,'ahle_dueto_mortality_stdev')
+    ,'mean_ppr_total_mortality':('ahle_dueto_ppr_mortality_mean' ,'ahle_dueto_ppr_mortality_stdev')
+    ,'mean_bruc_total_mortality':('ahle_dueto_bruc_mortality_mean' ,'ahle_dueto_bruc_mortality_stdev')
+    ,'mean_fmd_total_mortality':('ahle_dueto_fmd_mortality_mean' ,'ahle_dueto_fmd_mortality_stdev')
+}
+for MORT_COL, AHLE_COLS in mortzero_ahle_lookup.items():
+    _rowselect = (ahle_combo_withahle[MORT_COL] == 0)
+    print(f"Found {_rowselect.sum()} rows where {MORT_COL} is zero. Setting {AHLE_COLS} to zero.")
+    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[0]] == 0
+    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[1]] == 0
 
 # -----------------------------------------------------------------------------
 # Set disease-specific AHLE to zero where it does not apply
 # -----------------------------------------------------------------------------
 # PPR only impacts small ruminants
-ahle_dueto_ppr_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_ppr' in i]
 _ppr_applies = (ahle_combo_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS']))
+ahle_dueto_ppr_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_ppr' in i]
 for COL in ahle_dueto_ppr_cols:
     ahle_combo_withahle.loc[~ _ppr_applies ,COL] = \
         ahle_combo_withahle.loc[~ _ppr_applies ,COL].fillna(0)
 
 # Brucellosis impacts small ruminants and cattle
-ahle_dueto_bruc_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_bruc' in i]
 _bruc_applies = (ahle_combo_withahle['species'].str.upper().isin(['SHEEP' ,'GOAT' ,'ALL SMALL RUMINANTS' ,'CATTLE']))
+ahle_dueto_bruc_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_bruc' in i]
 for COL in ahle_dueto_bruc_cols:
     ahle_combo_withahle.loc[~ _bruc_applies ,COL] = \
         ahle_combo_withahle.loc[~ _bruc_applies ,COL].fillna(0)
 
 # FMD only impacts cattle
-ahle_dueto_fmd_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_fmd' in i]
 _fmd_applies = (ahle_combo_withahle['species'].str.upper().isin(['CATTLE']))
+ahle_dueto_fmd_cols = [i for i in list(ahle_combo_withahle) if 'ahle_dueto_fmd' in i]
 for COL in ahle_dueto_fmd_cols:
     ahle_combo_withahle.loc[~ _fmd_applies ,COL] = \
         ahle_combo_withahle.loc[~ _fmd_applies ,COL].fillna(0)
@@ -832,7 +857,9 @@ for MEANCOL in mean_cols_ahle:
 sd_cols_ahle = [i for i in list(ahle_combo_withahle) if 'stdev' in i and 'ahle' in i]
 for SDCOL in sd_cols_ahle:
     SDCOL_USD = SDCOL + '_usd'
-    ahle_combo_withahle[SDCOL_USD] = np.sqrt(ahle_combo_withahle[SDCOL]**2 / ahle_combo_withahle['exchg_rate_lcuperusdol']**2)
+    ahle_combo_withahle[SDCOL_USD] = np.sqrt(
+        ahle_combo_withahle[SDCOL]**2 / ahle_combo_withahle['exchg_rate_lcuperusdol']**2
+    )
 
 # =============================================================================
 #### Cleanup and export
@@ -841,7 +868,9 @@ datainfo(ahle_combo_withahle)
 
 # Keep only key columns and AHLE calcs
 _ahle_cols = [i for i in list(ahle_combo_withahle) if 'ahle' in i]
-_cols_for_summary = ['region' ,'species' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year'] + _ahle_cols
+_cols_for_summary = all_byvars + _ahle_cols
+_cols_for_summary.remove('item')
+_cols_for_summary.remove('item_type_code')
 
 ahle_combo_withahle_smry = ahle_combo_withahle[_cols_for_summary].reset_index(drop=True)
 datainfo(ahle_combo_withahle_smry)
