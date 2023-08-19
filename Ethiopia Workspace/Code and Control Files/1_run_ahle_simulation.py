@@ -198,7 +198,7 @@ timerstop()
 #%% Small Ruminants using Murdoch's updated function
 '''
 August 2023: this is not needed because Murdoch is running the model with their
-updated function and providing the outputs in Github.
+updated function and uploading the outputs to Github.
 '''
 # Full path to the AHLE function in R
 r_script = os.path.join(CURRENT_FOLDER ,'ahle_sr.R')
@@ -239,7 +239,7 @@ returncode_cattle = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLINES=999
 timerstop()
 
 # =============================================================================
-#### Brucellosis scenario
+#### Disease scenarios
 # =============================================================================
 '''
 Note: any scenarios that exist in this file will overwrite results of previous
