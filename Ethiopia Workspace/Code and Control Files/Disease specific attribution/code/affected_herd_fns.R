@@ -248,6 +248,7 @@ update_AHLE_scenarios <- function(AHLE_scenario_file, ideal_col, affected_parame
 # CHANGE COMBINED PRODUCTION FUNCTION TO USE DATA.FRAMES RATHER THAN LISTS
 # Write up summary documentation and user guide
 # CHANGE PERT_DISTRIBUTIONS FUNCTION TO HAVE IFELSE SO THAT AFFECTED SCENARIO ALWAYS =< IDEAL for production.
+## IF PERT VALUES < 1E-04 then multiply each value by 1E04 and divide samples by 1E04 otherwise rpert values invalid
 ## This is hard to code due to format of AHLE cells (e.g. "rpert(10000, 0.52, 1.8, 0.8)" for parturition. Not always rpert. Some will also be single values or other distributions.)
 ## Can't just truncate as different parameters have different number of decimals. E.g. disease mortality is often 6 decimals compared to milk being 2
 ## Currently checking and changing these manually.

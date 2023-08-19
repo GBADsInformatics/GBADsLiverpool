@@ -1,5 +1,5 @@
 # CODE TO RUN POPULATION MODEL FOR CURRENT, IDEAL, AND DISEASED SCENARIOS
-# Note: 160,000 runs (10,000 runs x 16 scenarios) takes ~3 hours to run
+# Note: 160,000 runs (10,000 runs x 16 scenarios) takes ~4 hours to run
 # Source model and helper functions
 source("code/ahle_sr_fns.R")
 
