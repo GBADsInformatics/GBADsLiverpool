@@ -226,8 +226,8 @@ wei_ethiopia_raw = pd.DataFrame({
     'species':'Cattle and Small Ruminants'
     ,'scenario':['Current' ,'Zero Mortality' ,'Ideal']
     ,'scenario_numeric':[0 ,0.5 ,1]
-    ,'production_change_pct':[0 ,40.2 ,180.48]
-    ,'gdp_change_pct':[0 ,2.51 ,3.57]
+    ,'production_change_pct':[0 ,.402 ,1.8048]
+    ,'gdp_change_pct':[0 ,.0251 ,.0357]
     ,'economic_surplus_usd':[0 ,1760050000 ,2452180000]
 })
 
@@ -1802,12 +1802,13 @@ def create_map_display_ecs(input_df, geojson, location, featurekey, color_by, co
     return ecs_map_fig
 
 # Wider Economic Impact charts for Ethiopia
-def create_wei_chart_1(
-        input_df
-        ,plot_xvar
-        ,plot_yvar
-        ,plot_yvar_color
-        ,hover_list=None         # List of variable names to add to hover-over
+def create_wei_chart(
+        input_df                # Dataframe
+        ,plot_xvar              # String: variable to use for x axis
+        ,plot_yvar              # String: variable to use for y axis. Will be interpolated over range min(X), max(X).
+        ,interpolation_kind     # 'linear', 'quadratic', or 'cubic'. Integer n: spline of order n.
+        ,plot_color
+        ,yvar_divisor=None      # Divide y values by this number before interpolation and plotting
     ):
     # Generate range of x-axis values
     gen_end = input_df[plot_xvar].max()
@@ -1819,23 +1820,46 @@ def create_wei_chart_1(
     	start=0 				# Start value. Can be integer or float.
     	,stop=gen_end 				# Stop value. Can be integer or float.
     	,num=gen_num 				# Number of elements to generate. Will be evenly spaced from START to STOP.
-    )
+        )
 
-    # Get quadratic fit line
-    quadratic_interp = sp.interpolate.interp1d(input_df[plot_xvar] ,input_df[plot_yvar] ,kind='quadratic')
-    interp_y = quadratic_interp(gen_x)		# Calculate y-axis values on fit line
+    # Adjust scale
+    if yvar_divisor:
+        input_df[plot_yvar] = input_df[plot_yvar] / yvar_divisor
+
+    # Get interpolation line
+    interpolator = sp.interpolate.interp1d(
+        input_df[plot_xvar]
+        ,input_df[plot_yvar]
+        ,kind=interpolation_kind
+        )
+    interp_y = interpolator(gen_x)		# Calculate y-axis values on fit line
 
     # Plot data
-    fig = px.scatter(input_df ,x=plot_xvar ,y=plot_yvar ,hover_data=hover_list)
-    fig.update_traces(marker_size=20 ,marker_color=plot_yvar_color)
+    fig = px.scatter(
+        input_df
+        ,x=plot_xvar
+        ,y=plot_yvar
+        ,hover_name='scenario'
+        ,text='scenario'
+        )
+    fig.update_traces(
+        marker_size=20
+        ,marker_color=plot_color
+        ,textposition='top center'
+        )
 
     # Plot fit line
-    fig_quadratic = px.scatter(x=gen_x ,y=interp_y)
-    fig_quadratic.update_traces(marker_size=2 ,marker_color=plot_yvar_color)
-    fig.add_trace(fig_quadratic.data[0])
+    fig_interp = px.scatter(x=gen_x ,y=interp_y)
+    fig_interp.update_traces(
+        mode='lines'
+        ,line_width=2
+        ,line_color=plot_color
+        )
+    fig.add_trace(fig_interp.data[0])
 
     # Draw
     fig.update_layout(xaxis_title=plot_xvar ,yaxis_title=plot_yvar)
+    fig.update_xaxes(dtick=0.2)
     return fig
 
 # Define the Biomass map
@@ -1870,7 +1894,6 @@ def create_biomass_map_ga(input_df, iso_alpha3, value, country, display):
 
     # Rename the animation frame
     biomass_map_fig.update_layout(sliders=[{"currentvalue": {"prefix": "Year="}}])
-
 
     return biomass_map_fig
 
@@ -3505,7 +3528,7 @@ gbadsDash.layout = html.Div([
                     dbc.Spinner(children=[
 
                     dcc.Graph(id='ecs-attr-treemap',
-                                style = {"height":"650px"},
+                              style = {"height":"650px"},
                               config = {
                                   "displayModeBar" : True,
                                   "displaylogo": False,
@@ -3553,19 +3576,51 @@ gbadsDash.layout = html.Div([
             #### -- WIDER ECONOMIC IMPACT
             dbc.Row([
                 html.H3("Wider Economic Impact"),
-                html.Label(["Impact currently estimated for cattle and small ruminants combined."]),
+                html.Label(["Estimating the total economic impact of each scenario for cattle and small ruminants combined."]),
                 dbc.Col([
                     dbc.Spinner(children=[
                     dcc.Graph(id='ecs-wei-chart-1',
                               style = {"height":"650px"},
-                              )
+                              config = {
+                                  "displayModeBar" : True,
+                                  "displaylogo": False,
+                                  'toImageButtonOptions': {
+                                      'format': 'png', # one of png, svg, jpeg, webp
+                                      'filename': 'GBADs_Ethiopia_Attribution_Treemap'
+                                      },
+                                   'modeBarButtonsToRemove': ['zoom',
+                                                              'zoomIn',
+                                                              'zoomOut',
+                                                              'autoScale',
+                                                              #'resetScale',  # Removes home button
+                                                              'pan',
+                                                              'select2d',
+                                                              'lasso2d']
+                                  }
+                              ),
                         ],size="md", color="#393375", fullscreen=False),    # End of Spinner
                     ]),
                 dbc.Col([
                     dbc.Spinner(children=[
                     dcc.Graph(id='ecs-wei-chart-2',
                               style = {"height":"650px"},
-                              )
+                              config = {
+                                  "displayModeBar" : True,
+                                  "displaylogo": False,
+                                  'toImageButtonOptions': {
+                                      'format': 'png', # one of png, svg, jpeg, webp
+                                      'filename': 'GBADs_Ethiopia_Attribution_Treemap'
+                                      },
+                                   'modeBarButtonsToRemove': ['zoom',
+                                                              'zoomIn',
+                                                              'zoomOut',
+                                                              'autoScale',
+                                                              #'resetScale',  # Removes home button
+                                                              'pan',
+                                                              'select2d',
+                                                              'lasso2d']
+                                  }
+                              ),
                         ],size="md", color="#393375", fullscreen=False),    # End of Spinner
                     ]),
                 ]),
@@ -3573,10 +3628,11 @@ gbadsDash.layout = html.Div([
             #### -- WEI FOOTNOTES
             dbc.Row([
                 dbc.Col([   # Chart 1 footnote
-                    html.P("Chart 1 footnote."),
+                    html.P("Scenario results estimated by GTAB model with simple linear interpolation."),
                 ]),
                 dbc.Col([   # Chart 2 footnote
-                    html.P("Chart 2 footnote."),
+                    html.P("Scenario results estimated by GTAB model with simple linear interpolation."),
+                    html.P("Economic surplus is the combined measure of consumer surplus and producer surplus."),
                 ]),
             ], style={'font-style': 'italic'}
             ),
@@ -9157,7 +9213,6 @@ def update_stacked_bar_ecs(
             font_size=15
             )
 
-    # !!! - STILL WORKING ON THIS
     # # Add tooltip
     # if currency == 'Birr':
     #     ahle_bar_ecs_fig.update_traces(hovertemplate='Category=%{color}<br>Value=%{y:,.0f} Birr<extra></extra>')
@@ -9168,17 +9223,53 @@ def update_stacked_bar_ecs(
 
 @gbadsDash.callback(
     Output('ecs-wei-chart-1','figure'),
+    Output('ecs-wei-chart-2','figure'),
     Input('select-species-ecs','value'),    # Dummy input
     )
 def update_wei_display_ecs(species):
-    wei_chart_1 = create_wei_chart_1(
+    # Chart 1: GDP
+    wei_chart_1 = create_wei_chart(
         input_df=wei_ethiopia_raw
-        ,plot_xvar='scenario_numeric'
+        ,plot_xvar='production_change_pct'
         ,plot_yvar='gdp_change_pct'
-        ,plot_yvar_color='green'
-        ,hover_list=['scenario']         # List of variable names to add to hover-over
+        ,interpolation_kind='linear'
+        ,plot_color='green'
         )
-    return wei_chart_1
+    wei_chart_1.update_layout(
+        title_text='GDP Change and Production Change by Scenario <br><sup>Cattle and Small Ruminants combined</sup>'
+        ,font_size=15
+
+    	,xaxis_title='Production Change %'
+        ,xaxis_tickformat='.0%'
+
+    	,yaxis_title='GDP Change %'
+        ,yaxis_tickformat='.1%'
+
+        ,plot_bgcolor="#ededed"
+        )
+
+    # Chart 2: Economic surplus
+    wei_chart_2 = create_wei_chart(
+        input_df=wei_ethiopia_raw
+        ,plot_xvar='production_change_pct'
+        ,plot_yvar='economic_surplus_usd'
+        ,interpolation_kind='linear'
+        ,plot_color='blue'
+        ,yvar_divisor=1e6      # Divide y values by this number before interpolation and plotting
+        )
+    wei_chart_2.update_layout(
+        title_text='Economic Surplus and Production Change by Scenario <br><sup>Cattle and Small Ruminants combined</sup>'
+        ,font_size=15
+
+    	,xaxis_title='Production Change %'
+        ,xaxis_tickformat='.0%'
+
+    	,yaxis_title='Economic Surplus (Millions USD)'
+        ,yaxis_tickformat='$,d'
+
+        ,plot_bgcolor="#ededed"
+        )
+    return wei_chart_1 ,wei_chart_2
 
 # Update subnational map
 @gbadsDash.callback(
