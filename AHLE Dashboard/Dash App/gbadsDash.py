@@ -1806,21 +1806,23 @@ def create_wei_chart(
         input_df                # Dataframe
         ,plot_xvar              # String: variable to use for x axis
         ,plot_yvar              # String: variable to use for y axis. Will be interpolated over range min(X), max(X).
-        ,interpolation_kind     # 'linear', 'quadratic', or 'cubic'. Integer n: spline of order n.
         ,plot_color
+        ,interpolation_kind     # 'linear', 'quadratic', or 'cubic'. Integer n: spline of order n.
         ,yvar_divisor=None      # Divide y values by this number before interpolation and plotting
     ):
     # Generate range of x-axis values
     gen_end = input_df[plot_xvar].max()
-    step_size = 0.1
+    step_size = 0.01
     gen_num = int(input_df[plot_xvar].max() / step_size)
-    if gen_num < 200:
-        gen_num = 200
     gen_x = np.linspace(
     	start=0 				# Start value. Can be integer or float.
     	,stop=gen_end 				# Stop value. Can be integer or float.
     	,num=gen_num 				# Number of elements to generate. Will be evenly spaced from START to STOP.
         )
+    # Create dataframe and name generated data for predictor variable
+    gen_x_df = pd.DataFrame({
+        plot_xvar:gen_x
+    })
 
     # Adjust scale
     if yvar_divisor:
@@ -1833,14 +1835,18 @@ def create_wei_chart(
         ,kind=interpolation_kind
         )
     interp_y = interpolator(gen_x)		# Calculate y-axis values on fit line
+    gen_x_df[plot_yvar] = interp_y
 
     # Plot data
     fig = px.scatter(
         input_df
         ,x=plot_xvar
         ,y=plot_yvar
-        ,hover_name='scenario'
         ,text='scenario'
+        ,hover_name='scenario'
+        ,hover_data={
+            'scenario':False    # Used for hover name, remove from hover data
+            }
         )
     fig.update_traces(
         marker_size=20
@@ -1849,7 +1855,11 @@ def create_wei_chart(
         )
 
     # Plot fit line
-    fig_interp = px.scatter(x=gen_x ,y=interp_y)
+    fig_interp = px.scatter(
+        gen_x_df
+        ,x=plot_xvar
+        ,y=plot_yvar
+        )
     fig_interp.update_traces(
         mode='lines'
         ,line_width=2
@@ -3576,7 +3586,9 @@ gbadsDash.layout = html.Div([
             #### -- WIDER ECONOMIC IMPACT
             dbc.Row([
                 html.H3("Wider Economic Impact"),
-                html.Label(["Estimating the total economic impact of each scenario for cattle and small ruminants combined."]),
+                html.Label(["Estimating the total economic impact of each scenario on cattle and small ruminants using the ",
+                            html.A('GTAP model.', href='https://www.gtap.agecon.purdue.edu/')
+                            ]),
                 dbc.Col([
                     dbc.Spinner(children=[
                     dcc.Graph(id='ecs-wei-chart-1',
@@ -3588,14 +3600,14 @@ gbadsDash.layout = html.Div([
                                       'format': 'png', # one of png, svg, jpeg, webp
                                       'filename': 'GBADs_Ethiopia_Attribution_Treemap'
                                       },
-                                   'modeBarButtonsToRemove': ['zoom',
-                                                              'zoomIn',
-                                                              'zoomOut',
-                                                              'autoScale',
-                                                              #'resetScale',  # Removes home button
-                                                              'pan',
-                                                              'select2d',
-                                                              'lasso2d']
+                                  'modeBarButtonsToRemove': ['zoom',
+                                                             'zoomIn',
+                                                             'zoomOut',
+                                                             'autoScale',
+                                                             #'resetScale',  # Removes home button
+                                                             'pan',
+                                                             'select2d',
+                                                             'lasso2d']
                                   }
                               ),
                         ],size="md", color="#393375", fullscreen=False),    # End of Spinner
@@ -3611,14 +3623,14 @@ gbadsDash.layout = html.Div([
                                       'format': 'png', # one of png, svg, jpeg, webp
                                       'filename': 'GBADs_Ethiopia_Attribution_Treemap'
                                       },
-                                   'modeBarButtonsToRemove': ['zoom',
-                                                              'zoomIn',
-                                                              'zoomOut',
-                                                              'autoScale',
-                                                              #'resetScale',  # Removes home button
-                                                              'pan',
-                                                              'select2d',
-                                                              'lasso2d']
+                                  'modeBarButtonsToRemove': ['zoom',
+                                                             'zoomIn',
+                                                             'zoomOut',
+                                                             'autoScale',
+                                                             #'resetScale',  # Removes home button
+                                                             'pan',
+                                                             'select2d',
+                                                             'lasso2d']
                                   }
                               ),
                         ],size="md", color="#393375", fullscreen=False),    # End of Spinner
@@ -3628,10 +3640,9 @@ gbadsDash.layout = html.Div([
             #### -- WEI FOOTNOTES
             dbc.Row([
                 dbc.Col([   # Chart 1 footnote
-                    html.P("Scenario results estimated by GTAB model with simple linear interpolation."),
+                    html.P("Chart 1 footnote."),
                 ]),
                 dbc.Col([   # Chart 2 footnote
-                    html.P("Scenario results estimated by GTAB model with simple linear interpolation."),
                     html.P("Economic surplus is the combined measure of consumer surplus and producer surplus."),
                 ]),
             ], style={'font-style': 'italic'}
@@ -9232,17 +9243,17 @@ def update_wei_display_ecs(species):
         input_df=wei_ethiopia_raw
         ,plot_xvar='production_change_pct'
         ,plot_yvar='gdp_change_pct'
+        ,plot_color='blue'
         ,interpolation_kind='linear'
-        ,plot_color='green'
         )
     wei_chart_1.update_layout(
-        title_text='GDP Change and Production Change by Scenario <br><sup>Cattle and Small Ruminants combined</sup>'
+        title_text='GDP change due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
         ,font_size=15
 
-    	,xaxis_title='Production Change %'
+    	,xaxis_title='% Productivity Change'
         ,xaxis_tickformat='.0%'
 
-    	,yaxis_title='GDP Change %'
+    	,yaxis_title='% GDP Change'
         ,yaxis_tickformat='.1%'
 
         ,plot_bgcolor="#ededed"
@@ -9253,18 +9264,18 @@ def update_wei_display_ecs(species):
         input_df=wei_ethiopia_raw
         ,plot_xvar='production_change_pct'
         ,plot_yvar='economic_surplus_usd'
+        ,plot_color='green'
         ,interpolation_kind='linear'
-        ,plot_color='blue'
         ,yvar_divisor=1e6      # Divide y values by this number before interpolation and plotting
         )
     wei_chart_2.update_layout(
-        title_text='Economic Surplus and Production Change by Scenario <br><sup>Cattle and Small Ruminants combined</sup>'
+        title_text='Economic surplus due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
         ,font_size=15
 
-    	,xaxis_title='Production Change %'
+    	,xaxis_title='% Productivity Change'
         ,xaxis_tickformat='.0%'
 
-    	,yaxis_title='Economic Surplus (Millions USD)'
+    	,yaxis_title='Economic Surplus (Million USD)'
         ,yaxis_tickformat='$,d'
 
         ,plot_bgcolor="#ededed"
