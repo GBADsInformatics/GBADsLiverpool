@@ -595,7 +595,9 @@ datainfo(ahle_combo_withagg_p)
 Approach:
     - Total AHLE is difference in gross margin between ideal scenario and current scenario.
     - AHLE due to mortality is difference in gross margin between zero mortality scenario and
-        current scenario.
+        current scenario:
+        ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
+
         Update August 2023: the zero mortality scenario is no longer being run for Small
         Ruminants or Cattle. I am going to take the same approach as I did for disease-specific
         ahle due to mortality, estimating it as (number of deaths) * (value per head).
@@ -609,7 +611,8 @@ Approach:
             non-zero values. WARNING: juveniles and neonates have zero offtake! Use the herd
             increase version.
 
-    - AHLE due to health cost is simply current health cost (ideal health cost is zero)
+    - AHLE due to health cost is simply current health cost (ideal health cost is zero).
+        Note health cost is negative, but the AHLE due to health cost is expressed as a positive.
     - AHLE due to production loss is the remainder needed to make total AHLE after accounting
         for mortality and health cost.
         Note production loss is hardest to measure because it is the lost potential production
@@ -626,44 +629,140 @@ Relying on the following properties of sums of random variables:
 '''
 ahle_combo_withahle = ahle_combo_withagg_p.copy()
 
+# -----------------------------------------------------------------------------
+# Total AHLE
+# -----------------------------------------------------------------------------
 ahle_combo_withahle = ahle_combo_withahle.eval(
-    # Top level
-    # Note health cost is negative, but the AHLE due to health cost is expressed as a positive.
     '''
     ahle_total_mean = mean_ideal_gross_margin - mean_current_gross_margin
+    ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
+    ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
+    ahle_dueto_fmd_total_mean = mean_ideal_gross_margin - mean_fmd_gross_margin
     '''
-    # ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
+)
+# AHLE due to Other Disease will depend on which diseases were estimated.
+# It also requires an estimate of the total infectious disease, which we don't have until the attribution step.
+# Don't calculate this here. Handle it when needed (after attribution).
+# Should be: ahle_dueto_otherdisease_total_mean = ahle_total_infectious - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
+
+# Standard Deviations
+# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
+ahle_combo_withahle['ahle_total_stdev'] = np.sqrt(
+    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_current_gross_margin']**2
+)
+ahle_combo_withahle['ahle_dueto_ppr_total_stdev'] = np.sqrt(
+    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_ppr_gross_margin']**2
+)
+ahle_combo_withahle['ahle_dueto_bruc_total_stdev'] = np.sqrt(
+    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_bruc_gross_margin']**2
+)
+ahle_combo_withahle['ahle_dueto_fmd_total_stdev'] = np.sqrt(
+    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_fmd_gross_margin']**2
+)
+
+# -----------------------------------------------------------------------------
+# AHLE due to mortality
+# -----------------------------------------------------------------------------
+ahle_combo_withahle = ahle_combo_withahle.eval(
     '''
     mean_current_valueperhead = mean_current_value_of_herd_increase / mean_current_cml_pop_growth
     ahle_dueto_mortality_mean = mean_current_total_mortality * mean_current_valueperhead
-    ahle_dueto_healthcost_mean = mean_current_health_cost * -1
-    ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
-    '''
-    # Disease-specific
-    '''
-    ahle_dueto_ppr_total_mean = mean_ideal_gross_margin - mean_ppr_gross_margin
+
     mean_ppr_valueperhead = mean_ppr_value_of_herd_increase / mean_ppr_cml_pop_growth
     ahle_dueto_ppr_mortality_mean = mean_ppr_total_mortality * mean_ppr_valueperhead
-    ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost * -1
-    ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
 
-    ahle_dueto_bruc_total_mean = mean_ideal_gross_margin - mean_bruc_gross_margin
     mean_bruc_valueperhead = mean_bruc_value_of_herd_increase / mean_bruc_cml_pop_growth
     ahle_dueto_bruc_mortality_mean = mean_bruc_total_mortality * mean_bruc_valueperhead
-    ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost * -1
-    ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
 
-    ahle_dueto_fmd_total_mean = mean_ideal_gross_margin - mean_fmd_gross_margin
     mean_fmd_valueperhead = mean_fmd_value_of_herd_increase / mean_fmd_cml_pop_growth
     ahle_dueto_fmd_mortality_mean = mean_fmd_total_mortality * mean_fmd_valueperhead
+    '''
+)
+
+# Standard Deviations
+# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
+# The variance of a product of random variables (XY) is more complex, and the variance of (X/Y) can only be found through simulation.
+# So, to calculate ahle_dueto_mortality_stdev I'm treating mean_current_valueperhead as constant.
+ahle_combo_withahle['ahle_dueto_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_current_valueperhead']**2 + ahle_combo_withahle['stdev_current_total_mortality']**2
+)
+ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_ppr_valueperhead']**2 + ahle_combo_withahle['stdev_ppr_total_mortality']**2
+)
+ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_bruc_valueperhead']**2 + ahle_combo_withahle['stdev_bruc_total_mortality']**2
+)
+ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev'] = np.sqrt(
+    ahle_combo_withahle['mean_fmd_valueperhead']**2 + ahle_combo_withahle['stdev_fmd_total_mortality']**2
+)
+
+# Some age/sex groups for some species (e.g. Oxen in Cattle) have zero mortality,
+# but due to zero cml pop growth, get a missing value for valueperhead and for
+# ahle_dueto_mortality.
+# Set ahle_dueto_mortality to zero if mortality is zero.
+mortzero_ahle_lookup = {
+    'mean_current_total_mortality':('ahle_dueto_mortality_mean' ,'ahle_dueto_mortality_stdev')
+    ,'mean_ppr_total_mortality':('ahle_dueto_ppr_mortality_mean' ,'ahle_dueto_ppr_mortality_stdev')
+    ,'mean_bruc_total_mortality':('ahle_dueto_bruc_mortality_mean' ,'ahle_dueto_bruc_mortality_stdev')
+    ,'mean_fmd_total_mortality':('ahle_dueto_fmd_mortality_mean' ,'ahle_dueto_fmd_mortality_stdev')
+}
+for MORT_COL, AHLE_COLS in mortzero_ahle_lookup.items():
+    _rowselect = (ahle_combo_withahle[MORT_COL] == 0)
+    print(f"Found {_rowselect.sum()} rows where {MORT_COL} is zero. Setting {AHLE_COLS} to zero.")
+    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[0]] = 0
+    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[1]] = 0
+
+# -----------------------------------------------------------------------------
+# AHLE due to health cost
+# -----------------------------------------------------------------------------
+# Note health cost is negative, but the AHLE due to health cost is expressed as a positive.
+ahle_combo_withahle = ahle_combo_withahle.eval(
+    '''
+    ahle_dueto_healthcost_mean = mean_current_health_cost * -1
+    ahle_dueto_ppr_healthcost_mean = mean_ppr_health_cost * -1
+    ahle_dueto_bruc_healthcost_mean = mean_bruc_health_cost * -1
     ahle_dueto_fmd_healthcost_mean = mean_fmd_health_cost * -1
+    '''
+)
+
+# Standard Deviations
+# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
+ahle_combo_withahle['ahle_dueto_healthcost_stdev'] = ahle_combo_withahle['stdev_current_health_cost']
+ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev'] = ahle_combo_withahle['stdev_ppr_health_cost']
+ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev'] = ahle_combo_withahle['stdev_bruc_health_cost']
+ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev'] = ahle_combo_withahle['stdev_fmd_health_cost']
+
+# -----------------------------------------------------------------------------
+# AHLE due to production loss
+# -----------------------------------------------------------------------------
+ahle_combo_withahle = ahle_combo_withahle.eval(
+    '''
+    ahle_dueto_productionloss_mean = ahle_total_mean - ahle_dueto_mortality_mean - ahle_dueto_healthcost_mean
+    ahle_dueto_ppr_productionloss_mean = ahle_dueto_ppr_total_mean - ahle_dueto_ppr_mortality_mean - ahle_dueto_ppr_healthcost_mean
+    ahle_dueto_bruc_productionloss_mean = ahle_dueto_bruc_total_mean - ahle_dueto_bruc_mortality_mean - ahle_dueto_bruc_healthcost_mean
     ahle_dueto_fmd_productionloss_mean = ahle_dueto_fmd_total_mean - ahle_dueto_fmd_mortality_mean - ahle_dueto_fmd_healthcost_mean
     '''
-    # AHLE due to Other Disease will depend on which diseases were estimated.
-    # Don't calculate this here. Handle it when needed (attribution).
-    # Should be: ahle_dueto_otherdisease_total_mean = ahle_total_infectious - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
+)
 
-    # Ideal scenario applied to specific age/sex groups
+# Standard Deviations
+# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
+ahle_combo_withahle['ahle_dueto_productionloss_stdev'] = np.sqrt(
+    ahle_combo_withahle['ahle_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_healthcost_stdev']**2
+)
+ahle_combo_withahle['ahle_dueto_ppr_productionloss_stdev'] = np.sqrt(
+    ahle_combo_withahle['ahle_dueto_ppr_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev']**2
+)
+ahle_combo_withahle['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
+    ahle_combo_withahle['ahle_dueto_bruc_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev']**2
+)
+ahle_combo_withahle['ahle_dueto_fmd_productionloss_stdev'] = np.sqrt(
+    ahle_combo_withahle['ahle_dueto_fmd_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev']**2
+)
+
+# -----------------------------------------------------------------------------
+# AHLE from scenarios applied to specific age/sex groups
+# -----------------------------------------------------------------------------
+ahle_combo_withahle = ahle_combo_withahle.eval(
     '''
     ahle_when_af_ideal_mean = mean_ideal_af_gross_margin - mean_current_gross_margin
     ahle_when_am_ideal_mean = mean_ideal_am_gross_margin - mean_current_gross_margin
@@ -687,7 +786,7 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     ahle_when_a_mort_imp100_mean = mean_mortality_zero_a_gross_margin - mean_current_gross_margin
     '''
     # Other scenarios applied to specific age/sex groups
-    # NOTE these only applied to small ruminants, and only with the legacy scenario parameters.
+    # NOTE August 2023: these only applied to small ruminants, and only with the legacy scenario parameters.
     # These scenarios do not exist in the updated small ruminant results.
     # '''
     # ahle_when_af_mort_imp25_mean = mean_mort_25_imp_af_gross_margin - mean_current_gross_margin
@@ -745,81 +844,6 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
 )
 
 # -----------------------------------------------------------------------------
-# Standard deviations
-# -----------------------------------------------------------------------------
-# Require summing variances and taking square root. Must be done outside eval().
-# VAR(aX) = a^2 * VAR(X)
-# The variance of a product of random variables (XY) is more complex, and the variance of (X/Y) can only be found through simulation.
-# So, to calculate ahle_dueto_mortality_stdev I'm going to pretend mean_current_valueperhead is constant.
-
-# Base
-ahle_combo_withahle['ahle_total_stdev'] = np.sqrt(
-    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_current_gross_margin']**2
-)
-ahle_combo_withahle['ahle_dueto_mortality_stdev'] = np.sqrt(
-    ahle_combo_withahle['mean_current_valueperhead']**2 + ahle_combo_withahle['stdev_current_total_mortality']**2
-)
-ahle_combo_withahle['ahle_dueto_healthcost_stdev'] = ahle_combo_withahle['stdev_current_health_cost']
-ahle_combo_withahle['ahle_dueto_productionloss_stdev'] = np.sqrt(
-    ahle_combo_withahle['ahle_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_healthcost_stdev']**2
-)
-
-# PPR
-ahle_combo_withahle['ahle_dueto_ppr_total_stdev'] = np.sqrt(
-    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_ppr_gross_margin']**2
-)
-ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev'] = np.sqrt(
-    ahle_combo_withahle['mean_ppr_valueperhead']**2 + ahle_combo_withahle['stdev_ppr_total_mortality']**2
-)
-ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev'] = ahle_combo_withahle['stdev_ppr_health_cost']
-ahle_combo_withahle['ahle_dueto_ppr_productionloss_stdev'] = np.sqrt(
-    ahle_combo_withahle['ahle_dueto_ppr_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev']**2
-)
-
-# Brucellosis
-ahle_combo_withahle['ahle_dueto_bruc_total_stdev'] = np.sqrt(
-    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_bruc_gross_margin']**2
-)
-ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev'] = np.sqrt(
-    ahle_combo_withahle['mean_bruc_valueperhead']**2 + ahle_combo_withahle['stdev_bruc_total_mortality']**2
-)
-ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev'] = ahle_combo_withahle['stdev_bruc_health_cost']
-ahle_combo_withahle['ahle_dueto_bruc_productionloss_stdev'] = np.sqrt(
-    ahle_combo_withahle['ahle_dueto_bruc_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev']**2
-)
-
-# FMD
-ahle_combo_withahle['ahle_dueto_fmd_total_stdev'] = np.sqrt(
-    ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_fmd_gross_margin']**2
-)
-ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev'] = np.sqrt(
-    ahle_combo_withahle['mean_fmd_valueperhead']**2 + ahle_combo_withahle['stdev_fmd_total_mortality']**2
-)
-ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev'] = ahle_combo_withahle['stdev_fmd_health_cost']
-ahle_combo_withahle['ahle_dueto_fmd_productionloss_stdev'] = np.sqrt(
-    ahle_combo_withahle['ahle_dueto_fmd_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_fmd_healthcost_stdev']**2
-)
-
-# -----------------------------------------------------------------------------
-# Set AHLE components to zero where appropriate
-# -----------------------------------------------------------------------------
-# Some age/sex groups for some species (e.g. Oxen in Cattle) have zero mortality, but due to zero
-# cml pop growth, get a missing value for ahle_dueto_mortality.
-# Set ahle_dueto_mortality to zero if mortality is zero.
-#!!! This should happen BEFORE calculating ahle_dueto_productionloss_mean!
-mortzero_ahle_lookup = {
-    'mean_current_total_mortality':('ahle_dueto_mortality_mean' ,'ahle_dueto_mortality_stdev')
-    ,'mean_ppr_total_mortality':('ahle_dueto_ppr_mortality_mean' ,'ahle_dueto_ppr_mortality_stdev')
-    ,'mean_bruc_total_mortality':('ahle_dueto_bruc_mortality_mean' ,'ahle_dueto_bruc_mortality_stdev')
-    ,'mean_fmd_total_mortality':('ahle_dueto_fmd_mortality_mean' ,'ahle_dueto_fmd_mortality_stdev')
-}
-for MORT_COL, AHLE_COLS in mortzero_ahle_lookup.items():
-    _rowselect = (ahle_combo_withahle[MORT_COL] == 0)
-    print(f"Found {_rowselect.sum()} rows where {MORT_COL} is zero. Setting {AHLE_COLS} to zero.")
-    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[0]] == 0
-    ahle_combo_withahle.loc[_rowselect ,AHLE_COLS[1]] == 0
-
-# -----------------------------------------------------------------------------
 # Set disease-specific AHLE to zero where it does not apply
 # -----------------------------------------------------------------------------
 # PPR only impacts small ruminants
@@ -873,7 +897,7 @@ _cols_for_summary.remove('item')
 _cols_for_summary.remove('item_type_code')
 
 ahle_combo_withahle_smry = ahle_combo_withahle[_cols_for_summary].reset_index(drop=True)
-datainfo(ahle_combo_withahle_smry)
+datainfo(ahle_combo_withahle_smry ,150)
 
 ahle_combo_withahle_smry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary2.csv') ,index=False)
 ahle_combo_withahle_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary2.pkl.gz'))
