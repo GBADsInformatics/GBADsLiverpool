@@ -109,7 +109,7 @@ ahle_sr <- function(
               QMeat = OftkLw *ccy, 
               QManu = new *s(m) *30, 
               QHides = D * (.j + .a) * hrm, 
-              QMilk = new * (.a * .f) * s(pt) * pfm * ld * s(ady), # change ady to s(ady). August 2023. WE MAY BE APPLYING THE ANNUAL PARTURITION RATE HERE - AL.
+              QMilk = new * (.a * .f) * s(pt/12) * pfm * ld * s(ady), # change ady to s(ady). Change pt to pt/12 so that monthly. August 2023. AL.
               QWool = 0, 
               CumDM = new * dm * s(lw) * 30, 
               ValOftk = NOftk *s(fv), 
