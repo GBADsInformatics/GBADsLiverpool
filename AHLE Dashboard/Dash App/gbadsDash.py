@@ -31,6 +31,7 @@ import dash_bootstrap_components as dbc  # Allows easy access to all bootstrap t
 import dash_daq as daq
 import dash_auth
 import numpy as np
+import scipy as sp
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
