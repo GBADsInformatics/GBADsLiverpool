@@ -383,7 +383,7 @@ recode_sr_groups = {
     "Female Combined":"Overall Female"
     ,"Male Combined":"Overall Male"
 }
-ahle_sr_p['production_system'] = ahle_sr_p['production_system'].replace(recode_sr_prodsys)
+ahle_sr_p['group'] = ahle_sr_p['group'].replace(recode_sr_groups)
 
 datainfo(ahle_sr_p)
 

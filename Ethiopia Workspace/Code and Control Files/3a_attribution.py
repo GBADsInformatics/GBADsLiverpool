@@ -5,7 +5,7 @@ to estimate attribution of the AHLE to infectious, non-infectious, and external
 causes.
 
 The expert opinions are recorded in CSV files.
-There is a separate file for each species:
+There is a separate file for each species group:
     Small ruminants (sheep and goats)
     Cattle
     Poultry
@@ -267,9 +267,9 @@ r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Attribution function.R')    # Ful
 # Arguments to R function, as list of strings.
 # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
 r_args = [
-    os.path.join(ETHIOPIA_CODE_FOLDER ,'Attribution function input - example AHLE.csv')                # String: full path to AHLE estimates file (csv)
-    ,os.path.join(ETHIOPIA_CODE_FOLDER ,'attribution_experts_smallruminants.csv')               # String: full path to expert opinion attribution file (csv)
-    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_example.csv')    # String: full path to output file (csv)
+    os.path.join(ETHIOPIA_CODE_FOLDER ,'Attribution function input - example AHLE.csv')     # String: full path to AHLE estimates file (csv)
+    ,os.path.join(ETHIOPIA_CODE_FOLDER ,'attribution_experts_smallruminants.csv')           # String: full path to expert opinion attribution file (csv)
+    ,os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_example.csv')                # String: full path to output file (csv)
 ]
 
 timerstart()
@@ -348,8 +348,8 @@ ahle_combo_forattr_m = \
 #### Rename and reorder columns
 # =============================================================================
 '''
-The attribution function refers to some columns by position and others by name
-Put all the expected columns first, with correct names and ordering
+The attribution function refers to some columns by position and others by name.
+Put all the expected columns first, with correct names and ordering.
 '''
 colnames_ordered_forattr = {
     "species":"Species"
@@ -666,8 +666,9 @@ cleancolnames(ahle_combo_withattr)
 
 #%% ADD HEALTH COST COMPONENT
 '''
-Expert opinions do not apply to health cost. Filling in placeholders by attributing
-health cost evenly to infectious, non-infectious, and external causes.
+Expert opinions do not apply to health cost. Filling in placeholders by
+attributing health cost evenly to infectious, non-infectious, and external
+causes.
 '''
 # =============================================================================
 #### Define placeholder attribution categories
@@ -849,7 +850,7 @@ ahle_combo_withattr.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withat
 #%% *DEV A* ADD DISEASE-SPECIFIC COMPONENTS
 
 # =============================================================================
-#### Assemble disease-specific columns
+#### Get disease-specific AHLE
 # =============================================================================
 # -----------------------------------------------------------------------------
 # Cause: Infectious
@@ -866,44 +867,50 @@ diseases_infectious = {
     'PPR':{
         'ahle_dueto_ppr_mortality_mean':'Mortality'
         ,'ahle_dueto_ppr_mortality_stdev':'Mortality'
+
         ,'ahle_dueto_ppr_healthcost_mean':'Health cost'
         ,'ahle_dueto_ppr_healthcost_stdev':'Health cost'
+
         ,'ahle_dueto_ppr_productionloss_mean':'Production loss'
         ,'ahle_dueto_ppr_productionloss_stdev':'Production loss'
     }
     ,'Brucellosis':{
         'ahle_dueto_bruc_mortality_mean':'Mortality'
         ,'ahle_dueto_bruc_mortality_stdev':'Mortality'
+
         ,'ahle_dueto_bruc_healthcost_mean':'Health cost'
         ,'ahle_dueto_bruc_healthcost_stdev':'Health cost'
+
         ,'ahle_dueto_bruc_productionloss_mean':'Production loss'
         ,'ahle_dueto_bruc_productionloss_stdev':'Production loss'
     }
     ,'FMD':{
         'ahle_dueto_fmd_mortality_mean':'Mortality'
         ,'ahle_dueto_fmd_mortality_stdev':'Mortality'
+
         ,'ahle_dueto_fmd_healthcost_mean':'Health cost'
         ,'ahle_dueto_fmd_healthcost_stdev':'Health cost'
+
         ,'ahle_dueto_fmd_productionloss_mean':'Production loss'
         ,'ahle_dueto_fmd_productionloss_stdev':'Production loss'
     }
 }
 
 # For each disease, melt columns of mortality, health cost, and production loss
-# and merge onto ahle_combo_withattr
+# to get a row for each ahle_component
 for DISEASE in list(diseases_infectious):
     single_disease_means = ahle_combo_forattr.melt(
         id_vars=attr_byvars
         ,value_vars=[i for i in list(diseases_infectious[DISEASE]) if 'mean' in i]
         ,var_name='ahle_column'
         ,value_name=f'ahle_dueto_{DISEASE}_mean'
-        )
+    )
     single_disease_stdev = ahle_combo_forattr.melt(
         id_vars=attr_byvars
         ,value_vars=[i for i in list(diseases_infectious[DISEASE]) if 'stdev' in i]
         ,var_name='ahle_column'
         ,value_name=f'ahle_dueto_{DISEASE}_stdev'
-        )
+    )
 
     # Add ahle component labels
     single_disease_means['ahle_component'] = single_disease_means['ahle_column'].replace(diseases_infectious[DISEASE])
@@ -921,26 +928,26 @@ for DISEASE in list(diseases_infectious):
 
     # Merge onto master disease-specific dataframe
     if DISEASE == list(diseases_infectious)[0]:     # If first disease, copy
-        disease_inf_ahle = single_disease_ahle.copy()
+        ahle_disease_inf = single_disease_ahle.copy()
     else:       # Otherwise, merge
-        disease_inf_ahle = pd.merge(
-            left=disease_inf_ahle
+        ahle_disease_inf = pd.merge(
+            left=ahle_disease_inf
             ,right=single_disease_ahle
             ,on=attr_byvars + ['ahle_component']
             ,how='left'
         )
 del single_disease_means ,single_disease_stdev ,single_disease_ahle
-disease_inf_ahle['cause'] = 'Infectious'
-cleancolnames(disease_inf_ahle)
+ahle_disease_inf['cause'] = 'Infectious'
+cleancolnames(ahle_disease_inf)
 
 # Calculate total contribution of known diseases
-disease_inf_ahle['ahle_dueto_known_infectious_mean'] = \
-    disease_inf_ahle['ahle_dueto_ppr_mean'] + disease_inf_ahle['ahle_dueto_brucellosis_mean'] + disease_inf_ahle['ahle_dueto_fmd_mean']
+ahle_disease_inf['ahle_dueto_knowninfectious_mean'] = \
+    ahle_disease_inf['ahle_dueto_ppr_mean'] + ahle_disease_inf['ahle_dueto_brucellosis_mean'] + ahle_disease_inf['ahle_dueto_fmd_mean']
 
-disease_inf_ahle['ahle_dueto_known_infectious_stdev'] = \
-    np.sqrt(disease_inf_ahle['ahle_dueto_ppr_stdev']**2 + disease_inf_ahle['ahle_dueto_brucellosis_stdev']**2 + disease_inf_ahle['ahle_dueto_fmd_stdev']**2)
+ahle_disease_inf['ahle_dueto_knowninfectious_stdev'] = \
+    np.sqrt(ahle_disease_inf['ahle_dueto_ppr_stdev']**2 + ahle_disease_inf['ahle_dueto_brucellosis_stdev']**2 + ahle_disease_inf['ahle_dueto_fmd_stdev']**2)
 
-datainfo(disease_inf_ahle)
+datainfo(ahle_disease_inf)
 
 # -----------------------------------------------------------------------------
 # Cause: Non-Infectious
@@ -953,45 +960,104 @@ datainfo(disease_inf_ahle)
 # =============================================================================
 #### Merge and calcs
 # =============================================================================
+# -----------------------------------------------------------------------------
 # Apply species-specific group labels
-## NOTE species-specific filters will be taken care of by left-merging onto attribution results
-_row_selection = (disease_inf_ahle['species'].str.upper() == 'ALL SMALL RUMINANTS')
-disease_inf_ahle.loc[_row_selection ,'group'] = \
-    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_smallrum)
+# -----------------------------------------------------------------------------
+# NOTE species-specific filters will be taken care of by left-merging onto attribution results
+_row_selection = (ahle_disease_inf['species'].str.upper() == 'ALL SMALL RUMINANTS')
+ahle_disease_inf.loc[_row_selection ,'group'] = \
+    ahle_disease_inf.loc[_row_selection ,'group'].replace(groups_for_attribution_smallrum)
 
-_row_selection = (disease_inf_ahle['species'].str.upper() == 'CATTLE')
-disease_inf_ahle.loc[_row_selection ,'group'] = \
-    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_cattle)
+_row_selection = (ahle_disease_inf['species'].str.upper() == 'CATTLE')
+ahle_disease_inf.loc[_row_selection ,'group'] = \
+    ahle_disease_inf.loc[_row_selection ,'group'].replace(groups_for_attribution_cattle)
 
-_row_selection = (disease_inf_ahle['species'].str.upper() == 'ALL POULTRY')
-disease_inf_ahle.loc[_row_selection ,'group'] = \
-    disease_inf_ahle.loc[_row_selection ,'group'].replace(groups_for_attribution_poultry)
+_row_selection = (ahle_disease_inf['species'].str.upper() == 'ALL POULTRY')
+ahle_disease_inf.loc[_row_selection ,'group'] = \
+    ahle_disease_inf.loc[_row_selection ,'group'].replace(groups_for_attribution_poultry)
 
 # Remove age_group and sex as these no longer match group labels
-del disease_inf_ahle['age_group'] ,disease_inf_ahle['sex']
+del ahle_disease_inf['age_group'] ,ahle_disease_inf['sex']
 
+# -----------------------------------------------------------------------------
 # Merge disease-specific columns onto ahle_combo_withattr
+# -----------------------------------------------------------------------------
 merge_on = attr_byvars + ['ahle_component' ,'cause']
 merge_on.remove('age_group')
 merge_on.remove('sex')
-ahle_combo_withattr_diseases = pd.merge(
+ahle_combo_withattr_plusinf = pd.merge(
     left=ahle_combo_withattr
-    ,right=disease_inf_ahle
+    ,right=ahle_disease_inf
     ,on=merge_on
     ,how='left'
 )
 
+# -----------------------------------------------------------------------------
+# Adjust health cost placeholder
+# -----------------------------------------------------------------------------
+'''
+Disease-specific health costs may add up to more than the total Infectious health
+cost because we split health cost evenly among infectious, non-infectious, and
+external causes.
+
+If total infectious health cost is less than the sum of disease-specific health
+cost, set it equal to the sum.
+'''
+_cause_infectious = (ahle_combo_withattr_plusinf['cause'] == 'Infectious')
+
+# -----------------------------------------------------------------------------
 # Calculate ahle due to "other" diseases
-ahle_combo_withattr_diseases = ahle_combo_withattr_diseases.eval(
-    '''
-    ahle_dueto_otherinfectious_mean = mean - ahle_dueto_known_infectious_mean
-    '''
-)
-datainfo(ahle_combo_withattr_diseases)
+# -----------------------------------------------------------------------------
+ahle_combo_withattr_plusinf['ahle_dueto_otherinfectious_mean'] = \
+    ahle_combo_withattr_plusinf['mean'] - ahle_combo_withattr_plusinf['ahle_dueto_knowninfectious_mean']
+
+ahle_combo_withattr_plusinf['ahle_dueto_otherinfectious_stdev'] = \
+    np.sqrt(ahle_combo_withattr_plusinf['sd']**2 + ahle_combo_withattr_plusinf['ahle_dueto_knowninfectious_stdev']**2)
+
+datainfo(ahle_combo_withattr_plusinf)
 
 # =============================================================================
 #### Melt disease-specific columns into rows
 # =============================================================================
+# Means
+ahle_combo_withattr_plusinf_means = ahle_combo_withattr_plusinf.melt(
+    id_vars=attr_byvars + ['ahle_component' ,'cause']
+    #!!! ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'ahle_dueto' in i and 'mean' in i]
+    ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'mean' in i]
+    ,var_name='disease_column'
+    ,value_name='disease_mean'
+)
+ahle_combo_withattr_plusinf_means[['drop_a' ,'drop_b' ,'disease' ,'drop_c']] = \
+    ahle_combo_withattr_plusinf_means['disease_column'].str.split('_' ,n=3 ,expand=True)
+ahle_combo_withattr_plusinf_means = ahle_combo_withattr_plusinf_means.drop(columns={
+    'disease_column'
+    ,'drop_a' ,'drop_b' ,'drop_c'
+})
+
+# Standard deviations
+ahle_combo_withattr_plusinf_stdev = ahle_combo_withattr_plusinf.melt(
+    id_vars=attr_byvars + ['ahle_component' ,'cause']
+    ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'ahle_dueto' in i and 'stdev' in i]
+    ,var_name='disease_column'
+    ,value_name='disease_stdev'
+)
+ahle_combo_withattr_plusinf_stdev[['drop_a' ,'drop_b' ,'disease' ,'drop_c']] = \
+    ahle_combo_withattr_plusinf_stdev['disease_column'].str.split('_' ,n=3 ,expand=True)
+ahle_combo_withattr_plusinf_stdev = ahle_combo_withattr_plusinf_stdev.drop(columns={
+    'disease_column'
+    ,'drop_a' ,'drop_b' ,'drop_c'
+})
+
+# Merge
+ahle_combo_withattr_diseases = pd.merge(
+    left=ahle_combo_withattr_plusinf_means
+    ,right=ahle_combo_withattr_plusinf_stdev
+    ,on=attr_byvars + ['ahle_component' ,'cause' ,'disease']
+    ,how='left'
+)
+del ahle_combo_withattr_plusinf_means ,ahle_combo_withattr_plusinf_stdev
+
+datainfo(ahle_combo_withattr_diseases)
 
 #%% *DEV B* ADD DISEASE-SPECIFIC COMPONENTS - MELT FIRST
 

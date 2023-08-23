@@ -182,8 +182,8 @@ sd_cols = [i for i in list(ahle_combo_adj) if 'stdev' in i]
 # =============================================================================
 #### Drop aggregate groups
 # =============================================================================
-# Separate all existing Overall records.
-_combined_rows = (ahle_combo_adj['group'].str.upper() == 'OVERALL')\
+# Separate all existing overall or combined groups
+_combined_rows = (ahle_combo_adj['group'].str.contains('OVERALL' ,case=False ,na=False))\
     | (ahle_combo_adj['group'].str.contains('COMBINED' ,case=False ,na=False))
 ahle_combo_overall = ahle_combo_adj.loc[_combined_rows].copy()
 
@@ -593,7 +593,8 @@ datainfo(ahle_combo_withagg_p)
 # =============================================================================
 '''
 Approach:
-    - Total AHLE is difference in gross margin between ideal scenario and current scenario.
+    - Total AHLE is difference in gross margin between ideal scenario and current scenario:
+        ahle_total_mean = mean_ideal_gross_margin - mean_current_gross_margin
     - AHLE due to mortality is difference in gross margin between zero mortality scenario and
         current scenario:
         ahle_dueto_mortality_mean = mean_mortality_zero_gross_margin - mean_current_gross_margin
@@ -602,7 +603,7 @@ Approach:
         Ruminants or Cattle. I am going to take the same approach as I did for disease-specific
         ahle due to mortality, estimating it as (number of deaths) * (value per head).
 
-        Number of deaths is simply Deaths a.k.a. Total Mortality
+        Number of deaths is simply Deaths a.k.a. Total Mortality.
         Value per head can be estimated 3 ways:
             (Value of Herd Increase) / (Cml Pop Growth)
             (Value of Offtake) / (Offtakes a.k.a. Num Offtake)
@@ -612,15 +613,15 @@ Approach:
             increase version.
 
     - AHLE due to health cost is simply current health cost (ideal health cost is zero).
-        Note health cost is negative, but the AHLE due to health cost is expressed as a positive.
+        Note health cost is negative; we multiply it by negative 1 to express AHLE due to health
+        cost as a positive.
     - AHLE due to production loss is the remainder needed to make total AHLE after accounting
         for mortality and health cost.
         Note production loss is hardest to measure because it is the lost potential production
-        among the animals that survived.
-
-        It's tempting to take the difference in "total production value" between the current
-        and ideal scenario as the production loss. However, this includes lost value due to
-        animals that died. We want the production loss just among the animals that survived.
+        among the animals that survived. It's tempting to take the difference in "total
+        production value" between the current and ideal scenario as the production loss. However,
+        this includes lost value due to animals that died. We want the production loss just among
+        the animals that survived.
 
 Calculating mean and standard deviation for each AHLE component.
 Relying on the following properties of sums of random variables:
@@ -641,12 +642,12 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
     '''
 )
 # AHLE due to Other Disease will depend on which diseases were estimated.
-# It also requires an estimate of the total infectious disease, which we don't have until the attribution step.
+# It also requires an estimate of the total infectious disease impact, which we
+# don't have until the attribution step.
 # Don't calculate this here. Handle it when needed (after attribution).
 # Should be: ahle_dueto_otherdisease_total_mean = ahle_total_infectious - ahle_dueto_ppr_total_mean - ahle_dueto_bruc_total_mean
 
 # Standard Deviations
-# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
 ahle_combo_withahle['ahle_total_stdev'] = np.sqrt(
     ahle_combo_withahle['stdev_ideal_gross_margin']**2 + ahle_combo_withahle['stdev_current_gross_margin']**2
 )
@@ -680,9 +681,10 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
 )
 
 # Standard Deviations
-# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
-# The variance of a product of random variables (XY) is more complex, and the variance of (X/Y) can only be found through simulation.
-# So, to calculate ahle_dueto_mortality_stdev I'm treating mean_current_valueperhead as constant.
+# The variance of a product of random variables (XY) is complex, and the variance
+# of a ratio (X/Y) can only be found through simulation.
+# So, to calculate ahle_dueto_mortality_stdev I'm treating mean_current_valueperhead
+# as constant.
 ahle_combo_withahle['ahle_dueto_mortality_stdev'] = np.sqrt(
     ahle_combo_withahle['mean_current_valueperhead']**2 + ahle_combo_withahle['stdev_current_total_mortality']**2
 )
@@ -726,7 +728,6 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
 )
 
 # Standard Deviations
-# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
 ahle_combo_withahle['ahle_dueto_healthcost_stdev'] = ahle_combo_withahle['stdev_current_health_cost']
 ahle_combo_withahle['ahle_dueto_ppr_healthcost_stdev'] = ahle_combo_withahle['stdev_ppr_health_cost']
 ahle_combo_withahle['ahle_dueto_bruc_healthcost_stdev'] = ahle_combo_withahle['stdev_bruc_health_cost']
@@ -745,7 +746,6 @@ ahle_combo_withahle = ahle_combo_withahle.eval(
 )
 
 # Standard Deviations
-# VAR(aX + bY) = a^2 VAR(X) + b^2 VAR(Y)
 ahle_combo_withahle['ahle_dueto_productionloss_stdev'] = np.sqrt(
     ahle_combo_withahle['ahle_total_stdev']**2 + ahle_combo_withahle['ahle_dueto_mortality_stdev']**2 + ahle_combo_withahle['ahle_dueto_healthcost_stdev']**2
 )
