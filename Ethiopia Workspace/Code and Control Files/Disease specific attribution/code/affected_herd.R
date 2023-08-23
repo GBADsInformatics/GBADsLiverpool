@@ -111,66 +111,6 @@ update_AHLE_scenarios(AHLE_scenario_file= "scenarios/sr_disease_scenarios.xlsx",
                       new_file_name = "scenarios/sr_disease_scenarios.xlsx")
 
 # 2 - Brucellosis ====
-## Cattle CLM ----
-CLM_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
-                                     SEBI_cause="Brucellosis",
-                                     SEBI_test=c("RBT, CFT"),
-                                     freq_col="C_Bruc",
-                                     age_col = "CLM_C_Bruc")
-CLM_C_Bruc_prod <- combined_production(production_system_code = "CLM",
-                                       species_code = "C",
-                                       cause_code = "Bruc",
-                                       ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
-                                       impact_file = "input/impact_inputs_cattle.xlsx",
-                                       affected_value = list(CP_J = CLM_C_Bruc_freq$stratified_I$I$J, CP_AF = CLM_C_Bruc_freq$stratified_I$I$AF,  CP_Health = Reduce("+",CLM_C_Bruc_freq$stratified_I$I)),
-                                       affected_change = list(CP_Part=CLM_C_Bruc_freq$stratified_I$I$AF, CP_Milk=CLM_C_Bruc_freq$stratified_I$I$AF, CP_Draught=CLM_C_Bruc_freq$stratified_I$I$O))
-CLM_C_Bruc <- pert_distributions("CLM_C_Bruc", CLM_C_Bruc_prod)
-update_AHLE_scenarios(AHLE_scenario_file="scenarios/AHLE scenario parameters CATTLE.xlsx",
-                      ideal_col = "CLM_C_Ideal",
-                      affected_parameters_object=CLM_C_Bruc,
-                      col_name = "CLM_C_Bruc",
-                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
-
-## Cattle Pastoral ----
-Past_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
-                                      SEBI_cause="Brucellosis",
-                                      SEBI_test=c("RBT, CFT"),
-                                      freq_col="C_Bruc",
-                                      age_col = "Past_C_Bruc")
-Past_C_Bruc_prod <- combined_production(production_system_code = "Past",
-                                              species_code = "C",
-                                              cause_code = "Bruc",
-                                              ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
-                                              impact_file = "input/impact_inputs_cattle.xlsx",
-                                              affected_value = list(CP_J = Past_C_Bruc_freq$stratified_I$I$J, CP_AF = Past_C_Bruc_freq$stratified_I$I$AF, CP_Health = Reduce("+", Past_C_Bruc_freq$stratified_I$I)),
-                                              affected_change = list(CP_Part = Past_C_Bruc_freq$stratified_I$I$AF, CP_Milk = Past_C_Bruc_freq$stratified_I$I$AF))
-Past_C_Bruc <- pert_distributions("Past_C_Bruc", Past_C_Bruc_prod)
-update_AHLE_scenarios(AHLE_scenario_file="scenarios/cattle_disease_scenarios.xlsx",
-                      ideal_col = "Past_C_Ideal",
-                      affected_parameters_object=Past_C_Bruc,
-                      col_name = "Past_C_Bruc",
-                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
-
-## Cattle Periurban Dairy ----
-PUD_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
-                                     SEBI_cause="Brucellosis",
-                                     SEBI_test=c("RBT, CFT"),
-                                     freq_col="C_Bruc",
-                                     age_col = "PUD_C_Bruc")
-PUD_C_Bruc_prod <- combined_production(production_system_code = "PUD",
-                                             species_code = "C",
-                                             cause_code = "Bruc",
-                                             ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
-                                             impact_file = "input/impact_inputs_cattle.xlsx",
-                                             affected_value = list(CP_J = PUD_C_Bruc_freq$stratified_I$I$J, CP_AF = PUD_C_Bruc_freq$stratified_I$I$AF, CP_Health = Reduce("+", PUD_C_Bruc_freq$stratified_I$I)),
-                                             affected_change = list(CP_Part=PUD_C_Bruc_freq$stratified_I$I$AF, CP_Milk=PUD_C_Bruc_freq$stratified_I$I$AF))
-PUD_C_Bruc <- pert_distributions("PUD_C_Bruc", PUD_C_Bruc_prod)
-update_AHLE_scenarios(AHLE_scenario_file="scenarios/cattle_disease_scenarios.xlsx",
-                      ideal_col = "PUD_C_Ideal",
-                      affected_parameters_object=PUD_C_Bruc,
-                      col_name = "PUD_C_Bruc",
-                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
-
 ## Sheep CLM ----
 CLM_S_Bruc_freq <- SEBI_to_incidence(SEBI_species=c("Sheep", "Small Ruminants"),
                                      SEBI_cause="Brucellosis",
@@ -262,6 +202,65 @@ update_AHLE_scenarios(AHLE_scenario_file= "scenarios/sr_disease_scenarios.xlsx",
                       affected_parameters_object=Past_G_Bruc,
                       col_name = "Past_G_Bruc",
                       new_file_name = "scenarios/sr_disease_scenarios.xlsx")
+## Cattle CLM ----
+CLM_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
+                                     SEBI_cause="Brucellosis",
+                                     SEBI_test=c("RBT, CFT"),
+                                     freq_col="C_Bruc",
+                                     age_col = "CLM_C_Bruc")
+CLM_C_Bruc_prod <- combined_production(production_system_code = "CLM",
+                                       species_code = "C",
+                                       cause_code = "Bruc",
+                                       ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
+                                       impact_file = "input/impact_inputs_cattle.xlsx",
+                                       affected_value = list(CP_J = CLM_C_Bruc_freq$stratified_I$I$J, CP_AF = CLM_C_Bruc_freq$stratified_I$I$AF,  CP_Health = Reduce("+",CLM_C_Bruc_freq$stratified_I$I)),
+                                       affected_change = list(CP_Part=CLM_C_Bruc_freq$stratified_I$I$AF, CP_Milk=CLM_C_Bruc_freq$stratified_I$I$AF, CP_Draught=CLM_C_Bruc_freq$stratified_I$I$O))
+CLM_C_Bruc <- pert_distributions("CLM_C_Bruc", CLM_C_Bruc_prod)
+update_AHLE_scenarios(AHLE_scenario_file="scenarios/AHLE scenario parameters CATTLE.xlsx",
+                      ideal_col = "CLM_C_Ideal",
+                      affected_parameters_object=CLM_C_Bruc,
+                      col_name = "CLM_C_Bruc",
+                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
+
+## Cattle Pastoral ----
+Past_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
+                                      SEBI_cause="Brucellosis",
+                                      SEBI_test=c("RBT, CFT"),
+                                      freq_col="C_Bruc",
+                                      age_col = "Past_C_Bruc")
+Past_C_Bruc_prod <- combined_production(production_system_code = "Past",
+                                        species_code = "C",
+                                        cause_code = "Bruc",
+                                        ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
+                                        impact_file = "input/impact_inputs_cattle.xlsx",
+                                        affected_value = list(CP_J = Past_C_Bruc_freq$stratified_I$I$J, CP_AF = Past_C_Bruc_freq$stratified_I$I$AF, CP_Health = Reduce("+", Past_C_Bruc_freq$stratified_I$I)),
+                                        affected_change = list(CP_Part = Past_C_Bruc_freq$stratified_I$I$AF, CP_Milk = Past_C_Bruc_freq$stratified_I$I$AF))
+Past_C_Bruc <- pert_distributions("Past_C_Bruc", Past_C_Bruc_prod)
+update_AHLE_scenarios(AHLE_scenario_file="scenarios/cattle_disease_scenarios.xlsx",
+                      ideal_col = "Past_C_Ideal",
+                      affected_parameters_object=Past_C_Bruc,
+                      col_name = "Past_C_Bruc",
+                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
+
+## Cattle Periurban Dairy ----
+PUD_C_Bruc_freq <- SEBI_to_incidence(SEBI_species="Cattle",
+                                     SEBI_cause="Brucellosis",
+                                     SEBI_test=c("RBT, CFT"),
+                                     freq_col="C_Bruc",
+                                     age_col = "PUD_C_Bruc")
+PUD_C_Bruc_prod <- combined_production(production_system_code = "PUD",
+                                       species_code = "C",
+                                       cause_code = "Bruc",
+                                       ahle_scenario_file = "scenarios/AHLE scenario parameters CATTLE.xlsx",
+                                       impact_file = "input/impact_inputs_cattle.xlsx",
+                                       affected_value = list(CP_J = PUD_C_Bruc_freq$stratified_I$I$J, CP_AF = PUD_C_Bruc_freq$stratified_I$I$AF, CP_Health = Reduce("+", PUD_C_Bruc_freq$stratified_I$I)),
+                                       affected_change = list(CP_Part=PUD_C_Bruc_freq$stratified_I$I$AF, CP_Milk=PUD_C_Bruc_freq$stratified_I$I$AF))
+PUD_C_Bruc <- pert_distributions("PUD_C_Bruc", PUD_C_Bruc_prod)
+update_AHLE_scenarios(AHLE_scenario_file="scenarios/cattle_disease_scenarios.xlsx",
+                      ideal_col = "PUD_C_Ideal",
+                      affected_parameters_object=PUD_C_Bruc,
+                      col_name = "PUD_C_Bruc",
+                      new_file_name = "scenarios/cattle_disease_scenarios.xlsx")
 
 # 3 - Foot-and-mouth disease ====
 ## Cattle CLM ----

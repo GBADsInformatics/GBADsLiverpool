@@ -5,6 +5,7 @@ source("code/ahle_sr_fns.R")
 
 # Set user, number of runs, scenario file location, and list scenario columns to run
 user <- "AL"
+user_comments <- "Update labour costs so that they always more than ideal scenario"
 n <- 10000
 scenario_file <- paste0("scenarios/sr_disease_scenarios.xlsx")
 scenario_list <- list(
@@ -31,5 +32,6 @@ results_long <- map_df(results_list, ~as.data.frame(.x), .id="id") %>%
 export_results_long <- write_csv(results_long, "output/ahle_sr.csv")
 
 # Add results to tracker csv
+results_tracker <- results_long %>% mutate(comments=user_comments)
 cat("\n", file="output/ahle_results_tracker.csv", append=TRUE) # wrtite_csv and write.table were having issues without this line to fix
-export_tracker <- write_csv(results_long, "output/ahle_results_tracker.csv", append = TRUE)
+export_tracker <- write_csv(results_tracker, "output/ahle_results_tracker.csv", append = TRUE)
