@@ -289,7 +289,7 @@ datainfo(ahle_combo_forattr ,200)
 # =============================================================================
 #### Restructure for Attribution function
 # =============================================================================
-attr_byvars = ['species' ,'region' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year']
+attr_byvars = ('species' ,'region' ,'production_system' ,'group' ,'age_group' ,'sex' ,'year')   # Make tuple so it is immutable
 
 # Define ahle variables to use and their labels to match expert attribution file
 ahle_component_labels = {
@@ -317,14 +317,16 @@ ahle_combo_forattr_stdev = ahle_combo_forattr.melt(
 )
 
 # Recode AHLE components to match expert opinion file
-ahle_combo_forattr_means['ahle_component'] = ahle_combo_forattr_means['ahle_component'].apply(lookup_from_dct ,DICT=ahle_component_labels)
-ahle_combo_forattr_stdev['ahle_component'] = ahle_combo_forattr_stdev['ahle_component'].apply(lookup_from_dct ,DICT=ahle_component_labels)
+ahle_combo_forattr_means['ahle_component'] = \
+    ahle_combo_forattr_means['ahle_component'].apply(lookup_from_dct ,DICT=ahle_component_labels)
+ahle_combo_forattr_stdev['ahle_component'] = \
+    ahle_combo_forattr_stdev['ahle_component'].apply(lookup_from_dct ,DICT=ahle_component_labels)
 
 # Merge means and standard deviations
 ahle_combo_forattr_m = pd.merge(
    left=ahle_combo_forattr_means
    ,right=ahle_combo_forattr_stdev
-   ,on=attr_byvars + ['ahle_component']
+   ,on=list(attr_byvars) + ['ahle_component']
    ,how='outer'
 )
 del ahle_combo_forattr_means ,ahle_combo_forattr_stdev
@@ -654,15 +656,278 @@ os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_poultry_one
 os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_poultry_oneyear_oneregion.csv'))
 
 # =============================================================================
-#### Combine attribution results
+#### Combine attribution results and cleanup
 # =============================================================================
-ahle_combo_withattr = pd.concat(
+ahle_combo_withattr_raw = pd.concat(
     [attribution_summary_smallruminants ,attribution_summary_cattle ,attribution_summary_poultry]
     ,axis=0              # axis=0: concatenate rows (stack), axis=1: concatenate columns (merge)
     ,join='outer'        # 'outer': keep all index values from all data frames
     ,ignore_index=True   # True: do not keep index values on concatenation axis
     )
-cleancolnames(ahle_combo_withattr)
+cleancolnames(ahle_combo_withattr_raw)
+
+# -----------------------------------------------------------------------------
+# Rename and Recode columns
+# -----------------------------------------------------------------------------
+ahle_combo_withattr = ahle_combo_withattr_raw.copy()
+
+rename_cols = {
+    "ahle":"ahle_component"
+    ,"age_class":"group"
+}
+ahle_combo_withattr = ahle_combo_withattr.rename(columns=rename_cols)
+
+# Split age and sex groups into their own columns
+ahle_combo_withattr[['age_group' ,'sex']] = ahle_combo_withattr['group'].str.split(' ' ,expand=True)
+
+recode_sex = {
+   None:'Overall'
+   ,'female':'Female'
+   ,'male':'Male'
+}
+ahle_combo_withattr['sex'] = ahle_combo_withattr['sex'].replace(recode_sex)
+
+recode_age = {
+   'Neonate':'Neonatal'
+}
+ahle_combo_withattr['age_group'] = ahle_combo_withattr['age_group'].replace(recode_age)
+
+recode_prodsys = {
+    "Dairy":"Periurban dairy"
+}
+ahle_combo_withattr['production_system'] = ahle_combo_withattr['production_system'].replace(recode_prodsys)
+
+# -----------------------------------------------------------------------------
+# Drop and reorder columns
+# -----------------------------------------------------------------------------
+# Drop Median column as it will not be valid after adding placeholders
+del ahle_combo_withattr['median']
+
+# Reorder columns
+cols_first = list(attr_byvars) + ['ahle_component' ,'cause']
+cols_other = [i for i in list(ahle_combo_withattr) if i not in cols_first]
+ahle_combo_withattr = ahle_combo_withattr.reindex(columns=cols_first + cols_other)
+ahle_combo_withattr = ahle_combo_withattr.sort_values(by=cols_first ,ignore_index=True)
+
+datainfo(ahle_combo_withattr)
+
+#%% *DEV* PIVOT ATTRIBUTION RESULTS
+'''
+This approach combines the logic to add health cost and disease-specific
+attribution (both actuals and placeholders).
+'''
+# =============================================================================
+#### Merge AHLE columns onto attribution
+# =============================================================================
+# -----------------------------------------------------------------------------
+# Pivot attribution rows into columns
+# -----------------------------------------------------------------------------
+ahle_combo_withattr_p = ahle_combo_withattr.pivot(
+	index=attr_byvars
+    ,columns=['ahle_component' ,'cause']
+    ,values=['mean' ,'sd']
+)
+ahle_combo_withattr_p = colnames_from_index(ahle_combo_withattr_p) 	# If multi-indexed columns were created, flatten index
+ahle_combo_withattr_p = ahle_combo_withattr_p.reset_index()           # Pivoting will change columns to indexes. Change them back.
+cleancolnames(ahle_combo_withattr_p)
+
+datainfo(ahle_combo_withattr_p)
+
+# -----------------------------------------------------------------------------
+# Prep for merge
+# -----------------------------------------------------------------------------
+ahle_combo_forattr_tomerge = ahle_combo_forattr.copy()
+
+# Recode groups on ahle_combo_forattr
+# NOTE species-specific filters will be taken care of by left-merging onto attribution results
+_row_selection = (ahle_combo_forattr_tomerge['species'].str.upper() == 'ALL SMALL RUMINANTS')
+ahle_combo_forattr_tomerge.loc[_row_selection ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_row_selection ,'group'].replace(groups_for_attribution_smallrum)
+
+_row_selection = (ahle_combo_forattr_tomerge['species'].str.upper() == 'CATTLE')
+ahle_combo_forattr_tomerge.loc[_row_selection ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_row_selection ,'group'].replace(groups_for_attribution_cattle)
+
+_row_selection = (ahle_combo_forattr_tomerge['species'].str.upper() == 'ALL POULTRY')
+ahle_combo_forattr_tomerge.loc[_row_selection ,'group'] = \
+    ahle_combo_forattr_tomerge.loc[_row_selection ,'group'].replace(groups_for_attribution_poultry)
+
+# Remove age_group and sex as these no longer match group labels
+del ahle_combo_forattr_tomerge['age_group'] ,ahle_combo_forattr_tomerge['sex']
+
+# -----------------------------------------------------------------------------
+# Merge AHLE columns onto ahle_combo_withattr
+# -----------------------------------------------------------------------------
+merge_on = list(attr_byvars)
+merge_on.remove('age_group')
+merge_on.remove('sex')
+ahle_combo_attrmerged = pd.merge(
+    left=ahle_combo_withattr_p
+    ,right=ahle_combo_forattr_tomerge
+    ,on=merge_on
+    ,how='left'
+)
+
+# =============================================================================
+#### Calcs
+# =============================================================================
+'''
+Create columns for each combination of:
+    ahle_component (mortality, production loss, health cost)
+    cause (infectious, noninfectious, external)
+    disease (ppr, bruc, fmd, other)
+
+Column naming pattern: ahle_attr_[component]_[cause]_[disease]_[mean|stdev]
+    e.g.:
+    ahle_attr_mortality_allcause_alldisease_mean
+    ahle_attr_mortality_infectious_alldisease_mean
+    ahle_attr_mortality_infectious_ppr_mean
+'''
+# -----------------------------------------------------------------------------
+# Mortality
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
+    '''
+    ahle_attr_mortality_allcause_alldisease_mean = ahle_dueto_mortality_mean
+
+    ahle_attr_mortality_infectious_alldisease_mean = mean_mortality_infectious
+    ahle_attr_mortality_infectious_ppr_mean = ahle_dueto_ppr_mortality_mean
+    ahle_attr_mortality_infectious_bruc_mean = ahle_dueto_bruc_mortality_mean
+    ahle_attr_mortality_infectious_fmd_mean = ahle_dueto_fmd_mortality_mean
+    ahle_attr_mortality_infectious_known_mean = \
+        ahle_attr_mortality_infectious_ppr_mean \
+            + ahle_attr_mortality_infectious_bruc_mean \
+                + ahle_attr_mortality_infectious_fmd_mean
+    ahle_attr_mortality_infectious_other_mean = \
+        ahle_attr_mortality_infectious_alldisease_mean - ahle_attr_mortality_infectious_known_mean
+
+    ahle_attr_mortality_noninfectious_alldisease_mean = mean_mortality_non_infectious
+    ahle_attr_mortality_external_alldisease_mean = mean_mortality_external
+    '''
+    # Standard deviations
+    #!!! Finish the rest of these. Will need to be outside eval() to use sqrt().
+    '''
+    ahle_attr_mortality_infectious_alldisease_stdev = sd_mortality_infectious
+    ahle_attr_mortality_noninfectious_alldisease_stdev = sd_mortality_non_infectious
+    ahle_attr_mortality_external_alldisease_stdev = sd_mortality_external
+    ahle_attr_productionloss_infectious_alldisease_stdev = sd_production_loss_infectious
+    ahle_attr_productionloss_noninfectious_alldisease_stdev = sd_production_loss_non_infectious
+    ahle_attr_productionloss_external_alldisease_stdev = sd_production_loss_external
+    '''
+)
+
+# -----------------------------------------------------------------------------
+# Production loss
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
+    '''
+    ahle_attr_productionloss_allcause_alldisease_mean = ahle_dueto_productionloss_mean
+
+    ahle_attr_productionloss_infectious_alldisease_mean = mean_production_loss_infectious
+    ahle_attr_productionloss_infectious_ppr_mean = ahle_dueto_ppr_productionloss_mean
+    ahle_attr_productionloss_infectious_bruc_mean = ahle_dueto_bruc_productionloss_mean
+    ahle_attr_productionloss_infectious_fmd_mean = ahle_dueto_fmd_productionloss_mean
+    ahle_attr_productionloss_infectious_known_mean = \
+        ahle_attr_productionloss_infectious_ppr_mean \
+            + ahle_attr_productionloss_infectious_bruc_mean \
+                + ahle_attr_productionloss_infectious_fmd_mean
+    ahle_attr_productionloss_infectious_other_mean = \
+        ahle_attr_productionloss_infectious_alldisease_mean - ahle_attr_productionloss_infectious_known_mean
+
+    ahle_attr_productionloss_noninfectious_alldisease_mean = mean_production_loss_non_infectious
+    ahle_attr_productionloss_external_alldisease_mean = mean_production_loss_external
+    '''
+)
+
+# -----------------------------------------------------------------------------
+# Health cost
+# -----------------------------------------------------------------------------
+## Note infectious, noninfectious, and external totals are unknown because not part of expert elicitation
+# # Naive approach: health cost split equally among causes
+# ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean_a'] = ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] / 3
+
+# # Total infectious must be at least equal to known diseases
+# ## Note this does not leave any for 'other' diseases
+# ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean_b'] = ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_mean']
+
+# ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean'] = \
+#     ahle_combo_attrmerged[['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b']].max(axis=1)
+# ahle_combo_attrmerged = ahle_combo_attrmerged.drop(columns=['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b'])
+
+# Make an assumption about the proportion of infectious_alldisease captured by known diseases
+#!!! Check for cases where ahle_attr_healthcost_allcause_alldisease_mean < ahle_attr_healthcost_infectious_alldisease_mean
+healthcost_known_disease_prpn = 0.9
+ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
+    f'''
+    ahle_attr_healthcost_allcause_alldisease_mean = ahle_dueto_healthcost_mean
+
+    ahle_attr_healthcost_infectious_ppr_mean = ahle_dueto_ppr_healthcost_mean
+    ahle_attr_healthcost_infectious_bruc_mean = ahle_dueto_bruc_healthcost_mean
+    ahle_attr_healthcost_infectious_fmd_mean = ahle_dueto_fmd_healthcost_mean
+    ahle_attr_healthcost_infectious_known_mean = \
+        ahle_attr_healthcost_infectious_ppr_mean \
+            + ahle_attr_healthcost_infectious_bruc_mean \
+                + ahle_attr_healthcost_infectious_fmd_mean
+
+    ahle_attr_healthcost_infectious_alldisease_mean = \
+        ahle_attr_healthcost_infectious_known_mean / {healthcost_known_disease_prpn}
+
+    ahle_attr_healthcost_infectious_other_mean = \
+        ahle_attr_healthcost_infectious_alldisease_mean - ahle_attr_healthcost_infectious_known_mean
+
+    ahle_attr_healthcost_noninfectious_alldisease_mean = \
+        (ahle_attr_healthcost_allcause_alldisease_mean - ahle_attr_healthcost_infectious_alldisease_mean) / 2
+    ahle_attr_healthcost_external_alldisease_mean = \
+        (ahle_attr_healthcost_allcause_alldisease_mean - ahle_attr_healthcost_infectious_alldisease_mean) / 2
+    '''
+)
+
+datainfo(ahle_combo_attrmerged ,150)
+
+# =============================================================================
+#### Melt attribution columns into rows
+# =============================================================================
+# -----------------------------------------------------------------------------
+# Means
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged_means = ahle_combo_attrmerged.melt(
+    id_vars=attr_byvars
+    ,value_vars=[i for i in list(ahle_combo_attrmerged) if 'ahle_attr' in i and 'mean' in i]
+    ,var_name='attr_column'
+    ,value_name='mean'
+)
+
+# Decode attribution names into columns
+ahle_combo_attrmerged_means[['drop_a' ,'drop_b' ,'ahle_component' ,'cause' ,'disease' ,'drop_c']] = \
+    ahle_combo_attrmerged_means['attr_column'].str.split('_' ,expand=True)
+ahle_combo_attrmerged_means = ahle_combo_attrmerged_means.drop(columns=['attr_column' ,'drop_a' ,'drop_b' ,'drop_c'])
+
+# -----------------------------------------------------------------------------
+# Standard deviations
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged_stdev = ahle_combo_attrmerged.melt(
+    id_vars=attr_byvars
+    ,value_vars=[i for i in list(ahle_combo_attrmerged) if 'ahle_attr' in i and 'stdev' in i]
+    ,var_name='attr_column'
+    ,value_name='stdev'
+)
+
+# Decode attribution names into columns
+ahle_combo_attrmerged_stdev[['drop_a' ,'drop_b' ,'ahle_component' ,'cause' ,'disease' ,'drop_c']] = \
+    ahle_combo_attrmerged_stdev['attr_column'].str.split('_' ,expand=True)
+ahle_combo_attrmerged_stdev = ahle_combo_attrmerged_stdev.drop(columns=['attr_column' ,'drop_a' ,'drop_b' ,'drop_c'])
+
+# -----------------------------------------------------------------------------
+# Merge
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged_m = pd.merge(
+    left=ahle_combo_attrmerged_means
+    ,right=ahle_combo_attrmerged_stdev
+    ,on=list(attr_byvars) + ['ahle_component' ,'cause' ,'disease']
+    ,how='left'
+)
+del ahle_combo_attrmerged_means ,ahle_combo_attrmerged_stdev
+datainfo(ahle_combo_attrmerged_m)
 
 #%% ADD HEALTH COST COMPONENT
 '''
@@ -837,7 +1102,7 @@ ahle_combo_withattr['production_system'] = ahle_combo_withattr['production_syste
 del ahle_combo_withattr['median']
 
 # Reorder columns
-cols_first = attr_byvars + ['ahle_component' ,'cause']
+cols_first = list(attr_byvars) + ['ahle_component' ,'cause']
 cols_other = [i for i in list(ahle_combo_withattr) if i not in cols_first]
 ahle_combo_withattr = ahle_combo_withattr.reindex(columns=cols_first + cols_other)
 ahle_combo_withattr = ahle_combo_withattr.sort_values(by=cols_first ,ignore_index=True)
@@ -922,7 +1187,7 @@ for DISEASE in list(diseases_infectious):
     single_disease_ahle = pd.merge(
         left=single_disease_means
         ,right=single_disease_stdev
-        ,on=attr_byvars + ['ahle_component']
+        ,on=list(attr_byvars) + ['ahle_component']
         ,how='left'
     )
 
@@ -933,7 +1198,7 @@ for DISEASE in list(diseases_infectious):
         ahle_disease_inf = pd.merge(
             left=ahle_disease_inf
             ,right=single_disease_ahle
-            ,on=attr_byvars + ['ahle_component']
+            ,on=list(attr_byvars) + ['ahle_component']
             ,how='left'
         )
 del single_disease_means ,single_disease_stdev ,single_disease_ahle
@@ -982,7 +1247,7 @@ del ahle_disease_inf['age_group'] ,ahle_disease_inf['sex']
 # -----------------------------------------------------------------------------
 # Merge disease-specific columns onto ahle_combo_withattr
 # -----------------------------------------------------------------------------
-merge_on = attr_byvars + ['ahle_component' ,'cause']
+merge_on = list(attr_byvars) + ['ahle_component' ,'cause']
 merge_on.remove('age_group')
 merge_on.remove('sex')
 ahle_combo_withattr_plusinf = pd.merge(
@@ -1021,45 +1286,53 @@ datainfo(ahle_combo_withattr_plusinf)
 # =============================================================================
 # Means
 ahle_combo_withattr_plusinf_means = ahle_combo_withattr_plusinf.melt(
-    id_vars=attr_byvars + ['ahle_component' ,'cause']
-    #!!! ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'ahle_dueto' in i and 'mean' in i]
+    id_vars=list(attr_byvars) + ['ahle_component' ,'cause']
     ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'mean' in i]
     ,var_name='disease_column'
     ,value_name='disease_mean'
 )
+
+# Isolate disease name from label
 ahle_combo_withattr_plusinf_means[['drop_a' ,'drop_b' ,'disease' ,'drop_c']] = \
     ahle_combo_withattr_plusinf_means['disease_column'].str.split('_' ,n=3 ,expand=True)
+
+# Plain label is 'overall' disease
+ahle_combo_withattr_plusinf_means.loc[ahle_combo_withattr_plusinf_means['disease_column'] == 'mean' ,'disease'] = 'overall'
 ahle_combo_withattr_plusinf_means = ahle_combo_withattr_plusinf_means.drop(columns={
-    'disease_column'
-    ,'drop_a' ,'drop_b' ,'drop_c'
+    'disease_column' ,'drop_a' ,'drop_b' ,'drop_c'
 })
 
 # Standard deviations
 ahle_combo_withattr_plusinf_stdev = ahle_combo_withattr_plusinf.melt(
-    id_vars=attr_byvars + ['ahle_component' ,'cause']
-    ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'ahle_dueto' in i and 'stdev' in i]
+    id_vars=list(attr_byvars) + ['ahle_component' ,'cause']
+    ,value_vars=[i for i in list(ahle_combo_withattr_plusinf) if 'stdev' in i or 'sd' in i]
     ,var_name='disease_column'
     ,value_name='disease_stdev'
 )
+
+# Isolate disease name from label
 ahle_combo_withattr_plusinf_stdev[['drop_a' ,'drop_b' ,'disease' ,'drop_c']] = \
     ahle_combo_withattr_plusinf_stdev['disease_column'].str.split('_' ,n=3 ,expand=True)
+
+# Plain label is 'overall' disease
+ahle_combo_withattr_plusinf_stdev.loc[ahle_combo_withattr_plusinf_stdev['disease_column'] == 'sd' ,'disease'] = 'overall'
 ahle_combo_withattr_plusinf_stdev = ahle_combo_withattr_plusinf_stdev.drop(columns={
     'disease_column'
     ,'drop_a' ,'drop_b' ,'drop_c'
 })
 
-# Merge
-ahle_combo_withattr_diseases = pd.merge(
+# Merge means and stdev
+ahle_combo_withattr_plusinf_m = pd.merge(
     left=ahle_combo_withattr_plusinf_means
     ,right=ahle_combo_withattr_plusinf_stdev
-    ,on=attr_byvars + ['ahle_component' ,'cause' ,'disease']
+    ,on=list(attr_byvars) + ['ahle_component' ,'cause' ,'disease']
     ,how='left'
 )
 del ahle_combo_withattr_plusinf_means ,ahle_combo_withattr_plusinf_stdev
 
-datainfo(ahle_combo_withattr_diseases)
+datainfo(ahle_combo_withattr_plusinf_m)
 
-#%% *DEV B* ADD DISEASE-SPECIFIC COMPONENTS - MELT FIRST
+#%% *DEV B* ADD DISEASE-SPECIFIC COMPONENTS
 
 # =============================================================================
 #### Cause: Infectious
@@ -1127,7 +1400,7 @@ del ahle_diseases_inf_m_stdev['ahle_column']
 ahle_diseases_inf_m = pd.merge(
     left=ahle_diseases_inf_m_means
     ,right=ahle_diseases_inf_m_stdev
-    ,on=attr_byvars + ['disease' ,'ahle_component']
+    ,on=list(attr_byvars) + ['disease' ,'ahle_component']
     ,how='outer'
 )
 del ahle_diseases_inf_m_means ,ahle_diseases_inf_m_stdev
@@ -1155,7 +1428,7 @@ del ahle_diseases_inf_m['age_group'] ,ahle_diseases_inf_m['sex']
 
 # Merge
 ## This will create new rows, one for each disease
-merge_on = attr_byvars + ['ahle_component' ,'cause']
+merge_on = list(attr_byvars) + ['ahle_component' ,'cause']
 merge_on.remove('age_group')
 merge_on.remove('sex')
 ahle_combo_withattr_diseases = pd.merge(
@@ -1170,7 +1443,7 @@ ahle_combo_withattr_diseases = pd.merge(
 # -----------------------------------------------------------------------------
 # Calculate total due to specific diseases by ahle_component and cause
 ahle_combo_withattr_diseases['specific_disease_total'] = \
-    ahle_combo_withattr_diseases.groupby(attr_byvars + ['ahle_component' ,'cause'])['disease_mean'].transform('sum')
+    ahle_combo_withattr_diseases.groupby(list(attr_byvars) + ['ahle_component' ,'cause'])['disease_mean'].transform('sum')
 
 # Get total due to other diseases as difference from total by cause
 
