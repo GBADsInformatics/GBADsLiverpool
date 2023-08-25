@@ -711,6 +711,11 @@ ahle_combo_withattr = ahle_combo_withattr.sort_values(by=cols_first ,ignore_inde
 
 datainfo(ahle_combo_withattr)
 
+# =============================================================================
+#### Export
+# =============================================================================
+ahle_combo_withattr.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr.csv') ,index=False)
+
 #%% *DEV* PIVOT ATTRIBUTION RESULTS
 '''
 This approach combines the logic to add health cost and disease-specific
@@ -791,29 +796,43 @@ ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
     ahle_attr_mortality_allcause_alldisease_mean = ahle_dueto_mortality_mean
 
     ahle_attr_mortality_infectious_alldisease_mean = mean_mortality_infectious
+    ahle_attr_mortality_noninfectious_alldisease_mean = mean_mortality_non_infectious
+    ahle_attr_mortality_external_alldisease_mean = mean_mortality_external
+
     ahle_attr_mortality_infectious_ppr_mean = ahle_dueto_ppr_mortality_mean
     ahle_attr_mortality_infectious_bruc_mean = ahle_dueto_bruc_mortality_mean
     ahle_attr_mortality_infectious_fmd_mean = ahle_dueto_fmd_mortality_mean
+
     ahle_attr_mortality_infectious_known_mean = \
         ahle_attr_mortality_infectious_ppr_mean \
             + ahle_attr_mortality_infectious_bruc_mean \
                 + ahle_attr_mortality_infectious_fmd_mean
     ahle_attr_mortality_infectious_other_mean = \
         ahle_attr_mortality_infectious_alldisease_mean - ahle_attr_mortality_infectious_known_mean
-
-    ahle_attr_mortality_noninfectious_alldisease_mean = mean_mortality_non_infectious
-    ahle_attr_mortality_external_alldisease_mean = mean_mortality_external
     '''
     # Standard deviations
-    #!!! Finish the rest of these. Will need to be outside eval() to use sqrt().
     '''
+    ahle_attr_mortality_allcause_alldisease_stdev = ahle_dueto_mortality_stdev
+
     ahle_attr_mortality_infectious_alldisease_stdev = sd_mortality_infectious
     ahle_attr_mortality_noninfectious_alldisease_stdev = sd_mortality_non_infectious
     ahle_attr_mortality_external_alldisease_stdev = sd_mortality_external
-    ahle_attr_productionloss_infectious_alldisease_stdev = sd_production_loss_infectious
-    ahle_attr_productionloss_noninfectious_alldisease_stdev = sd_production_loss_non_infectious
-    ahle_attr_productionloss_external_alldisease_stdev = sd_production_loss_external
+
+    ahle_attr_mortality_infectious_ppr_stdev = ahle_dueto_ppr_mortality_stdev
+    ahle_attr_mortality_infectious_bruc_stdev = ahle_dueto_bruc_mortality_stdev
+    ahle_attr_mortality_infectious_fmd_stdev = ahle_dueto_fmd_mortality_stdev
     '''
+)
+
+# Remaining standard deviations must be calculated outside eval() to use sqrt()
+ahle_combo_attrmerged['ahle_attr_mortality_infectious_known_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_mortality_infectious_ppr_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_mortality_infectious_bruc_stdev']**2 \
+            + ahle_combo_attrmerged['ahle_attr_mortality_infectious_fmd_stdev']**2
+)
+ahle_combo_attrmerged['ahle_attr_mortality_infectious_other_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_mortality_infectious_alldisease_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_mortality_infectious_known_stdev']**2
 )
 
 # -----------------------------------------------------------------------------
@@ -824,62 +843,142 @@ ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
     ahle_attr_productionloss_allcause_alldisease_mean = ahle_dueto_productionloss_mean
 
     ahle_attr_productionloss_infectious_alldisease_mean = mean_production_loss_infectious
+    ahle_attr_productionloss_noninfectious_alldisease_mean = mean_production_loss_non_infectious
+    ahle_attr_productionloss_external_alldisease_mean = mean_production_loss_external
+
     ahle_attr_productionloss_infectious_ppr_mean = ahle_dueto_ppr_productionloss_mean
     ahle_attr_productionloss_infectious_bruc_mean = ahle_dueto_bruc_productionloss_mean
     ahle_attr_productionloss_infectious_fmd_mean = ahle_dueto_fmd_productionloss_mean
+
     ahle_attr_productionloss_infectious_known_mean = \
         ahle_attr_productionloss_infectious_ppr_mean \
             + ahle_attr_productionloss_infectious_bruc_mean \
                 + ahle_attr_productionloss_infectious_fmd_mean
     ahle_attr_productionloss_infectious_other_mean = \
         ahle_attr_productionloss_infectious_alldisease_mean - ahle_attr_productionloss_infectious_known_mean
-
-    ahle_attr_productionloss_noninfectious_alldisease_mean = mean_production_loss_non_infectious
-    ahle_attr_productionloss_external_alldisease_mean = mean_production_loss_external
     '''
+    # Standard deviations
+    '''
+    ahle_attr_productionloss_allcause_alldisease_stdev = ahle_dueto_productionloss_stdev
+
+    ahle_attr_productionloss_infectious_alldisease_stdev = sd_production_loss_infectious
+    ahle_attr_productionloss_noninfectious_alldisease_stdev = sd_production_loss_non_infectious
+    ahle_attr_productionloss_external_alldisease_stdev = sd_production_loss_external
+
+    ahle_attr_productionloss_infectious_ppr_stdev = ahle_dueto_ppr_productionloss_stdev
+    ahle_attr_productionloss_infectious_bruc_stdev = ahle_dueto_bruc_productionloss_stdev
+    ahle_attr_productionloss_infectious_fmd_stdev = ahle_dueto_fmd_productionloss_stdev
+    '''
+)
+
+# Remaining standard deviations must be calculated outside eval() to use sqrt()
+ahle_combo_attrmerged['ahle_attr_productionloss_infectious_known_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_productionloss_infectious_ppr_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_productionloss_infectious_bruc_stdev']**2 \
+            + ahle_combo_attrmerged['ahle_attr_productionloss_infectious_fmd_stdev']**2
+)
+ahle_combo_attrmerged['ahle_attr_productionloss_infectious_other_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_productionloss_infectious_alldisease_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_productionloss_infectious_known_stdev']**2
 )
 
 # -----------------------------------------------------------------------------
 # Health cost
 # -----------------------------------------------------------------------------
-## Note infectious, noninfectious, and external totals are unknown because not part of expert elicitation
-# # Naive approach: health cost split equally among causes
+# Note infectious, noninfectious, and external totals are unknown because not part of expert elicitation
+# Naive approach: health cost split equally among causes
 # ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean_a'] = ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] / 3
 
-# # Total infectious must be at least equal to known diseases
-# ## Note this does not leave any for 'other' diseases
+# Total infectious must be at least equal to known diseases
+# Note this does not leave any for 'other' diseases
 # ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean_b'] = ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_mean']
 
 # ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean'] = \
 #     ahle_combo_attrmerged[['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b']].max(axis=1)
 # ahle_combo_attrmerged = ahle_combo_attrmerged.drop(columns=['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b'])
 
-# Make an assumption about the proportion of infectious_alldisease captured by known diseases
-#!!! Check for cases where ahle_attr_healthcost_allcause_alldisease_mean < ahle_attr_healthcost_infectious_alldisease_mean
+# Make an assumption about the proportion of healthcost_infectious_alldisease captured by known diseases
 healthcost_known_disease_prpn = 0.9
+
 ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
-    f'''
+    '''
     ahle_attr_healthcost_allcause_alldisease_mean = ahle_dueto_healthcost_mean
 
     ahle_attr_healthcost_infectious_ppr_mean = ahle_dueto_ppr_healthcost_mean
     ahle_attr_healthcost_infectious_bruc_mean = ahle_dueto_bruc_healthcost_mean
     ahle_attr_healthcost_infectious_fmd_mean = ahle_dueto_fmd_healthcost_mean
+
     ahle_attr_healthcost_infectious_known_mean = \
         ahle_attr_healthcost_infectious_ppr_mean \
             + ahle_attr_healthcost_infectious_bruc_mean \
                 + ahle_attr_healthcost_infectious_fmd_mean
-
+    '''
+    # Estimate health cost for all infectious diseases based on known diseases
+    f'''
     ahle_attr_healthcost_infectious_alldisease_mean = \
         ahle_attr_healthcost_infectious_known_mean / {healthcost_known_disease_prpn}
 
+    '''
+    # Standard deviations
+    '''
+    ahle_attr_healthcost_allcause_alldisease_stdev = ahle_dueto_healthcost_stdev
+
+    ahle_attr_healthcost_infectious_ppr_stdev = ahle_dueto_ppr_healthcost_stdev
+    ahle_attr_healthcost_infectious_bruc_stdev = ahle_dueto_bruc_healthcost_stdev
+    ahle_attr_healthcost_infectious_fmd_stdev = ahle_dueto_fmd_healthcost_stdev
+    '''
+)
+
+# There are cases where ahle_attr_healthcost_allcause_alldisease_mean < ahle_attr_healthcost_infectious_alldisease_mean
+# These actually have ahle_attr_healthcost_allcause_alldisease_mean < ahle_attr_healthcost_infectious_known_mean
+# Small Ruminants: Neonate and Juvenile, CLM and Pastoral
+# For these, set ahle_attr_healthcost_allcause_alldisease_mean EQUAL TO ahle_attr_healthcost_infectious_alldisease_mean
+# Inflate ahle_attr_healthcost_allcause_alldisease_mean slightly so that ahle_attr_healthcost_noninfectious_alldisease_mean
+# and ahle_attr_healthcost_external_alldisease_mean are nonzero.
+_total_healthcost_toolow = (ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] < ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*1.05)
+ahle_combo_attrmerged.loc[_total_healthcost_toolow ,'ahle_attr_healthcost_allcause_alldisease_mean'] = ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*1.05
+
+# For poultry, ahle_attr_healthcost_infectious_alldisease_mean = 0 because no specific diseases are estimated.
+# If no known diseases, want ahle_attr_healthcost_infectious_alldisease_mean to get another placeholder.
+# Use ahle_attr_healthcost_allcause_alldisease_mean / 3.
+_no_diseases_estimated = (ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_mean'] == 0)
+ahle_combo_attrmerged.loc[_no_diseases_estimated ,'ahle_attr_healthcost_infectious_alldisease_mean'] = \
+    ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] / 3
+
+ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
+    '''
     ahle_attr_healthcost_infectious_other_mean = \
         ahle_attr_healthcost_infectious_alldisease_mean - ahle_attr_healthcost_infectious_known_mean
-
+    '''
+    # Assign remaining health cost equally to noninfectious and external causes
+    '''
     ahle_attr_healthcost_noninfectious_alldisease_mean = \
         (ahle_attr_healthcost_allcause_alldisease_mean - ahle_attr_healthcost_infectious_alldisease_mean) / 2
     ahle_attr_healthcost_external_alldisease_mean = \
         (ahle_attr_healthcost_allcause_alldisease_mean - ahle_attr_healthcost_infectious_alldisease_mean) / 2
     '''
+)
+
+# Remaining standard deviations must be calculated outside eval() to use sqrt()
+ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_healthcost_infectious_ppr_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_healthcost_infectious_bruc_stdev']**2 \
+            + ahle_combo_attrmerged['ahle_attr_healthcost_infectious_fmd_stdev']**2
+)
+ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_stdev']**2 / healthcost_known_disease_prpn**2
+)
+ahle_combo_attrmerged['ahle_attr_healthcost_infectious_other_stdev'] = np.sqrt(
+    ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_healthcost_infectious_known_stdev']**2
+)
+ahle_combo_attrmerged['ahle_attr_healthcost_noninfectious_alldisease_stdev'] = np.sqrt(
+    (ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']**2) / 4
+)
+ahle_combo_attrmerged['ahle_attr_healthcost_external_alldisease_stdev'] = np.sqrt(
+    (ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_stdev']**2 \
+        + ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']**2) / 4
 )
 
 datainfo(ahle_combo_attrmerged ,150)
@@ -909,7 +1008,7 @@ ahle_combo_attrmerged_stdev = ahle_combo_attrmerged.melt(
     id_vars=attr_byvars
     ,value_vars=[i for i in list(ahle_combo_attrmerged) if 'ahle_attr' in i and 'stdev' in i]
     ,var_name='attr_column'
-    ,value_name='stdev'
+    ,value_name='sd'
 )
 
 # Decode attribution names into columns
@@ -927,7 +1026,103 @@ ahle_combo_attrmerged_m = pd.merge(
     ,how='left'
 )
 del ahle_combo_attrmerged_means ,ahle_combo_attrmerged_stdev
+
+ahle_combo_attrmerged_m['lower95'] = ahle_combo_attrmerged_m['mean'] - 1.96 * ahle_combo_attrmerged_m['sd']
+ahle_combo_attrmerged_m['upper95'] = ahle_combo_attrmerged_m['mean'] + 1.96 * ahle_combo_attrmerged_m['sd']
+
+# =============================================================================
+#### Add currency conversion
+# =============================================================================
+# Merge exchange rates onto data
+ahle_combo_attrmerged_m['country_name'] = 'Ethiopia'     # Add country for joining
+ahle_combo_attrmerged_m = pd.merge(
+    left=ahle_combo_attrmerged_m
+    ,right=exchg_data_tomerge
+    ,on=['country_name' ,'year']
+    ,how='left'
+    )
+ahle_combo_attrmerged_m = ahle_combo_attrmerged_m.drop(columns=['country_name'])
+
+# Add columns in USD
+ahle_combo_attrmerged_m['mean_usd'] = ahle_combo_attrmerged_m['mean'] / ahle_combo_attrmerged_m['exchg_rate_lcuperusdol']
+# For standard deviations, scale variances by the squared exchange rate.
+# VAR(aX) = a^2 * VAR(X).  a = 1/exchange rate.
+ahle_combo_attrmerged_m['sd_usd'] = np.sqrt(ahle_combo_attrmerged_m['sd']**2 / ahle_combo_attrmerged_m['exchg_rate_lcuperusdol']**2)
+ahle_combo_attrmerged_m['lower95_usd'] = ahle_combo_attrmerged_m['lower95'] / ahle_combo_attrmerged_m['exchg_rate_lcuperusdol']
+ahle_combo_attrmerged_m['upper95_usd'] = ahle_combo_attrmerged_m['upper95'] / ahle_combo_attrmerged_m['exchg_rate_lcuperusdol']
+
+# =============================================================================
+#### Cleanup and export
+# =============================================================================
+# -----------------------------------------------------------------------------
+# Recode columns to match previous versions
+# -----------------------------------------------------------------------------
+recode_ahle_comp = {
+    "healthcost":"Health cost"
+    ,"mortality":"Mortality"
+    ,"productionloss":"Production loss"
+}
+ahle_combo_attrmerged_m['ahle_component'] = ahle_combo_attrmerged_m['ahle_component'].replace(recode_ahle_comp)
+
+recode_cause = {
+    "infectious":"Infectious"
+    ,"noninfectious":"Non-infectious"
+    ,"external":"External"
+}
+ahle_combo_attrmerged_m['cause'] = ahle_combo_attrmerged_m['cause'].replace(recode_cause)
+
+recode_disease = {
+    "bruc":"Brucellosis"
+    ,"fmd":"FMD"
+    ,"ppr":"PPR"
+}
+ahle_combo_attrmerged_m['disease'] = ahle_combo_attrmerged_m['disease'].replace(recode_disease)
+
+# Conditional recoding for diseases
+recode_disease_inf = {
+    "alldisease":"All diseases"
+    ,"other":"Other diseases"
+}
+_cause_inf = (ahle_combo_attrmerged_m['cause'] == 'Infectious')
+ahle_combo_attrmerged_m.loc[_cause_inf ,'disease'] = ahle_combo_attrmerged_m.loc[_cause_inf ,'disease'].replace(recode_disease_inf)
+
+recode_disease_non = {
+    "alldisease":"All conditions"
+    ,"other":"Other conditions"
+}
+_cause_non = (ahle_combo_attrmerged_m['cause'] == 'Non-infectious')
+ahle_combo_attrmerged_m.loc[_cause_non ,'disease'] = ahle_combo_attrmerged_m.loc[_cause_non ,'disease'].replace(recode_disease_non)
+
+recode_disease_ext = {
+    "alldisease":"All causes"
+    ,"other":"Other causes"
+}
+_cause_ext = (ahle_combo_attrmerged_m['cause'] == 'External')
+ahle_combo_attrmerged_m.loc[_cause_ext ,'disease'] = ahle_combo_attrmerged_m.loc[_cause_ext ,'disease'].replace(recode_disease_ext)
+
+# -----------------------------------------------------------------------------
+# Reorder columns
+# -----------------------------------------------------------------------------
+cols_first = list(attr_byvars) + ['ahle_component' ,'cause' ,'disease']
+cols_other = [i for i in list(ahle_combo_attrmerged_m) if i not in cols_first]
+ahle_combo_attrmerged_m = ahle_combo_attrmerged_m.reindex(columns=cols_first + cols_other)
+ahle_combo_attrmerged_m = ahle_combo_attrmerged_m.sort_values(by=cols_first ,ignore_index=True)
+
 datainfo(ahle_combo_attrmerged_m)
+
+# -----------------------------------------------------------------------------
+# Write CSV
+# -----------------------------------------------------------------------------
+ahle_combo_attrmerged_m.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr_disease_full.csv') ,index=False)
+
+# Filter out summary rows
+_droprows = (ahle_combo_attrmerged_m['cause'] == 'allcause') \
+    | (ahle_combo_attrmerged_m['disease'].isin(['known']))
+print(f"> Dropping {_droprows.sum() :,} rows with summary measures.")
+ahle_combo_attrmerged_m_nosmry = ahle_combo_attrmerged_m.loc[~ _droprows].reset_index(drop=True)
+
+ahle_combo_attrmerged_m_nosmry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
+# ahle_combo_attrmerged_m_nosmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
 
 #%% ADD HEALTH COST COMPONENT
 '''
