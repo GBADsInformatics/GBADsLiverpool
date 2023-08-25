@@ -921,7 +921,7 @@ datainfo(ahle_combo_withahle)
 
 # Keep only key columns and AHLE calcs
 _ahle_cols = [i for i in list(ahle_combo_withahle) if 'ahle' in i]
-_cols_for_summary = all_byvars + _ahle_cols
+_cols_for_summary = list(all_byvars) + _ahle_cols
 _cols_for_summary.remove('item')
 _cols_for_summary.remove('item_type_code')
 
