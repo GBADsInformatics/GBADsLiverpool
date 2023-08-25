@@ -252,14 +252,6 @@ DASH_DATA_FOLDER = os.path.join(GRANDPARENT_FOLDER, 'AHLE Dashboard' ,'Dash App'
 # Full path to rscript.exe
 r_executable = 'C:\\Program Files\\R\\R-4.3.1\\bin\\x64\\Rscript.exe'
 
-#%% EXTERNAL DATA
-
-# =============================================================================
-#### Read currency conversion data
-# =============================================================================
-# Note: this is created in 2_process_simulation_results_standalone.py
-exchg_data_tomerge = pd.read_pickle(os.path.join(ETHIOPIA_DATA_FOLDER ,'wb_exchg_data_processed.pkl.gz'))
-
 #%% RUN ATTRIBUTION USING EXAMPLE INPUTS
 
 r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Attribution function.R')    # Full path to the R program you want to run
@@ -275,6 +267,14 @@ r_args = [
 timerstart()
 run_cmd([r_executable ,r_script] + r_args)
 timerstop()
+
+#%% EXTERNAL DATA
+
+# =============================================================================
+#### Read currency conversion data
+# =============================================================================
+# Note: this is created in 2_process_simulation_results_standalone.py
+exchg_data_tomerge = pd.read_pickle(os.path.join(ETHIOPIA_DATA_FOLDER ,'wb_exchg_data_processed.pkl.gz'))
 
 #%% READ DATA AND PREP FOR ATTRIBUTION
 '''
