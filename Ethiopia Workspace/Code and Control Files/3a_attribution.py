@@ -1122,7 +1122,7 @@ print(f"> Dropping {_droprows.sum() :,} rows with summary measures.")
 ahle_combo_attrmerged_m_nosmry = ahle_combo_attrmerged_m.loc[~ _droprows].reset_index(drop=True)
 
 ahle_combo_attrmerged_m_nosmry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
-# ahle_combo_attrmerged_m_nosmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
+ahle_combo_attrmerged_m_nosmry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv') ,index=False)
 
 #%% ADD HEALTH COST COMPONENT
 '''

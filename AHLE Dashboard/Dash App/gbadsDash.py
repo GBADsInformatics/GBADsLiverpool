@@ -189,17 +189,18 @@ swinebreedstd_liverpool_model3 = pd.read_pickle(os.path.join(DASH_DATA_FOLDER ,'
 # -----------------------------------------------------------------------------
 # Ethiopia Case Study
 # -----------------------------------------------------------------------------
-# AHLE Summary
-# ecs_ahle_summary = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv'))
-# Using alternative data which summarizes results from age/sex specific scenarios
+# Compartmental model results summary
+ecs_ahle_summary = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv'))
+## Using alternative data which summarizes results from age/sex specific scenarios
 ahle_all_scensmry = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_scensmry.csv'))
 
-# AHLE Summary 2 - for stacked bar
+# Compartmental model results summary with AHLE calculated
+# for stacked bar
 ecs_ahle_summary2 = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary2.csv'))
 
 # Attribution Summary
 # ecs_ahle_all_withattr = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr.csv'))
-# Using data with disease-specific attribution
+## Using data with disease-specific attribution
 ecs_ahle_all_withattr = pd.read_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_withattr_disease.csv'))
 
 # JR 2023-4-19: added regional results. Testing with Nationl level (should be same as before).
@@ -690,7 +691,7 @@ swine_lookup_breed_df = {
 # =============================================================================
 # Species
 # ecs_species_options = []
-# for i in np.sort(ahle_all_scensmry['species'].unique()):
+# for i in np.sort(ecs_ahle_summary['species'].unique()):
 #     str(ecs_species_options.append({'label':i,'value':(i)}))
 # Specify the order of the species
 ecs_species_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Cattle",
@@ -704,22 +705,22 @@ ecs_species_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Ca
 
 # Production system
 # Rename Overall to more descriptive
-ahle_all_scensmry['production_system'] = ahle_all_scensmry['production_system'].replace({'Overall': 'All Production Systems'})
+ecs_ahle_summary['production_system'] = ecs_ahle_summary['production_system'].replace({'Overall': 'All Production Systems'})
 
 # ecs_prodsys_options are now defined dynamically in a callback based on selected species
 # ecs_prodsys_options = []
-# for i in np.sort(ahle_all_scensmry['production_system'].unique()):
+# for i in np.sort(ecs_ahle_summary['production_system'].unique()):
 #    str(ecs_prodsys_options.append({'label':i,'value':(i)}))
 
 # Year
 # Year options are now set in a callback
 # ecs_year_options=[]
-# for i in np.sort(ahle_all_scensmry['year'].unique()):
+# for i in np.sort(ecs_ahle_summary['year'].unique()):
 #     str(ecs_year_options.append({'label':i,'value':(i)}))
 
 # Sex
 ecs_agesex_options=[]
-for i in np.sort(ahle_all_scensmry['agesex_scenario'].unique()):
+for i in np.sort(ecs_ahle_summary['group'].unique()):
    str(ecs_agesex_options.append({'label':i,'value':(i)}))
 
 # Currency
@@ -742,7 +743,7 @@ ecs_hierarchy_dd_attr_options += ecs_hierarchy_attr_options
 
 # Region - removing 'National' from the options
 ecs_region_options = []
-for i in ahle_all_scensmry.query("region != 'National'").region.unique():
+for i in ecs_ahle_summary.query("region != 'National'").region.unique():
     str(ecs_region_options.append({'label':i,'value':(i)}))
 
 # Display
@@ -756,6 +757,12 @@ ecs_compare_options = [{'label': i, 'value': i, 'disabled': False} for i in ["Id
                                                                              "Zero Mortality",
                                                                              "Improvement"
                                                                              ]]
+# August 2023: updated scenarios do not include zero mortality or improvement
+ecs_compare_options_limited = [
+    {'label': "Ideal", 'value': "Ideal", 'disabled': False}
+    ,{'label': "Zero Mortality", 'value': "Zero Mortality", 'disabled': True}
+    ,{'label': "Improvement", 'value': "Improvement", 'disabled': True}
+    ]
 
 # Factor
 ecs_factor_options = [{'label': i, 'value': i, 'disabled': True} for i in ["Mortality",
@@ -3365,25 +3372,25 @@ gbadsDash.layout = html.Div([
                                 dbc.Col([
                                     html.H6("Compare current to...", id='select-compare-ecs-title'),
                                     dcc.RadioItems(id='select-compare-ecs',
-                                                  options=ecs_compare_options,
-                                                  value='Ideal',
-                                                  labelStyle={'display': 'block'},
-                                                  inputStyle={"margin-right": "2px"}, # This pulls the words off of the button
-                                                  ),
+                                                   options=ecs_compare_options_limited,
+                                                   value='Ideal',
+                                                   labelStyle={'display': 'block'},
+                                                   inputStyle={"margin-right": "2px"}, # This pulls the words off of the button
+                                                   ),
                                     html.Label(["Ideal: zero mortality and ideal growth and production rates"] ,style={'font-style':'italic' ,"margin-top":"20px"}),
                                     html.Label(["Zero Mortality: zero mortality but growth and production rates at current levels"] ,style={'font-style':'italic'}),
                                     ]),
 
                                 # Age/Sex combination
                                 dbc.Col([
-                                    html.H6("Scenario applies to group...", id='select-agesex-ecs-title'),
+                                    html.H6("Show results for group...", id='select-agesex-ecs-title'),
                                     dcc.Dropdown(id='select-agesex-ecs',
                                                   options=ecs_agesex_options,
                                                   value='Overall',
                                                   clearable = False,
                                                   ),
-                                    html.Label(["Overall: comparison scenario applies to all age/sex groups"] ,style={'font-style':'italic' ,"margin-top":"20px"}),
-                                    html.Label(["Otherwise, comparison scenario applies to the selected age/sex group, keeping all other groups at current values"] ,style={'font-style':'italic'}),
+                                    html.Label(["Overall: show values and costs for whole system"] ,style={'font-style':'italic' ,"margin-top":"20px"}),
+                                    html.Label(["Otherwise, show values and costs for just the selected age/sex group"] ,style={'font-style':'italic'}),
                                     ]),
                             ]), # END OF ROW
                             dbc.Row([
@@ -3491,7 +3498,7 @@ gbadsDash.layout = html.Div([
                             html.Label([
                                 "Disease drilldown will show infectious AHLE broken out as follows depending on species:"
                                 ,html.Br()
-                                ,"- Cattle: Brucellosis | Other Infectious"
+                                ,"- Cattle: Brucellosis | FMD | Other Infectious"
                                 ,html.Br()
                                 ,"- Small ruminants: Brucellosis | PPR | Other Infectious"
                                 ] ,style={"font-style":"italic" ,"margin-top":"10px"}
@@ -7220,7 +7227,7 @@ def update_ahle_lineplot_ga(
     )
 def update_prodsys_options_ecs(species):
     # Get unique production systems for selected species
-    unique_prodsys = np.sort(ahle_all_scensmry.loc[ahle_all_scensmry['species'] == species ,'production_system'].unique())
+    unique_prodsys = np.sort(ecs_ahle_summary.loc[ecs_ahle_summary['species'] == species ,'production_system'].unique())
     options = [{'label': i, 'value': i} for i in unique_prodsys]
     value = options[0]['value']  # Default is first one
     return options, value
@@ -7256,7 +7263,7 @@ def update_year_select_ecs(graph, species):
 
     if (graph == 'Single Year') & (species.upper() == 'CATTLE'):
         ecs_year_options=[]
-        for i in np.sort(ahle_all_scensmry['year'].unique()):
+        for i in np.sort(ecs_ahle_summary['year'].unique()):
             str(ecs_year_options.append({'label':i,'value':(i)}))
     elif graph == 'Over Time':   # Over time - placeholder (all)
         placeholder = '(all)'
@@ -7307,19 +7314,20 @@ def update_age_options_ecs(species):
     return options
 
 # Remove improvement option from scenario for cattle and poultry while those are misssing
-@gbadsDash.callback(
-    Output('select-compare-ecs', 'options'),
-    Input('select-species-ecs', 'value'),
-    )
-def update_compare_options_ecs(species):
-    if species == "Cattle" or species == 'All Poultry' or species == 'Poultry hybrid' or species == 'Poultry indigenous':
-        options = ecs_compare_options.copy()
-        for d in options:
-            if d['value'] == 'Improvement':
-                options.remove(d)
-    else:
-        options = ecs_compare_options
-    return options
+# August 2023: updated scenarios do not include zero mortality or improvement
+# @gbadsDash.callback(
+#     Output('select-compare-ecs', 'options'),
+#     Input('select-species-ecs', 'value'),
+#     )
+# def update_compare_options_ecs(species):
+#     if species == "Cattle" or species == 'All Poultry' or species == 'Poultry hybrid' or species == 'Poultry indigenous':
+#         options = ecs_compare_options.copy()
+#         for d in options:
+#             if d['value'] == 'Improvement':
+#                 options.remove(d)
+#     else:
+#         options = ecs_compare_options
+#     return options
 
 # Update hierarchy dropdown filters to remove higher level selections from the options
 # And change if displaying stacked bar
@@ -7657,7 +7665,6 @@ def update_footnote(graph):
 # ------------------------------------------------------------------------------
 #### -- Data
 # ------------------------------------------------------------------------------
-
 # AHLE datatable below graphic
 @gbadsDash.callback(
     Output('ecs-ahle-datatable', 'children'),
@@ -7668,7 +7675,7 @@ def update_footnote(graph):
 )
 def update_ecs_ahle_data(currency, species, prodsys, agesex):
     # Read in data and apply filters
-    input_df = ahle_all_scensmry.copy()
+    input_df = ecs_ahle_summary.copy()
 
     # Species filter
     input_df = input_df.loc[(input_df['species'] == species)]
@@ -7679,7 +7686,7 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
     input_df=input_df.loc[(input_df['production_system'] == prodsys)]
 
     # Age/sex filter
-    input_df=input_df.loc[(input_df['agesex_scenario'] == agesex)]
+    input_df=input_df.loc[(input_df['group'] == agesex)]
 
     # If currency is USD, use USD columns
     display_currency = 'Birr'
@@ -7688,17 +7695,18 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
 
         input_df['mean_current'] = input_df['mean_current_usd']
         input_df['stdev_current'] = input_df['stdev_current_usd']
-        input_df['mean_mortality_zero'] = input_df['mean_mortality_zero_usd']
-        input_df['stdev_mortality_zero'] = input_df['stdev_mortality_zero_usd']
+        # input_df['mean_mortality_zero'] = input_df['mean_mortality_zero_usd']
+        # input_df['stdev_mortality_zero'] = input_df['stdev_mortality_zero_usd']
         input_df['mean_ideal'] = input_df['mean_ideal_usd']
         input_df['stdev_ideal'] = input_df['stdev_ideal_usd']
 
     # Format numbers
     input_df.update(input_df[['mean_current',
                               'mean_ideal',
-                              'mean_mortality_zero',
+                              # 'mean_mortality_zero',
                               'mean_diff_ideal',
-                              'mean_diff_mortzero',]].applymap('{:,.0f}'.format))
+                              # 'mean_diff_mortzero',
+                              ]].applymap('{:,.0f}'.format))
 
     columns_to_display_with_labels = {
         'species':'Species'
@@ -7706,12 +7714,12 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
         ,'region':'Region'
         ,'year':'Year'
         ,'item':'Value or Cost'
-        ,'agesex_scenario':'Group'
+        ,'group':'Group'
         ,'mean_current':f'Current Mean ({display_currency})'
         ,'mean_ideal':f'Ideal Mean ({display_currency})'
-        ,'mean_mortality_zero':f'Mortality Zero Mean ({display_currency})'
+        # ,'mean_mortality_zero':f'Mortality Zero Mean ({display_currency})'
         ,'mean_diff_ideal':'AHLE (Ideal - Current)'
-        ,'mean_diff_mortzero':'AHLE due to Mortality (Mortality Zero - Current)'
+        # ,'mean_diff_mortzero':'AHLE due to Mortality (Mortality Zero - Current)'
     }
 
     # Subset columns
@@ -7913,7 +7921,6 @@ def update_ecs_attr_expert_data(species):
     Input('select-currency-ecs','value'),
     Input('select-factor-ecs','value'),
     Input('select-improve-ecs','value'),
-    # Input('select-year-item-switch-ecs', 'value'),
     Input('select-year-ecs', 'value'),
     Input('select-item-ecs', 'value'),
     Input('select-geo-view-ecs','value'),
@@ -7935,7 +7942,7 @@ def update_ahle_value_and_cost_viz_ecs(
         region,
     ):
     # Read in data and apply filters
-    input_df = ahle_all_scensmry
+    input_df = ecs_ahle_summary
 
     # Species filter
     input_df = input_df.loc[(input_df['species'] == species)]
@@ -7944,7 +7951,7 @@ def update_ahle_value_and_cost_viz_ecs(
     input_df=input_df.loc[(input_df['production_system'] == prodsys)]
 
     # Age/sex filter
-    input_df=input_df.loc[(input_df['agesex_scenario'] == agesex)]
+    input_df=input_df.loc[(input_df['group'] == agesex)]
 
     # Geographic filter
     if geo_view.upper() == "NATIONAL":
@@ -7963,60 +7970,60 @@ def update_ahle_value_and_cost_viz_ecs(
         display_currency = 'USD'
 
         prep_df['mean_current']                     = prep_df['mean_current_usd']
-        prep_df['mean_mortality_zero']              = prep_df['mean_mortality_zero_usd']
+        # prep_df['mean_mortality_zero']              = prep_df['mean_mortality_zero_usd']
         prep_df['mean_ideal']                       = prep_df['mean_ideal_usd']
         prep_df['mean_diff_ideal']                  = prep_df['mean_diff_ideal_usd']
-        prep_df['mean_diff_mortzero']               = prep_df['mean_diff_mortzero_usd']
-        prep_df['mean_all_mort_25_imp']             = prep_df['mean_all_mort_25_imp_usd']
-        prep_df['mean_all_mort_50_imp']             = prep_df['mean_all_mort_50_imp_usd']
-        prep_df['mean_all_mort_75_imp']             = prep_df['mean_all_mort_75_imp_usd']
-        prep_df['mean_diff_mortimp25']              = prep_df['mean_diff_mortimp25_usd']
-        prep_df['mean_diff_mortimp50']              = prep_df['mean_diff_mortimp50_usd']
-        prep_df['mean_diff_mortimp75']              = prep_df['mean_diff_mortimp75_usd']
-        prep_df['mean_current_repro_25_imp']        = prep_df['mean_current_repro_25_imp_usd']
-        prep_df['mean_current_repro_50_imp']        = prep_df['mean_current_repro_50_imp_usd']
-        prep_df['mean_current_repro_75_imp']        = prep_df['mean_current_repro_75_imp_usd']
-        prep_df['mean_current_repro_100_imp']       = prep_df['mean_current_repro_100_imp_usd']
-        prep_df['mean_diff_reprimp25']              = prep_df['mean_diff_reprimp25_usd']
-        prep_df['mean_diff_reprimp50']              = prep_df['mean_diff_reprimp50_usd']
-        prep_df['mean_diff_reprimp75']              = prep_df['mean_diff_reprimp75_usd']
-        prep_df['mean_diff_reprimp100']             = prep_df['mean_diff_reprimp100_usd']
-        prep_df['mean_current_growth_25_imp_all']   = prep_df['mean_current_growth_25_imp_all_usd']
-        prep_df['mean_current_growth_50_imp_all']   = prep_df['mean_current_growth_50_imp_all_usd']
-        prep_df['mean_current_growth_75_imp_all']   = prep_df['mean_current_growth_75_imp_all_usd']
-        prep_df['mean_current_growth_100_imp_all']  = prep_df['mean_current_growth_100_imp_all_usd']
-        prep_df['mean_diff_growimp25']              = prep_df['mean_diff_growimp25_usd']
-        prep_df['mean_diff_growimp50']              = prep_df['mean_diff_growimp50_usd']
-        prep_df['mean_diff_growimp75']              = prep_df['mean_diff_growimp75_usd']
-        prep_df['mean_diff_growimp100']             = prep_df['mean_diff_growimp100_usd']
+        # prep_df['mean_diff_mortzero']               = prep_df['mean_diff_mortzero_usd']
+        # prep_df['mean_all_mort_25_imp']             = prep_df['mean_all_mort_25_imp_usd']
+        # prep_df['mean_all_mort_50_imp']             = prep_df['mean_all_mort_50_imp_usd']
+        # prep_df['mean_all_mort_75_imp']             = prep_df['mean_all_mort_75_imp_usd']
+        # prep_df['mean_diff_mortimp25']              = prep_df['mean_diff_mortimp25_usd']
+        # prep_df['mean_diff_mortimp50']              = prep_df['mean_diff_mortimp50_usd']
+        # prep_df['mean_diff_mortimp75']              = prep_df['mean_diff_mortimp75_usd']
+        # prep_df['mean_current_repro_25_imp']        = prep_df['mean_current_repro_25_imp_usd']
+        # prep_df['mean_current_repro_50_imp']        = prep_df['mean_current_repro_50_imp_usd']
+        # prep_df['mean_current_repro_75_imp']        = prep_df['mean_current_repro_75_imp_usd']
+        # prep_df['mean_current_repro_100_imp']       = prep_df['mean_current_repro_100_imp_usd']
+        # prep_df['mean_diff_reprimp25']              = prep_df['mean_diff_reprimp25_usd']
+        # prep_df['mean_diff_reprimp50']              = prep_df['mean_diff_reprimp50_usd']
+        # prep_df['mean_diff_reprimp75']              = prep_df['mean_diff_reprimp75_usd']
+        # prep_df['mean_diff_reprimp100']             = prep_df['mean_diff_reprimp100_usd']
+        # prep_df['mean_current_growth_25_imp_all']   = prep_df['mean_current_growth_25_imp_all_usd']
+        # prep_df['mean_current_growth_50_imp_all']   = prep_df['mean_current_growth_50_imp_all_usd']
+        # prep_df['mean_current_growth_75_imp_all']   = prep_df['mean_current_growth_75_imp_all_usd']
+        # prep_df['mean_current_growth_100_imp_all']  = prep_df['mean_current_growth_100_imp_all_usd']
+        # prep_df['mean_diff_growimp25']              = prep_df['mean_diff_growimp25_usd']
+        # prep_df['mean_diff_growimp50']              = prep_df['mean_diff_growimp50_usd']
+        # prep_df['mean_diff_growimp75']              = prep_df['mean_diff_growimp75_usd']
+        # prep_df['mean_diff_growimp100']             = prep_df['mean_diff_growimp100_usd']
 
         prep_df['stdev_current']                     = prep_df['stdev_current_usd']
-        prep_df['stdev_mortality_zero']              = prep_df['stdev_mortality_zero_usd']
+        # prep_df['stdev_mortality_zero']              = prep_df['stdev_mortality_zero_usd']
         prep_df['stdev_ideal']                       = prep_df['stdev_ideal_usd']
         prep_df['stdev_diff_ideal']                  = prep_df['stdev_diff_ideal_usd']
-        prep_df['stdev_diff_mortzero']               = prep_df['stdev_diff_mortzero_usd']
-        prep_df['stdev_all_mort_25_imp']             = prep_df['stdev_all_mort_25_imp_usd']
-        prep_df['stdev_all_mort_50_imp']             = prep_df['stdev_all_mort_50_imp_usd']
-        prep_df['stdev_all_mort_75_imp']             = prep_df['stdev_all_mort_75_imp_usd']
-        prep_df['stdev_diff_mortimp25']              = prep_df['stdev_diff_mortimp25_usd']
-        prep_df['stdev_diff_mortimp50']              = prep_df['stdev_diff_mortimp50_usd']
-        prep_df['stdev_diff_mortimp75']              = prep_df['stdev_diff_mortimp75_usd']
-        prep_df['stdev_current_repro_25_imp']        = prep_df['stdev_current_repro_25_imp_usd']
-        prep_df['stdev_current_repro_50_imp']        = prep_df['stdev_current_repro_50_imp_usd']
-        prep_df['stdev_current_repro_75_imp']        = prep_df['stdev_current_repro_75_imp_usd']
-        prep_df['stdev_current_repro_100_imp']       = prep_df['stdev_current_repro_100_imp_usd']
-        prep_df['stdev_diff_reprimp25']              = prep_df['stdev_diff_reprimp25_usd']
-        prep_df['stdev_diff_reprimp50']              = prep_df['stdev_diff_reprimp50_usd']
-        prep_df['stdev_diff_reprimp75']              = prep_df['stdev_diff_reprimp75_usd']
-        prep_df['stdev_diff_reprimp100']             = prep_df['stdev_diff_reprimp100_usd']
-        prep_df['stdev_current_growth_25_imp_all']   = prep_df['stdev_current_growth_25_imp_all_usd']
-        prep_df['stdev_current_growth_50_imp_all']   = prep_df['stdev_current_growth_50_imp_all_usd']
-        prep_df['stdev_current_growth_75_imp_all']   = prep_df['stdev_current_growth_75_imp_all_usd']
-        prep_df['stdev_current_growth_100_imp_all']  = prep_df['stdev_current_growth_100_imp_all_usd']
-        prep_df['stdev_all_current_growth_25_AHLE']  = prep_df['stdev_all_current_growth_25_AHLE_usd']
-        prep_df['stdev_all_current_growth_50_AHLE']  = prep_df['stdev_all_current_growth_50_AHLE_usd']
-        prep_df['stdev_all_current_growth_75_AHLE']  = prep_df['stdev_all_current_growth_75_AHLE_usd']
-        prep_df['stdev_all_current_growth_100_AHLE'] = prep_df['stdev_all_current_growth_100_AHLE_usd']
+        # prep_df['stdev_diff_mortzero']               = prep_df['stdev_diff_mortzero_usd']
+        # prep_df['stdev_all_mort_25_imp']             = prep_df['stdev_all_mort_25_imp_usd']
+        # prep_df['stdev_all_mort_50_imp']             = prep_df['stdev_all_mort_50_imp_usd']
+        # prep_df['stdev_all_mort_75_imp']             = prep_df['stdev_all_mort_75_imp_usd']
+        # prep_df['stdev_diff_mortimp25']              = prep_df['stdev_diff_mortimp25_usd']
+        # prep_df['stdev_diff_mortimp50']              = prep_df['stdev_diff_mortimp50_usd']
+        # prep_df['stdev_diff_mortimp75']              = prep_df['stdev_diff_mortimp75_usd']
+        # prep_df['stdev_current_repro_25_imp']        = prep_df['stdev_current_repro_25_imp_usd']
+        # prep_df['stdev_current_repro_50_imp']        = prep_df['stdev_current_repro_50_imp_usd']
+        # prep_df['stdev_current_repro_75_imp']        = prep_df['stdev_current_repro_75_imp_usd']
+        # prep_df['stdev_current_repro_100_imp']       = prep_df['stdev_current_repro_100_imp_usd']
+        # prep_df['stdev_diff_reprimp25']              = prep_df['stdev_diff_reprimp25_usd']
+        # prep_df['stdev_diff_reprimp50']              = prep_df['stdev_diff_reprimp50_usd']
+        # prep_df['stdev_diff_reprimp75']              = prep_df['stdev_diff_reprimp75_usd']
+        # prep_df['stdev_diff_reprimp100']             = prep_df['stdev_diff_reprimp100_usd']
+        # prep_df['stdev_current_growth_25_imp_all']   = prep_df['stdev_current_growth_25_imp_all_usd']
+        # prep_df['stdev_current_growth_50_imp_all']   = prep_df['stdev_current_growth_50_imp_all_usd']
+        # prep_df['stdev_current_growth_75_imp_all']   = prep_df['stdev_current_growth_75_imp_all_usd']
+        # prep_df['stdev_current_growth_100_imp_all']  = prep_df['stdev_current_growth_100_imp_all_usd']
+        # prep_df['stdev_all_current_growth_25_AHLE']  = prep_df['stdev_all_current_growth_25_AHLE_usd']
+        # prep_df['stdev_all_current_growth_50_AHLE']  = prep_df['stdev_all_current_growth_50_AHLE_usd']
+        # prep_df['stdev_all_current_growth_75_AHLE']  = prep_df['stdev_all_current_growth_75_AHLE_usd']
+        # prep_df['stdev_all_current_growth_100_AHLE'] = prep_df['stdev_all_current_growth_100_AHLE_usd']
 
     # Create longitudinal chart
     if graph_options == "Over Time":
@@ -9292,7 +9299,7 @@ def update_wei_display_ecs(species):
     Input('select-currency-ecs','value'),
     Input('select-map-denominator-ecs','value'),
     )
-def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, denominator):
+def update_map_display_ecs(species, group, prodsys, item, currency, denominator):
     if species.upper() != 'CATTLE':
         ecs_map_fig = go.Figure()
         ecs_map_fig.update_layout(
@@ -9323,7 +9330,7 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
         featurekey = (f'properties.{featureid}')
 
         # Read in data and apply filters
-        input_df = ahle_all_scensmry
+        input_df = ecs_ahle_summary
 
         # Filter based on species - Currently only have Cattle for 2021
         input_df = input_df.loc[(input_df['species'] == 'Cattle')]
@@ -9337,7 +9344,7 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
         input_df=input_df.loc[(input_df['production_system'] == prodsys)]
 
         # Age/sex filter
-        input_df=input_df.loc[(input_df['agesex_scenario'] == agesex_scenario)]
+        input_df=input_df.loc[(input_df['group'] == group)]
 
         if item == 'Ideal Gross Margin' or item == 'Animal Health Loss Envelope':
             item_filter = 'Gross Margin'
@@ -9351,9 +9358,9 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
         if denominator.upper() == 'PER KG BIOMASS':
             if currency == 'USD':
                 display_currency = 'USD'
-                input_df['mean_current'] = input_df['mean_current_usd_perkgbiomass']
-                input_df['mean_ideal'] = input_df['mean_ideal_usd_perkgbiomass']
-                input_df['mean_diff_ideal'] = input_df['mean_diff_ideal_usd_perkgbiomass']
+                input_df['mean_current'] = input_df['mean_current_perkgbiomass_usd']
+                input_df['mean_ideal'] = input_df['mean_ideal_perkgbiomass_usd']
+                input_df['mean_diff_ideal'] = input_df['mean_diff_ideal_perkgbiomass_usd']
             else:
                 input_df['mean_current'] = input_df['mean_current_perkgbiomass']
                 input_df['mean_ideal'] = input_df['mean_ideal_perkgbiomass']
@@ -9399,7 +9406,7 @@ def update_map_display_ecs(species, agesex_scenario, prodsys, item, currency, de
 
         # Add title
         ecs_map_fig.update_layout(
-            title_text=f'{item} in {currency} {denominator} by subnational state | {agesex_scenario} Cattle, {prodsys} in 2021',
+            title_text=f'{item} in {currency} {denominator} by subnational state | {group} Cattle, {prodsys} in 2021',
             font_size=15
             )
 
