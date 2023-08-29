@@ -222,11 +222,12 @@ placeholders.
 #### Build aggregate age/sex groups
 # =============================================================================
 # Define full set of key variables
-all_byvars = ['species' ,'region' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year']
+# Make tuple so immutable
+all_byvars = ('species' ,'region' ,'production_system' ,'item' ,'item_type_code' ,'group' ,'age_group' ,'sex' ,'year')
 
 # Only using mean and standard deviaion of each item, as the other statistics
 # cannot be summed.
-keepcols = all_byvars + mean_cols + sd_cols
+keepcols = list(all_byvars) + mean_cols + sd_cols
 ahle_combo_indiv = ahle_combo_indiv[keepcols].copy()
 datainfo(ahle_combo_indiv)
 
@@ -247,7 +248,7 @@ datainfo(ahle_combo_indiv)
 # Create Overall age/sex group
 # -----------------------------------------------------------------------------
 agg_vars = ['group' ,'age_group' ,'sex']
-summarize_byvars = all_byvars.copy()
+summarize_byvars = list(all_byvars)
 for i in agg_vars:
     summarize_byvars.remove(i)
 
@@ -264,7 +265,7 @@ ahle_combo_sum_groups['sex'] = 'Overall'
 # Create Overall sex for each age group
 # -----------------------------------------------------------------------------
 agg_vars = ['group' ,'sex']
-summarize_byvars = all_byvars.copy()
+summarize_byvars = list(all_byvars)
 for i in agg_vars:
     summarize_byvars.remove(i)
 
@@ -295,7 +296,7 @@ ahle_combo_sum_sexes = ahle_combo_sum_sexes.loc[~ _oxen_combined].reset_index(dr
 # Create Overall age group for each sex
 # -----------------------------------------------------------------------------
 agg_vars = ['group' ,'age_group']
-summarize_byvars = all_byvars.copy()
+summarize_byvars = list(all_byvars)
 for i in agg_vars:
     summarize_byvars.remove(i)
 
@@ -352,7 +353,7 @@ calculated for the combined groups as well.
 # Create overall production system
 # -----------------------------------------------------------------------------
 agg_vars = ['production_system']
-summarize_byvars = all_byvars.copy()
+summarize_byvars = list(all_byvars)
 for i in agg_vars:
     summarize_byvars.remove(i)
 
@@ -375,7 +376,7 @@ del ahle_combo_sum_prodsys
 # Create combined species
 # -----------------------------------------------------------------------------
 agg_vars = ['species']
-summarize_byvars = all_byvars.copy()
+summarize_byvars = list(all_byvars)
 for i in agg_vars:
     summarize_byvars.remove(i)
 
@@ -413,6 +414,53 @@ for i ,VARCOL in enumerate(var_cols):
 
 datainfo(ahle_combo_withagg)
 
+#%% MISC CALCS AND EXPORT
+
+# =============================================================================
+#### Misc calcs
+# =============================================================================
+# Columns for scenario differences
+ahle_combo_withagg['mean_diff_ideal'] = ahle_combo_withagg['mean_ideal'] - ahle_combo_withagg['mean_current']
+ahle_combo_withagg['stdev_diff_ideal'] = np.sqrt(ahle_combo_withagg['stdev_ideal']**2 + ahle_combo_withagg['stdev_current']**2)
+
+# -----------------------------------------------------------------------------
+# Columns per kg biomass
+# -----------------------------------------------------------------------------
+# Get current population liveweight by region into its own column
+liveweight_byregion = ahle_combo_withagg.query("item == 'Population Liveweight (kg)'")[list(all_byvars) + ['mean_current']].drop_duplicates()
+pivot_index = list(all_byvars)
+pivot_index.remove('item')
+pivot_index.remove('item_type_code')
+liveweight_byregion = liveweight_byregion.pivot(
+    index=pivot_index
+    ,columns='item'
+    ,values='mean_current'
+).reset_index()
+cleancolnames(liveweight_byregion)
+
+# Merge with original data
+ahle_combo_withagg = pd.merge(
+    left=ahle_combo_withagg
+    ,right=liveweight_byregion
+    ,on=pivot_index
+    ,how='left'
+)
+
+# Recreate column lists to include misc calcs columns
+mean_cols_update = [i for i in list(ahle_combo_withagg) if 'mean' in i]
+sd_cols_update = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
+
+# Calculate value columns per kg liveweight
+for MEANCOL in mean_cols_update:
+    NEWCOL_NAME = MEANCOL + '_perkgbiomass'
+    ahle_combo_withagg[NEWCOL_NAME] = ahle_combo_withagg[MEANCOL] / ahle_combo_withagg['population_liveweight__kg_']
+
+# For standard deviations, convert to variances then scale by the squared denominator
+# VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
+for SDCOL in sd_cols_update:
+    NEWCOL_NAME = SDCOL + '_perkgbiomass'
+    ahle_combo_withagg[NEWCOL_NAME] = np.sqrt(ahle_combo_withagg[SDCOL]**2 / ahle_combo_withagg['population_liveweight__kg_']**2)
+
 # =============================================================================
 #### Add currency conversion
 # =============================================================================
@@ -426,16 +474,20 @@ ahle_combo_withagg = pd.merge(
     )
 del ahle_combo_withagg['country_name']
 
+# Recreate column lists to include perkgbiomass columns
+mean_cols_update2 = [i for i in list(ahle_combo_withagg) if 'mean' in i]
+sd_cols_update2 = [i for i in list(ahle_combo_withagg) if 'stdev' in i]
+
 # Add columns in USD for currency items
 _currency_items = (ahle_combo_withagg['item_type_code'].isin(['mv' ,'mc']))
-for MEANCOL in mean_cols:
+for MEANCOL in mean_cols_update2:
    MEANCOL_USD = MEANCOL + '_usd'
    ahle_combo_withagg.loc[_currency_items ,MEANCOL_USD] = \
       ahle_combo_withagg[MEANCOL] / ahle_combo_withagg['exchg_rate_lcuperusdol']
 
 # For standard deviations, scale variances by the squared exchange rate
 # VAR(aX) = a^2 * VAR(X). a = 1/exchange rate.
-for SDCOL in sd_cols:
+for SDCOL in sd_cols_update2:
    SDCOL_USD = SDCOL + '_usd'
    ahle_combo_withagg.loc[_currency_items ,SDCOL_USD] = \
       np.sqrt(ahle_combo_withagg[SDCOL]**2 / ahle_combo_withagg['exchg_rate_lcuperusdol']**2)
@@ -448,13 +500,15 @@ datainfo(ahle_combo_withagg)
 # -----------------------------------------------------------------------------
 # Subset and rename columns
 # -----------------------------------------------------------------------------
-# In this file, keeping only scenarios that apply to all groups
-keepcols = all_byvars + [
+# In this file, keeping a subset of scenarios
+keepcols = list(all_byvars) + [
     # In Birr
     'mean_current'
     ,'stdev_current'
     ,'mean_ideal'
     ,'stdev_ideal'
+    ,'mean_diff_ideal'
+    ,'stdev_diff_ideal'
 
     ,'mean_ppr'
     ,'stdev_ppr'
@@ -463,32 +517,19 @@ keepcols = all_byvars + [
     ,'mean_fmd'
     ,'stdev_fmd'
 
-    # ,'mean_all_mort_25_imp'
-    # ,'stdev_all_mort_25_imp'
-    # ,'mean_all_mort_50_imp'
-    # ,'stdev_all_mort_50_imp'
-    # ,'mean_all_mort_75_imp'
-    # ,'stdev_all_mort_75_imp'
-    # ,'mean_mortality_zero'
-    # ,'stdev_mortality_zero'
+    ,'mean_current_perkgbiomass'
+    ,'stdev_current_perkgbiomass'
+    ,'mean_ideal_perkgbiomass'
+    ,'stdev_ideal_perkgbiomass'
+    ,'mean_diff_ideal_perkgbiomass'
+    ,'stdev_diff_ideal_perkgbiomass'
 
-    # ,'mean_current_repro_25_imp'
-    # ,'stdev_current_repro_25_imp'
-    # ,'stdev_current_repro_50_imp'
-    # ,'mean_current_repro_50_imp'
-    # ,'mean_current_repro_75_imp'
-    # ,'stdev_current_repro_75_imp'
-    # ,'mean_current_repro_100_imp'
-    # ,'stdev_current_repro_100_imp'
-
-    # ,'mean_current_growth_25_imp_all'
-    # ,'stdev_current_growth_25_imp_all'
-    # ,'mean_current_growth_50_imp_all'
-    # ,'stdev_current_growth_50_imp_all'
-    # ,'mean_current_growth_75_imp_all'
-    # ,'stdev_current_growth_75_imp_all'
-    # ,'mean_current_growth_100_imp_all'
-    # ,'stdev_current_growth_100_imp_all'
+    ,'mean_ppr_perkgbiomass'
+    ,'stdev_ppr_perkgbiomass'
+    ,'mean_bruc_perkgbiomass'
+    ,'stdev_bruc_perkgbiomass'
+    ,'mean_fmd_perkgbiomass'
+    ,'stdev_fmd_perkgbiomass'
 
     # In USD
     ,'exchg_rate_lcuperusdol'
@@ -497,6 +538,8 @@ keepcols = all_byvars + [
     ,'stdev_current_usd'
     ,'mean_ideal_usd'
     ,'stdev_ideal_usd'
+    ,'mean_diff_ideal_usd'
+    ,'stdev_diff_ideal_usd'
 
     ,'mean_ppr_usd'
     ,'stdev_ppr_usd'
@@ -505,45 +548,31 @@ keepcols = all_byvars + [
     ,'mean_fmd_usd'
     ,'stdev_fmd_usd'
 
-    # ,'mean_all_mort_25_imp_usd'
-    # ,'stdev_all_mort_25_imp_usd'
-    # ,'mean_all_mort_50_imp_usd'
-    # ,'stdev_all_mort_50_imp_usd'
-    # ,'mean_all_mort_75_imp_usd'
-    # ,'stdev_all_mort_75_imp_usd'
-    # ,'mean_mortality_zero_usd'
-    # ,'stdev_mortality_zero_usd'
+    ,'mean_current_perkgbiomass_usd'
+    ,'stdev_current_perkgbiomass_usd'
+    ,'mean_ideal_perkgbiomass_usd'
+    ,'stdev_ideal_perkgbiomass_usd'
+    ,'mean_diff_ideal_perkgbiomass_usd'
+    ,'stdev_diff_ideal_perkgbiomass_usd'
 
-    # ,'mean_current_repro_25_imp_usd'
-    # ,'stdev_current_repro_25_imp_usd'
-    # ,'mean_current_repro_50_imp_usd'
-    # ,'stdev_current_repro_50_imp_usd'
-    # ,'mean_current_repro_75_imp_usd'
-    # ,'stdev_current_repro_75_imp_usd'
-    # ,'mean_current_repro_100_imp_usd'
-    # ,'stdev_current_repro_100_imp_usd'
-
-    # ,'mean_current_growth_25_imp_all_usd'
-    # ,'stdev_current_growth_25_imp_all_usd'
-    # ,'mean_current_growth_50_imp_all_usd'
-    # ,'stdev_current_growth_50_imp_all_usd'
-    # ,'mean_current_growth_75_imp_all_usd'
-    # ,'stdev_current_growth_75_imp_all_usd'
-    # ,'mean_current_growth_100_imp_all_usd'
-    # ,'stdev_current_growth_100_imp_all_usd'
+    ,'mean_ppr_perkgbiomass_usd'
+    ,'stdev_ppr_perkgbiomass_usd'
+    ,'mean_bruc_perkgbiomass_usd'
+    ,'stdev_bruc_perkgbiomass_usd'
+    ,'mean_fmd_perkgbiomass_usd'
+    ,'stdev_fmd_perkgbiomass_usd'
 ]
 
 ahle_combo_withagg_smry = ahle_combo_withagg[keepcols].copy()
 datainfo(ahle_combo_withagg_smry)
 
 ahle_combo_withagg_smry.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary.csv') ,index=False)
-# ahle_combo_withagg_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary.pkl.gz'))
+ahle_combo_withagg_smry.to_pickle(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_summary.pkl.gz'))
 
 # Output for Dash
-# This is not currently used in Dash
-# ahle_combo_withagg_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv') ,index=False)
+ahle_combo_withagg_smry.to_csv(os.path.join(DASH_DATA_FOLDER ,'ahle_all_summary.csv') ,index=False)
 
-#%% CALCULATE AHLE
+#%% CALCULATE AHLE AND EXPORT
 
 # =============================================================================
 #### Restructure
@@ -892,7 +921,7 @@ datainfo(ahle_combo_withahle)
 
 # Keep only key columns and AHLE calcs
 _ahle_cols = [i for i in list(ahle_combo_withahle) if 'ahle' in i]
-_cols_for_summary = all_byvars + _ahle_cols
+_cols_for_summary = list(all_byvars) + _ahle_cols
 _cols_for_summary.remove('item')
 _cols_for_summary.remove('item_type_code')
 
