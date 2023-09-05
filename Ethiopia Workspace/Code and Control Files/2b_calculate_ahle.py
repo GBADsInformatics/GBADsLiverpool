@@ -417,7 +417,7 @@ datainfo(ahle_combo_withagg)
 #%% MISC CALCS AND EXPORT
 
 # =============================================================================
-#### Misc calcs
+#### Calcs
 # =============================================================================
 # Columns for scenario differences
 ahle_combo_withagg['mean_diff_ideal'] = ahle_combo_withagg['mean_ideal'] - ahle_combo_withagg['mean_current']

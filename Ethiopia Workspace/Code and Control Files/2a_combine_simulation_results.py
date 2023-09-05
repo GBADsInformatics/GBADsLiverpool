@@ -770,6 +770,7 @@ check_ahle_combo = ahle_combo.copy()
 
 _group_overall = (check_ahle_combo['group'].str.upper() == 'OVERALL')
 _item_grossmargin = (check_ahle_combo['item'].str.upper() == 'GROSS MARGIN')
+summarize_byvars = ('species' ,'region' ,'production_system' ,'year')
 
 # =============================================================================
 #### Change in Gross Margin
@@ -801,6 +802,9 @@ check_grossmargin_overall = check_grossmargin_overall.eval(
 
     gmchange_dueto_bruc = mean_ideal - mean_bruc
     gmchange_dueto_bruc_ratio = gmchange_dueto_bruc / gmchange_ideal_overall
+
+    gmchange_dueto_fmd = mean_ideal - mean_fmd
+    gmchange_dueto_fmd_ratio = gmchange_dueto_fmd / gmchange_ideal_overall
     '''
 )
 # Not all agesex scenarios apply to every species. Set missing to zero.
@@ -828,48 +832,52 @@ check_grossmargin_overall = check_grossmargin_overall.eval(
 
 print('\n> Summarizing the change in Gross Margin for ideal overall')
 print(check_grossmargin_overall['gmchange_ideal_overall'].describe())
-print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_ideal_overall']])
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_ideal_overall']])
 
 print('\n> Checking the change in Gross Margin for ideal overall vs. individual ideal scenarios')
-print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_ideal_check']])
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_ideal_check']])
 
 print('\n> Checking mortality as proportion of total AHLE')
-print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_dueto_mortality_prpn']])
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_dueto_mortality_prpn']])
 
 print('\n> Checking the change in gross margin due to PPR as proportion of total AHLE')
-print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_dueto_ppr_ratio']])
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_dueto_ppr_ratio']])
 
 print('\n> Checking the change in gross margin due to Brucellosis as proportion of total AHLE')
-print(check_grossmargin_overall[['region' ,'species' ,'production_system' ,'year' ,'gmchange_dueto_bruc_ratio']])
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_dueto_bruc_ratio']])
+
+print('\n> Checking the change in gross margin due to FMD as proportion of total AHLE')
+print(check_grossmargin_overall[list(summarize_byvars) + ['gmchange_dueto_fmd_ratio']])
 
 # =============================================================================
 #### Sum of agesex groups compared to system total for each item
 # =============================================================================
 # Sum individual agesex groups for each item
-_sex_combined = (check_ahle_combo['sex'].str.upper() == 'OVERALL')
-check_agesex_sums = pd.DataFrame(check_ahle_combo.loc[~ _sex_combined]\
-    .groupby(['region' ,'species' ,'production_system' ,'year' ,'item'] ,observed=True)['mean_current'].sum())
+_indiv_sex = (check_ahle_combo['group'].str.upper().isin(['ADULT FEMALE' ,'ADULT MALE' ,'JUVENILE FEMALE' ,'JUVENILE MALE' ,'NEONATAL FEMALE' ,'NEONATAL MALE' ,'OXEN']))
+check_agesex_sums = pd.DataFrame(check_ahle_combo.loc[_indiv_sex]\
+    .groupby(list(summarize_byvars) + ['item'] ,observed=True)['mean_current'].sum())
 check_agesex_sums.columns = ['mean_current_sumagesex']
 
 # Merge group total for each item
 check_agesex_sums = pd.merge(
     left=check_agesex_sums
-    ,right=check_ahle_combo.loc[_group_overall ,['region' ,'species' ,'production_system' ,'year' ,'item' ,'mean_current']]
-    ,on=['region' ,'species' ,'production_system' ,'year' ,'item']
+    ,right=check_ahle_combo.loc[_group_overall ,list(summarize_byvars) + ['item' ,'mean_current']]
+    ,on=list(summarize_byvars) + ['item']
     ,how='left'
 )
 check_agesex_sums = check_agesex_sums.rename(columns={'mean_current':'mean_current_overall'})
 
+# Calculate ratio
 check_agesex_sums = check_agesex_sums.eval(
     '''
     check_ratio = mean_current_sumagesex / mean_current_overall
     '''
 )
-print('\n> Checking the sum of individual age/sex compared to the overall for each item')
+print('\n> Checking the sum of individual age/sex groups compared to the overall for each item')
 print('\nMaximum ratio \n-------------')
-print(check_agesex_sums.groupby(['region' ,'species' ,'production_system' ,'year'])['check_ratio'].max())
+print(check_agesex_sums.groupby(list(summarize_byvars))['check_ratio'].max())
 print('\nMinimum ratio \n-------------')
-print(check_agesex_sums.groupby(['region' ,'species' ,'production_system' ,'year'])['check_ratio'].min())
+print(check_agesex_sums.groupby(list(summarize_byvars))['check_ratio'].min())
 
 #%% BASIC ADJUSTMENTS
 

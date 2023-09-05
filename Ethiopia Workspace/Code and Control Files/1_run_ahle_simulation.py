@@ -105,7 +105,7 @@ MURDOCH_OUTPUT_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'output')
 # Full path to rscript.exe
 r_executable = 'C:\\Program Files\\R\\R-4.3.1\\bin\\x64\\Rscript.exe'
 
-N_RUNS = '1000'   # String: number of simulation runs for each scenario
+N_RUNS = '10000'   # String: number of simulation runs for each scenario
 
 #%% Small ruminants
 
@@ -268,7 +268,7 @@ r_args = [
     ,'-1'
 ]
 timerstart()
-returncode_cattle_bruc = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLINES=999)
+returncode_cattle_disease = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLINES=999)
 timerstop()
 
 # =============================================================================
@@ -302,7 +302,8 @@ for YEAR in list_years:
     # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
     r_args = [
         # Arg 1: Number of simulation runs
-        N_RUNS
+        # N_RUNS
+        '1000'
 
         # Arg 2: Folder location for saving output files
         ,OUTFOLDER
@@ -363,7 +364,8 @@ for REGION in list_eth_regions:
     # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
     r_args = [
         # Arg 1: Number of simulation runs
-        N_RUNS
+        # N_RUNS
+        '1000'
 
         # Arg 2: Folder location for saving output files
         ,OUTFOLDER

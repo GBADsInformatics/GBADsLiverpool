@@ -3306,7 +3306,7 @@ gbadsDash.layout = html.Div([
                                       },
                                   ),
                     # Text underneath
-                    html.P("Estimates over time or for any year other than 2021 are currently only available for cattle" ,style={'font-style':'italic'}),
+                    html.P("Estimates over time or for any year other than 2021 are currently placeholders" ,style={'font-style':'italic'}),
                     ]),
 
                 # Year selector
@@ -3435,7 +3435,7 @@ gbadsDash.layout = html.Div([
                             html.H5("AHLE Attribution",
                                     className="card-title",
                                     style={"font-weight": "bold"}),
-                            html.Label(["Showing how each component contributes to the total animal health loss envelope, including attribution to infectious, non-infectious, and external causes"]),
+                            html.Label(["Showing how each component contributes to the total animal health loss envelope, including attribution to infectious, non-infectious, and external causes. NOTE: this is shown for species groups (cattle, all small ruminants, all poultry) rather than for individual species."]),
                             html.H5("Segment by..."),
                             dbc.Row([
                                 # Top Level
@@ -3496,14 +3496,17 @@ gbadsDash.layout = html.Div([
                                     ]),
                                 ]), # END OF ROW
                             html.Label([
-                                "Disease drilldown will show infectious AHLE broken out as follows depending on species:"
+                                "Disease drilldown shows infectious AHLE broken out as follows depending on species:"
                                 ,html.Br()
                                 ,"- Cattle: Brucellosis | FMD | Other Infectious"
                                 ,html.Br()
                                 ,"- Small ruminants: Brucellosis | PPR | Other Infectious"
+                                ,html.Br()
+                                ,html.Br()
+                                ,"Set any drill down to None to segment by fewer factors"
                                 ] ,style={"font-style":"italic" ,"margin-top":"10px"}
                                 ),
-                            html.Label(["Set any drill down to None to segment by fewer factors"] ,style={"font-style":"italic"}),
+                            # html.Label(["Set any drill down to None to segment by fewer factors"] ,style={"font-style":"italic"}),
                             ]),     # END OF CARD BODY
                         ], color='#F2F2F2'),    # END OF CARD
                     ]),
@@ -3517,7 +3520,7 @@ gbadsDash.layout = html.Div([
                 dbc.Col([
                     dbc.Spinner(children=[
                     dcc.Graph(id='ecs-ahle-waterfall',
-                                style = {"height":"650px"},
+                              style = {"height":"650px"},
                               config = {
                                   "displayModeBar" : True,
                                   "displaylogo": False,
@@ -3578,11 +3581,8 @@ gbadsDash.layout = html.Div([
                     html.P("Error bars show 95% confidence interval for each item based on simulation results and reflect uncertainty in the input parameters"),
                 ]),
                 dbc.Col([   # Treemap footnote
-                    html.P("Note: Attribution is reported for species groups rather than for individual species"),
                     html.P("Attribution to infectious, non-infectious, and external causes is based on expert opinion. See the expert opinion attribution proportions in the table below."),
                     html.P("AHLE Components are production loss, mortality loss, and health cost. Health cost makes up the smallest proportion and may not be visible in this view."),
-                    html.P("Health cost is attributed evenly to infectious, non-infectious, and external causes"),
-                    # html.P("AHLE due to specific diseases (such as PPR) is estimated for the total system and is assigned proportionally to individual age and sex groups"),
                 ]),
             ], style={'font-style': 'italic'}
             ),
@@ -7239,13 +7239,16 @@ def update_prodsys_options_ecs(species):
     Input('select-species-ecs','value'),
     )
 def update_longitudinal_options_ecs(species):
-    options = [{'label': i, 'value': i, 'disabled': False} for i in ["Single Year", "Over Time"]]
+    options = [
+        {'label': "Single Year", 'value': "Single Year", 'disabled': False},
+        {'label': "Over Time", 'value': "Over Time", 'disabled': False}
+        ]
     value='Single Year'
 
     # Disable option if species doesn't support it
-    if species.upper() != 'CATTLE':
-        for d in options:
-            d['disabled']=True
+    # if species.upper() != 'CATTLE':
+    #     for d in options:
+    #         d['disabled']=True
     return options, value
 
 # Year selector
@@ -7279,7 +7282,10 @@ def update_year_select_ecs(graph, species):
     Input('select-year-ecs', 'value'),
     )
 def update_geo_view_options_ecs(graph, species, year):
-    options = [{'label': i, 'value': i, 'disabled': False} for i in ["National", "Subnational"]]
+    options = [
+        {'label': "National", 'value': "National", 'disabled': False},
+        {'label': "Subnational", 'value': "Subnational", 'disabled': True}  # Update Aug 2023: disabling subnational views as these scenarios are incomplete and cause missing values in attribution
+        ]
     value='National'
 
     # Disable controls if Over Time selected
@@ -7771,8 +7777,10 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
     Input('select-currency-ecs','value'),
     Input('select-prodsys-ecs','value'),
     Input('select-species-ecs','value'),
+    Input('select-geo-view-ecs','value'),
+    Input('select-region-ecs','value'),
     )
-def update_ecs_attr_data(currency, prodsys, species):
+def update_ecs_attr_data(currency, prodsys, species, geo_view, region):
     # Read in data
     input_df = ecs_ahle_all_withattr
 
@@ -7787,12 +7795,17 @@ def update_ecs_attr_data(currency, prodsys, species):
     # Goat and Sheep do not appear separately. These get all small ruminants results.
     if species == 'Goat' or species == "Sheep":
         input_df=input_df.loc[(input_df['species'] == 'All Small Ruminants')]
-
     # Poultry subspecies do not appear separately. These get all poultry results.
     elif species == 'Poultry hybrid' or species == "Poultry indigenous":
         input_df=input_df.loc[(input_df['species'] == 'All Poultry')]
     else:
         input_df=input_df.loc[(input_df['species'] == species)]
+
+    # Geographic filter
+    if geo_view.upper() == "NATIONAL":
+        input_df = input_df.query("region == 'National'")
+    else:
+        input_df = input_df.query("region == @region")
 
     # If currency is USD, use USD columns
     display_currency = 'Birr'
@@ -7813,8 +7826,10 @@ def update_ecs_attr_data(currency, prodsys, species):
         ,'region':'Region'
         ,'age_group':'Age'
         ,'sex':'Sex'
+        ,'year':'Year'
         ,'ahle_component':'AHLE Component'
         ,'cause':'Attribution'
+        ,'disease':'Disease'
         ,'mean':f'Mean ({display_currency})'
         ,'sd':'Std. Dev.'
         ,'lower95':'Lower 95%'
@@ -8165,7 +8180,6 @@ def update_ahle_value_and_cost_viz_ecs(
 
     # Create waterfall chart
     if graph_options == "Single Year":
-
         # Filter to a specific year
         prep_df = prep_df.query('year == @selected_year')
 
@@ -8212,6 +8226,7 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
             prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
+
         measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
         x = prep_df['item']
 
@@ -8250,7 +8265,7 @@ def update_ahle_value_and_cost_viz_ecs(
                     stdev = prep_df[f'stdev_diff_growimp{number_split}']
 
             # Create graph
-            name = 'AHLE'
+            name = 'Difference'
             ecs_waterfall_fig = create_ahle_waterfall_ecs(prep_df, name, measure, x, y)
 
             # Add error bars
@@ -8274,15 +8289,15 @@ def update_ahle_value_and_cost_viz_ecs(
                 go.Scatter(
                      x=x,
                      y=y_error_sum,
-                    marker=dict(color='black'),
-                    customdata=np.stack((y, prep_df['item']), axis=-1),
+                     marker=dict(color='black'),
+                     customdata=np.stack((y, prep_df['item']), axis=-1),
                      error_y=dict(
                         type='data',
                         array=stdev
-                    ),
-                    mode="markers",
-                    hoverinfo='none',
-                    name='95% Confidence'
+                        ),
+                     mode="markers",
+                     hoverinfo='none',
+                     name='95% Confidence'
                 ),
             )
 
@@ -8324,16 +8339,15 @@ def update_ahle_value_and_cost_viz_ecs(
                     go.Scatter(
                          x=x_len-.3,
                          y=y_error_sum,
-                        marker=dict(color='black'),
-                        customdata=np.stack((y, prep_df['item']), axis=-1),
+                         marker=dict(color='black'),
+                         customdata=np.stack((y, prep_df['item']), axis=-1),
                          error_y=dict(
                             type='data',
                             array=stdev
-                        ),
-                        mode="markers",
-                        hoverinfo='none',
-                        showlegend=False
-
+                            ),
+                         mode="markers",
+                         hoverinfo='none',
+                         showlegend=False
                     ),
                 )
 
@@ -8369,18 +8383,17 @@ def update_ahle_value_and_cost_viz_ecs(
                     go.Scatter(
                          x=x_len+.3,
                          y=y_error_sum,
-                        marker=dict(color='black'),
-                        customdata=np.stack((y, prep_df['item']), axis=-1),
+                         marker=dict(color='black'),
+                         customdata=np.stack((y, prep_df['item']), axis=-1),
                          error_y=dict(
-                            type='data',
-                            array=prep_df['stdev_current']
-                        ),
-                        mode="markers",
-                        hoverinfo='none',
-                        name='95% Confidence'
+                             type='data',
+                             array=prep_df['stdev_current']
+                             ),
+                         mode="markers",
+                         hoverinfo='none',
+                         name='95% Confidence'
                     ),
                 )
-
                 ecs_waterfall_fig.update_layout(
                     xaxis = dict(
                         tickmode = 'array',
@@ -8423,18 +8436,17 @@ def update_ahle_value_and_cost_viz_ecs(
                 # Add trace for error
                 ecs_waterfall_fig.add_trace(
                     go.Scatter(
-                         x=x_len-.3,
-                         y=y_error_sum,
+                        x=x_len-.3,
+                        y=y_error_sum,
                         marker=dict(color='black'),
                         customdata=np.stack((y, prep_df['item']), axis=-1),
-                         error_y=dict(
+                        error_y=dict(
                             type='data',
                             array=stdev
                         ),
                         mode="markers",
                         hoverinfo='none',
                         showlegend=False
-
                     ),
                 )
 
@@ -9415,7 +9427,11 @@ def update_map_display_ecs(species, group, prodsys, item, currency, denominator)
             coloraxis_colorbar=dict(
                 title=f"{display_currency}",
                 )
-        )
+            )
+
+        # Disable mouse zooming at request of Ethiopia users
+        #!!! Unknown why this does not work.
+        ecs_map_fig.update_layout(dragmode=False)
 
         # TODO: Refine tooltip
         # # Update tooltip

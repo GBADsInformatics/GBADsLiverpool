@@ -492,7 +492,7 @@ ahle_combo_forattr_m_poultry['Age class'] = ahle_combo_forattr_m_poultry['Age cl
 
 datainfo(ahle_combo_forattr_m_poultry)
 
-#%% RUN ATTRIBUTION
+#%% RUN EXPERT ATTRIBUTION
 
 r_script = os.path.join(ETHIOPIA_CODE_FOLDER ,'Attribution function.R')    # Full path to the R program you want to run
 
@@ -656,7 +656,7 @@ os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_combo_forattr_m_poultry_one
 os.remove(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'attribution_summary_poultry_oneyear_oneregion.csv'))
 
 # =============================================================================
-#### Combine attribution results and cleanup
+#### Combine and cleanup
 # =============================================================================
 ahle_combo_withattr_raw = pd.concat(
     [attribution_summary_smallruminants ,attribution_summary_cattle ,attribution_summary_poultry]
@@ -716,10 +716,10 @@ datainfo(ahle_combo_withattr)
 # =============================================================================
 ahle_combo_withattr.to_csv(os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle_all_withattr.csv') ,index=False)
 
-#%% COMBINE ATTRIBUTION WITH AHLE
+#%% COMBINE EXPERT ATTRIBUTION WITH AHLE
 '''
-This approach combines the logic to add health cost and disease-specific
-attribution (both actuals and placeholders).
+Combine results of expert attribution with output of compartmental model to
+calculate health cost and disease-specific attribution (both actuals and placeholders).
 '''
 # =============================================================================
 #### Merge AHLE columns onto attribution
@@ -885,8 +885,9 @@ ahle_combo_attrmerged['ahle_attr_productionloss_infectious_other_stdev'] = np.sq
 # -----------------------------------------------------------------------------
 # Health cost
 # -----------------------------------------------------------------------------
-# Note infectious, noninfectious, and external totals are unknown because not part of expert elicitation
-# Naive approach: health cost split equally among causes
+# Note infectious, noninfectious, and external totals are unknown because they
+# are not part of expert elicitation.
+# Naive: health cost split equally among causes
 # ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean_a'] = ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] / 3
 
 # Total infectious must be at least equal to known diseases
@@ -897,7 +898,7 @@ ahle_combo_attrmerged['ahle_attr_productionloss_infectious_other_stdev'] = np.sq
 #     ahle_combo_attrmerged[['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b']].max(axis=1)
 # ahle_combo_attrmerged = ahle_combo_attrmerged.drop(columns=['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b'])
 
-# Make an assumption about the proportion of healthcost_infectious_alldisease captured by known diseases
+# Make an assumption about the proportion of ahle_attr_healthcost_infectious_alldisease_mean captured by known diseases
 healthcost_known_disease_prpn = 0.9
 
 ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
@@ -935,8 +936,12 @@ ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
 # For these, set ahle_attr_healthcost_allcause_alldisease_mean EQUAL TO ahle_attr_healthcost_infectious_alldisease_mean
 # Inflate ahle_attr_healthcost_allcause_alldisease_mean slightly so that ahle_attr_healthcost_noninfectious_alldisease_mean
 # and ahle_attr_healthcost_external_alldisease_mean are nonzero.
-_total_healthcost_toolow = (ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] < ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*1.05)
-ahle_combo_attrmerged.loc[_total_healthcost_toolow ,'ahle_attr_healthcost_allcause_alldisease_mean'] = ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*1.05
+healthcost_allcause_inflation_factor = 1.05
+
+_total_healthcost_toolow = (ahle_combo_attrmerged['ahle_attr_healthcost_allcause_alldisease_mean'] < ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*healthcost_allcause_inflation_factor)
+print(f"> Found {_total_healthcost_toolow.sum()} records where total AHLE due to health cost is less than infectious AHLE health cost.")
+print(f">> Setting total AHLE due to health cost equal to infectious AHLE health cost times {healthcost_allcause_inflation_factor}.")
+ahle_combo_attrmerged.loc[_total_healthcost_toolow ,'ahle_attr_healthcost_allcause_alldisease_mean'] = ahle_combo_attrmerged['ahle_attr_healthcost_infectious_alldisease_mean']*healthcost_allcause_inflation_factor
 
 # For poultry, ahle_attr_healthcost_infectious_alldisease_mean = 0 because no specific diseases are estimated.
 # If no known diseases, want ahle_attr_healthcost_infectious_alldisease_mean to get another placeholder.
