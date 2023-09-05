@@ -1725,7 +1725,9 @@ compartmental_model <- function(
 	## values
 	
 	# value of milk matrices
+	# This gets allocated to Adult Female and to Overall
 	Value_Milk_M <- Quant_Milk_M * milk_value_ltr
+	Value_Milk_AF_M <- Quant_Milk_M * milk_value_ltr
 
 	# value of hides matrices
 	Value_Hides_JF_M <- Quant_Hides_JF_M * sample(hides_value, 1)
@@ -1784,9 +1786,9 @@ compartmental_model <- function(
 	Total_Mortality_N_M <- Total_Mortality_NF_M + Total_Mortality_NM_M
 	Total_Mortality_J_M <- Total_Mortality_JF_M + Total_Mortality_JM_M
 
-   # Monetary value of mortality
-   Value_of_Total_Mortality_N_M <- Value_of_Total_Mortality_NF_M + Value_of_Total_Mortality_NM_M
-   Value_of_Total_Mortality_J_M <- Value_of_Total_Mortality_JF_M + Value_of_Total_Mortality_JM_M
+	# Monetary value of mortality
+	Value_of_Total_Mortality_N_M <- Value_of_Total_Mortality_NF_M + Value_of_Total_Mortality_NM_M
+	Value_of_Total_Mortality_J_M <- Value_of_Total_Mortality_JF_M + Value_of_Total_Mortality_JM_M
 
 	#Quant_Liveweight_kg_N_M <- Quant_Liveweight_kg_NF_M + Quant_Liveweight_kg_NM_M
 	Quant_Liveweight_kg_J_M <- Quant_Liveweight_kg_JF_M + Quant_Liveweight_kg_JM_M

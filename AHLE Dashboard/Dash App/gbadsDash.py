@@ -432,7 +432,8 @@ drop_countries = [
     ,'Zambia'
     # ,'Zimbabwe'
 ]
-_drop_countries = (ga_countries_biomass['country'].isin(drop_countries))
+drop_countries_upper = [i.upper() for i in drop_countries]
+_drop_countries = (ga_countries_biomass['country'].str.upper().isin(drop_countries_upper))
 ga_countries_biomass = ga_countries_biomass.loc[~ _drop_countries]
 
 # Keep history only to 2015
@@ -1405,7 +1406,7 @@ def prep_ahle_forwaterfall_ecs(INPUT_DF):
 
    # Keep only items for the waterfall
    # This also specifies the ordering of the bars
-   waterfall_plot_values = ('Value of Offtake',
+   waterfall_plot_items = ('Value of Offtake',
                             'Value of Eggs consumed',
                             'Value of Eggs sold',
                             'Value of Herd Increase',
@@ -1419,11 +1420,12 @@ def prep_ahle_forwaterfall_ecs(INPUT_DF):
                             'Infrastructure Cost',
                             'Capital Cost',
                             'Gross Margin')
-   ecs_ahle_waterfall = ecs_ahle_waterfall.loc[ecs_ahle_waterfall['item'].isin(waterfall_plot_values)]
+   waterfall_plot_items_upper = [i.upper() for i in waterfall_plot_items]
+   ecs_ahle_waterfall = ecs_ahle_waterfall.loc[ecs_ahle_waterfall['item'].str.upper().isin(waterfall_plot_items_upper)]
 
    # Sort Item column to keep values and costs together
    ecs_ahle_waterfall['item'] = ecs_ahle_waterfall['item'].astype('category')
-   ecs_ahle_waterfall.item.cat.set_categories(waterfall_plot_values, inplace=True)
+   ecs_ahle_waterfall.item.cat.set_categories(waterfall_plot_items, inplace=True)
    ecs_ahle_waterfall = ecs_ahle_waterfall.sort_values(["item"])
 
    # Rename costs values to be more descriptive
@@ -1699,21 +1701,27 @@ def create_stacked_bar_swine(input_df, x, y, color):
 
 # Define the attribution treemap
 def create_attr_treemap_ecs(input_df, path):
-    treemap_fig = px.treemap(input_df,
-                      # path=[
-                      #    'cause',
-                      #    'production_system',
-                      #    'age_group',
-                      #    'sex',
-                      #    'ahle_component',
-                      #    ],
-                      path = path,
-                      values='mean',
-                      # hover_data=['pct_of_total'],
-                      # custom_data=['pct_of_total'],
-                      color='cause', # cause only applys to the cause level
-                      color_discrete_map={'(?)':'lightgrey','Infectious':'#68000D', 'Non-infectious':'#08316C', 'External':'#00441B'} # Cause colors matches the Human health dashboard
-                      )
+    treemap_fig = px.treemap(
+        input_df,
+        # path=[
+        #    'cause',
+        #    'production_system',
+        #    'age_group',
+        #    'sex',
+        #    'ahle_component',
+        #    ],
+        path = path,
+        values='mean',
+        # hover_data=['pct_of_total'],
+        # custom_data=['pct_of_total'],
+        color='cause',            # cause only applys to the cause level
+        color_discrete_map={      # Cause colors match the Human health dashboard
+            '(?)':'lightgrey',
+            'Infectious':'#68000D',
+            'Non-infectious':'#08316C',
+            'External':'#00441B'
+            }
+        )
 
     return treemap_fig
 
@@ -2128,20 +2136,23 @@ gbadsDash.layout = html.Div([
     #### BRANDING & HEADING
     dbc.Row([
         # GBADs Branding
-        dbc.Col(html.Div([
-            html.A(href="https://animalhealthmetrics.org/",
-            children=[
-                html.Img(title="Link to GBADS site",src=(os.environ.get("DASH_BASE_URL") if os.environ.get("DASH_BASE_URL") else "") + '/assets/GBADs-LOGO-Black-sm.png')
-            ],),
+        dbc.Col(
+            html.Div([
+                html.A(href="https://animalhealthmetrics.org/",
+                       children=[
+                       html.Img(title="Link to GBADS site", src=(os.environ.get("DASH_BASE_URL") if os.environ.get("DASH_BASE_URL") else "") + '/assets/GBADs-LOGO-Black-sm.png')
+                       ]
+                       ),
                 html.H3("Inclusiveness Challenge Delivery Rigour Transparency",
                         style={"font-style": "italic",
                                "margin": "0",
-                               "padding": "0"})
+                               "padding": "0"}),
                 ], style = {'margin-left':"10px",
                             "margin-bottom":"10px",
                             'margin-right':"10px"},
-        )),
-    ], justify='between'),
+                )
+            ),
+        ], justify='between'),
 
     #### Data to pass between callbacks
     dcc.Store(id='core-data-poultry'),
@@ -3255,7 +3266,7 @@ gbadsDash.layout = html.Div([
         ], style=major_producers_tab_style, selected_style=major_producers_tab_selected_style),
 
         #### ETHIOPIA TAB
-        dcc.Tab(label="Ethiopia Case Study [WIP]", children =[
+        dcc.Tab(label="Ethiopia Case Study", children =[
 
             html.H3("Ethiopia Animal Health Loss Envelope and Disease Attribution"),
             html.Label(["Displaying production values, expenditures, and gross margin under the current and ideal scenario estimated by a compartmental herd dynamics model. Attribution of AHLE to infectious, non-infectious, and external causes is based on the results of expert elicitation."]),
@@ -3359,11 +3370,11 @@ gbadsDash.layout = html.Div([
                                 dbc.Col([
                                     html.H6("Show current and ideal as..."),
                                     dcc.RadioItems(id='select-display-ecs',
-                                                  options=ecs_display_options,
-                                                  value='Difference',
-                                                  labelStyle={'display': 'block'},
-                                                  inputStyle={"margin-right": "2px"}, # This pulls the words off of the button
-                                                  ),
+                                                   options=ecs_display_options,
+                                                   value='Difference',
+                                                   labelStyle={'display': 'block'},
+                                                   inputStyle={"margin-right": "2px"}, # This pulls the words off of the button
+                                                   ),
                                     html.Label(["Difference: show a single bar for each item representing the difference between the current and ideal values"] ,style={'font-style':'italic' ,"margin-top":"20px"}),
                                     html.Label(["Side by Side: show two bars for each item, one for current and another for the ideal value"] ,style={'font-style':'italic'}),
                                     ]),
@@ -3385,10 +3396,10 @@ gbadsDash.layout = html.Div([
                                 dbc.Col([
                                     html.H6("Show results for group...", id='select-agesex-ecs-title'),
                                     dcc.Dropdown(id='select-agesex-ecs',
-                                                  options=ecs_agesex_options,
-                                                  value='Overall',
-                                                  clearable = False,
-                                                  ),
+                                                 options=ecs_agesex_options,
+                                                 value='Overall',
+                                                 clearable = False,
+                                                 ),
                                     html.Label(["Overall: show values and costs for whole system"] ,style={'font-style':'italic' ,"margin-top":"20px"}),
                                     html.Label(["Otherwise, show values and costs for just the selected age/sex group"] ,style={'font-style':'italic'}),
                                     ]),
@@ -3435,7 +3446,7 @@ gbadsDash.layout = html.Div([
                             html.H5("AHLE Attribution",
                                     className="card-title",
                                     style={"font-weight": "bold"}),
-                            html.Label(["Showing how each component contributes to the total animal health loss envelope, including attribution to infectious, non-infectious, and external causes. NOTE: this is shown for species groups (cattle, all small ruminants, all poultry) rather than for individual species."]),
+                            html.Label(["Showing how each component contributes to the total animal health loss envelope, including attribution to infectious, non-infectious, and external causes. NOTE: this is shown for species groups (cattle, all small ruminants, or all poultry) rather than for individual species."]),
                             html.H5("Segment by..."),
                             dbc.Row([
                                 # Top Level
@@ -3556,22 +3567,20 @@ gbadsDash.layout = html.Div([
                                       'format': 'png', # one of png, svg, jpeg, webp
                                       'filename': 'GBADs_Ethiopia_Attribution_Treemap'
                                       },
-                                   'modeBarButtonsToRemove': ['zoom',
-                                                              'zoomIn',
-                                                              'zoomOut',
-                                                              'autoScale',
-                                                              #'resetScale',  # Removes home button
-                                                              'pan',
-                                                              'select2d',
-                                                              'lasso2d']
+                                  'modeBarButtonsToRemove': ['zoom',
+                                                             'zoomIn',
+                                                             'zoomOut',
+                                                             'autoScale',
+                                                             #'resetScale',  # Removes home button
+                                                             'pan',
+                                                             'select2d',
+                                                             'lasso2d']
                                   }
                               )
-
                     # End of Spinner
                     ],size="md", color="#393375", fullscreen=False),
                     # End of Attribution Treemap
                     style={"width":5}),
-
                 ]),
 
             #### -- FOOTNOTES PT.1
@@ -3593,7 +3602,7 @@ gbadsDash.layout = html.Div([
             #### -- WIDER ECONOMIC IMPACT
             dbc.Row([
                 html.H3("Wider Economic Impact"),
-                html.Label(["Estimating the total economic impact of each scenario on cattle and small ruminants using the ",
+                html.Label(["Estimating the total economic impact of each scenario for cattle and small ruminants using the ",
                             html.A('GTAP model.', href='https://www.gtap.agecon.purdue.edu/')
                             ]),
                 dbc.Col([
@@ -7732,7 +7741,7 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
     input_df = input_df[list(columns_to_display_with_labels)]
 
     # Keep only items for the waterfall
-    waterfall_plot_values = ('Value of Offtake',
+    waterfall_plot_items = ('Value of Offtake',
                              'Value of Herd Increase',
                              'Value of draught',
                              'Value of Milk',
@@ -7745,7 +7754,8 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
                              'Health Cost',
                              'Capital Cost',
                              'Gross Margin')
-    input_df = input_df.loc[input_df['item'].isin(waterfall_plot_values)]
+    waterfall_plot_items_upper = [i.upper() for i in waterfall_plot_items]
+    input_df = input_df.loc[input_df['item'].str.upper().isin(waterfall_plot_items_upper)]
 
 
     return [
@@ -8185,7 +8195,7 @@ def update_ahle_value_and_cost_viz_ecs(
 
         # Filters
         if species.upper() == "CATTLE":     # Cattle have draught
-            waterfall_plot_values = ('Value of Offtake',
+            waterfall_plot_items = ('Value of Offtake',
                                      'Value of Herd Increase',
                                      'Value of Draught',
                                      'Value of Milk',
@@ -8198,9 +8208,8 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Housing',
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
-            prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
         elif 'POULTRY' in species.upper():   # Poultry have value of eggs, do not have manure or hides
-            waterfall_plot_values = ('Value of Offtake',
+            waterfall_plot_items = ('Value of Offtake',
                                      'Value of Herd Increase',
                                      'Value of Eggs consumed',
                                      'Value of Eggs sold',
@@ -8211,9 +8220,8 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Housing',
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
-            prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
-        else:
-            waterfall_plot_values = ('Value of Offtake',
+        else:   # Goats, Sheep, All Small Ruminants
+            waterfall_plot_items = ('Value of Offtake',
                                      'Value of Herd Increase',
                                      'Value of Milk',
                                      'Value of Manure',
@@ -8225,9 +8233,9 @@ def update_ahle_value_and_cost_viz_ecs(
                                      # 'Expenditure on Housing',
                                      # 'Expenditure on Capital',
                                      'Gross Margin')
-            prep_df = prep_df.loc[prep_df['item'].isin(waterfall_plot_values)]
-
-        measure = ['relative'] * (len(waterfall_plot_values) - 1) + ['total']
+        waterfall_plot_items_upper = [i.upper() for i in waterfall_plot_items]
+        prep_df = prep_df.loc[prep_df['item'].str.upper().isin(waterfall_plot_items_upper)]
+        measure = ['relative'] * (len(waterfall_plot_items) - 1) + ['total']
         x = prep_df['item']
 
         # Display and Compare filters
@@ -8300,7 +8308,6 @@ def update_ahle_value_and_cost_viz_ecs(
                      name='95% Confidence'
                 ),
             )
-
             # Add title
             ecs_waterfall_fig.update_layout(
                 title_text=f'{reg_title} Animal Health Loss Envelope | {species}, {prodsys} <br><sup>Difference between current and {compare} values for {agesex}, {selected_year}</sup><br>',
@@ -8398,7 +8405,7 @@ def update_ahle_value_and_cost_viz_ecs(
                     xaxis = dict(
                         tickmode = 'array',
                         tickvals = x_len,
-                        ticktext = waterfall_plot_values
+                        ticktext = waterfall_plot_items
                     )
                 )
 
@@ -8497,7 +8504,7 @@ def update_ahle_value_and_cost_viz_ecs(
                     xaxis = dict(
                         tickmode = 'array',
                         tickvals = x_len,
-                        ticktext = waterfall_plot_values
+                        ticktext = waterfall_plot_items
                     )
                 )
 
@@ -8614,7 +8621,7 @@ def update_ahle_value_and_cost_viz_ecs(
                     xaxis = dict(
                         tickmode = 'array',
                         tickvals = x_len,
-                        ticktext = waterfall_plot_values
+                        ticktext = waterfall_plot_items
                     )
                 )
 
