@@ -8193,7 +8193,7 @@ def update_ahle_value_and_cost_viz_ecs(
         # Filter to a specific year
         prep_df = prep_df.query('year == @selected_year')
 
-        # Filters
+        # Select items to show - depends on species
         if species.upper() == "CATTLE":     # Cattle have draught
             waterfall_plot_items = ('Value of Offtake',
                                      'Value of Herd Increase',
@@ -8235,7 +8235,11 @@ def update_ahle_value_and_cost_viz_ecs(
                                      'Gross Margin')
         waterfall_plot_items_upper = [i.upper() for i in waterfall_plot_items]
         prep_df = prep_df.loc[prep_df['item'].str.upper().isin(waterfall_plot_items_upper)]
-        measure = ['relative'] * (len(waterfall_plot_items) - 1) + ['total']
+
+        # Get list of items from data - may differ from list specified because not all items appear for all age/sex groups
+        waterfall_plot_items_indata = list(prep_df['item'].unique())
+
+        measure = ['relative'] * (len(waterfall_plot_items_indata) - 1) + ['total']
         x = prep_df['item']
 
         # Display and Compare filters
