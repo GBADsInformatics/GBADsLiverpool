@@ -3656,10 +3656,10 @@ gbadsDash.layout = html.Div([
             #### -- WEI FOOTNOTES
             dbc.Row([
                 dbc.Col([   # Chart 1 footnote
-                    html.P("Chart 1 footnote."),
+                    html.P("% Change in Production is the % change in live animal production."),
                 ]),
                 dbc.Col([   # Chart 2 footnote
-                    html.P("Economic surplus is the combined measure of consumer surplus and producer surplus."),
+                    html.P("Economic surplus refers to the monetary gains that a consumer or producer or both accrues from an economic activity."),
                 ]),
             ], style={'font-style': 'italic'}
             ),
@@ -9276,7 +9276,7 @@ def update_wei_display_ecs(species):
         title_text='GDP change due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
         ,font_size=15
 
-    	,xaxis_title='% Productivity Change'
+    	,xaxis_title='% Change in Production'
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='% GDP Change'
@@ -9298,7 +9298,7 @@ def update_wei_display_ecs(species):
         title_text='Economic surplus due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
         ,font_size=15
 
-    	,xaxis_title='% Productivity Change'
+    	,xaxis_title='% Change in Production'
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='Economic Surplus (Million USD)'
