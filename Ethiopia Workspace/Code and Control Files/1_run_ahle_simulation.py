@@ -105,7 +105,7 @@ MURDOCH_OUTPUT_FOLDER = os.path.join(MURDOCH_BASE_FOLDER ,'output')
 # Full path to rscript.exe
 r_executable = 'C:\\Program Files\\R\\R-4.3.1\\bin\\x64\\Rscript.exe'
 
-N_RUNS = '1000'   # String: number of simulation runs for each scenario
+N_RUNS = '10000'   # String: number of simulation runs for each scenario
 
 #%% Small ruminants
 
@@ -278,49 +278,48 @@ timerstop()
 #!!! As of August 2023, yearly scenarios are not being updated. Murdoch University
 is providing updated cattle scenarios for the base single-year.
 '''
-list_years = list(range(2017, 2022))
+# list_years = list(range(2017, 2022))
 
-# Initialize list to save return codes
-returncode_cattle_yearly = []
+# # Initialize list to save return codes
+# returncode_cattle_yearly = []
 
-# Loop through years, calling scenario file for each and saving outputs to a new folder
-for YEAR in list_years:
-    print(f"> Running compartmental model for year {YEAR}...")
+# # Loop through years, calling scenario file for each and saving outputs to a new folder
+# for YEAR in list_years:
+#     print(f"> Running compartmental model for year {YEAR}...")
 
-    # Define input scenario file
-    SCENARIO_FILE = os.path.join(
-        ETHIOPIA_CODE_FOLDER
-        ,'Yearly parameters'
-        ,f'{YEAR}_AHLE scenario parameters CATTLE_20230209 scenarios only.xlsx'
-        )
+#     # Define input scenario file
+#     SCENARIO_FILE = os.path.join(
+#         ETHIOPIA_CODE_FOLDER
+#         ,'Yearly parameters'
+#         ,f'{YEAR}_AHLE scenario parameters CATTLE_20230209 scenarios only.xlsx'
+#         )
 
-    # Create subfolder for results if it doesn't exist
-    OUTFOLDER = os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f'{YEAR}')
-    os.makedirs(OUTFOLDER ,exist_ok=True)
+#     # Create subfolder for results if it doesn't exist
+#     OUTFOLDER = os.path.join(ETHIOPIA_OUTPUT_FOLDER ,'ahle CATTLE' ,'Yearly results' ,f'{YEAR}')
+#     os.makedirs(OUTFOLDER ,exist_ok=True)
 
-    # Arguments to R function, as list of strings.
-    # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
-    r_args = [
-        # Arg 1: Number of simulation runs
-        # N_RUNS
-        '1000'
+#     # Arguments to R function, as list of strings.
+#     # ORDER MATTERS! SEE HOW THIS LIST IS PARSED INSIDE R SCRIPT.
+#     r_args = [
+#         # Arg 1: Number of simulation runs
+#         N_RUNS
 
-        # Arg 2: Folder location for saving output files
-        ,OUTFOLDER
+#         # Arg 2: Folder location for saving output files
+#         ,OUTFOLDER
 
-        # Arg 3: full path to scenario control file
-        ,SCENARIO_FILE
+#         # Arg 3: full path to scenario control file
+#         ,SCENARIO_FILE
 
-        # Arg 4: only run the first N scenarios from the control file
-        # -1: use all scenarios
-        ,'-1'
-    ]
-    timerstart()
-    rc = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLINES=999)
-    returncode_cattle_yearly.append(rc)
-    timerstop()
+#         # Arg 4: only run the first N scenarios from the control file
+#         # -1: use all scenarios
+#         ,'-1'
+#     ]
+#     timerstart()
+#     rc = run_cmd([r_executable ,r_script] + r_args ,SHOW_MAXLINES=999)
+#     returncode_cattle_yearly.append(rc)
+#     timerstop()
 
-    print(f"> Finished compartmental model for year {YEAR}.")
+#     print(f"> Finished compartmental model for year {YEAR}.")
 
 # =============================================================================
 #### Subnational/regional scenarios

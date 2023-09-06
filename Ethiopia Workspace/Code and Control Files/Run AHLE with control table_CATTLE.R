@@ -597,6 +597,7 @@ compartmental_model <- function(
 	
 	# Draught
 	cumilative_draught_income_M <- matrix(, nrow = nruns, ncol = Num_months)
+	cumilative_draught_income_O_M <- matrix(, nrow = nruns, ncol = Num_months)
 	
 	# Meat
 	Quant_Meat_kg_M <- matrix(, nrow = nruns, ncol = Num_months)
@@ -1506,8 +1507,11 @@ compartmental_model <- function(
 		Quant_Liveweight_kg_AM_M[i, ] <- Quant_Liveweight_kg_AM
 		Quant_Liveweight_kg_O_M[i, ] <- Quant_Liveweight_kg_O
 		
-		#Draught
+		# Draught
+		# Allocated to Oxen as well as overall
 		cumilative_draught_income_M[i,] <- cumilative_draught_income
+		cumilative_draught_income_O_M[i,] <- cumilative_draught_income
+		
 		# Meat
 		Quant_Meat_kg_M[i, ] <- Quant_Meat_kg
 
