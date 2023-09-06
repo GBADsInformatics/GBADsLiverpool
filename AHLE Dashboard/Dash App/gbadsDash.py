@@ -3603,7 +3603,7 @@ gbadsDash.layout = html.Div([
             dbc.Row([
                 html.H3("Wider Economic Impact"),
                 html.Label(["Estimating the total economic impact of each scenario for cattle and small ruminants using the ",
-                            html.A('GTAP model.', href='https://www.gtap.agecon.purdue.edu/')
+                            html.A('GTAP model.', href='https://www.gtap.agecon.purdue.edu/' ,target='_blank')  # target='_blank' to open in a new tab
                             ]),
                 dbc.Col([
                     dbc.Spinner(children=[
@@ -9306,7 +9306,7 @@ def update_wei_display_ecs(species):
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='Economic Surplus (Million USD)'
-        ,yaxis_tickformat='$,d'
+        ,yaxis_tickformat='$,.0f'
 
         ,plot_bgcolor="#ededed"
         )
