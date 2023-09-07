@@ -9303,7 +9303,7 @@ def update_wei_display_ecs(species):
         ,plot_yvar='economic_surplus_usd'
         ,plot_color='green'
         ,interpolation_kind='linear'
-        ,yvar_divisor=1e6      # Divide y values by this number before interpolation and plotting
+        ,yvar_divisor=1000000      # Divide y values by this number before interpolation and plotting
         )
     wei_chart_2.update_layout(
         title_text='Economic surplus due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
@@ -9313,9 +9313,7 @@ def update_wei_display_ecs(species):
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='Economic Surplus (Million USD)'
-        # ,yaxis_tickformat='$,d'
-        # ,yaxis_tickformat='$,.0f'
-        ,yaxis_tickformat='$,'
+        ,yaxis_tickformat='$,.0f'
 
         ,plot_bgcolor="#ededed"
         )
