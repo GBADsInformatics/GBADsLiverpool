@@ -899,7 +899,7 @@ ahle_combo_attrmerged['ahle_attr_productionloss_infectious_other_stdev'] = np.sq
 # ahle_combo_attrmerged = ahle_combo_attrmerged.drop(columns=['ahle_attr_healthcost_infectious_alldisease_mean_a' ,'ahle_attr_healthcost_infectious_alldisease_mean_b'])
 
 # Make an assumption about the proportion of ahle_attr_healthcost_infectious_alldisease_mean captured by known diseases
-healthcost_known_disease_prpn = 0.9
+healthcost_known_disease_prpn = 0.5
 
 ahle_combo_attrmerged = ahle_combo_attrmerged.eval(
     '''

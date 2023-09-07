@@ -739,7 +739,6 @@ ecs_hierarchy_attr_options = [{'label': "Cause", 'value': "cause", 'disabled': F
 
 # Drill down options for hierarchy
 ecs_hierarchy_dd_attr_options = [{'label': i, 'value': i, 'disabled': False} for i in ["None"]]
-
 ecs_hierarchy_dd_attr_options += ecs_hierarchy_attr_options
 
 # Region - removing 'National' from the options
@@ -3458,7 +3457,7 @@ gbadsDash.layout = html.Div([
                                                   clearable = False,
                                                   ),
                                     ], style={
-                                        "margin-bottom":"30px", # Adding this to account for the additional space creted by the radio buttons
+                                        "margin-bottom":"30px", # Adding this to account for the additional space created by the radio buttons
                                         },
                                     ),
                                 # Drilldown 1
@@ -7273,12 +7272,20 @@ def update_year_select_ecs(graph, species):
     ecs_year_options=[]     # By default, list is blank
     placeholder = '2021'
 
-    if (graph == 'Single Year') & (species.upper() == 'CATTLE'):
+    if graph == 'Over Time':   # Over time placeholder is (all)
+        placeholder = '(all)'
+    # Other years only available for Cattle
+    # elif (graph == 'Single Year') & (species.upper() == 'CATTLE'):
+    #     ecs_year_options=[]
+    #     for i in np.sort(ecs_ahle_summary['year'].unique()):
+    #         str(ecs_year_options.append({'label':i,'value':(i)}))
+    # Have placeholder values for all species and years
+    elif graph == 'Single Year':
         ecs_year_options=[]
         for i in np.sort(ecs_ahle_summary['year'].unique()):
             str(ecs_year_options.append({'label':i,'value':(i)}))
-    elif graph == 'Over Time':   # Over time - placeholder (all)
-        placeholder = '(all)'
+    else:
+        None
 
     return ecs_year_options, value, placeholder
 
@@ -7366,7 +7373,7 @@ def update_year_item_switch(graph):
     Input('select-top-lvl-attr-ecs','value'),
     )
 def update_dd1_options_ecs(graph, top_lvl_hierarchy):
-    options = ecs_hierarchy_dd_attr_options.copy()
+    options = ecs_hierarchy_dd_attr_options
 
     if graph == 'Over Time':
         for d in options:
@@ -9306,7 +9313,9 @@ def update_wei_display_ecs(species):
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='Economic Surplus (Million USD)'
-        ,yaxis_tickformat='$,.0f'
+        # ,yaxis_tickformat='$,d'
+        # ,yaxis_tickformat='$,.0f'
+        ,yaxis_tickformat='$,'
 
         ,plot_bgcolor="#ededed"
         )
