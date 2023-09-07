@@ -229,7 +229,7 @@ wei_ethiopia_raw = pd.DataFrame({
     ,'scenario_numeric':[0 ,0.5 ,1]
     ,'production_change_pct':[0 ,.402 ,1.8048]
     ,'gdp_change_pct':[0 ,.0251 ,.0357]
-    ,'economic_surplus_usd':[0 ,1760050000 ,2452180000]
+    ,'economic_surplus_mlnusd':[0 ,1760.050 ,2452.180]
 })
 
 # -----------------------------------------------------------------------------
@@ -9304,10 +9304,9 @@ def update_wei_display_ecs(species):
     wei_chart_2 = create_wei_chart(
         input_df=wei_ethiopia_raw
         ,plot_xvar='production_change_pct'
-        ,plot_yvar='economic_surplus_usd'
+        ,plot_yvar='economic_surplus_mlnusd'
         ,plot_color='green'
         ,interpolation_kind='linear'
-        ,yvar_divisor=1e6      # Divide y values by this number before interpolation and plotting
         )
     wei_chart_2.update_layout(
         title_text='Economic surplus due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
@@ -9317,7 +9316,7 @@ def update_wei_display_ecs(species):
         ,xaxis_tickformat='.0%'
 
     	,yaxis_title='Economic Surplus (Million USD)'
-        ,yaxis_tickformat='$,.0f'
+        ,yaxis_tickformat='$,.1f'
 
         ,plot_bgcolor="#ededed"
         )
