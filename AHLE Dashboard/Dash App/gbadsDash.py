@@ -7794,10 +7794,11 @@ def update_ecs_ahle_data(currency, species, prodsys, agesex):
     Input('select-currency-ecs','value'),
     Input('select-prodsys-ecs','value'),
     Input('select-species-ecs','value'),
+    Input('select-year-ecs', 'value'),
     Input('select-geo-view-ecs','value'),
     Input('select-region-ecs','value'),
     )
-def update_ecs_attr_data(currency, prodsys, species, geo_view, region):
+def update_ecs_attr_data(currency, prodsys, species, year, geo_view, region):
     # Read in data
     input_df = ecs_ahle_all_withattr
 
@@ -7817,6 +7818,9 @@ def update_ecs_attr_data(currency, prodsys, species, geo_view, region):
         input_df=input_df.loc[(input_df['species'] == 'All Poultry')]
     else:
         input_df=input_df.loc[(input_df['species'] == species)]
+
+    # Year filter
+    input_df=input_df.loc[(input_df['year'] == year)]
 
     # Geographic filter
     if geo_view.upper() == "NATIONAL":
@@ -9303,7 +9307,7 @@ def update_wei_display_ecs(species):
         ,plot_yvar='economic_surplus_usd'
         ,plot_color='green'
         ,interpolation_kind='linear'
-        ,yvar_divisor=1000000      # Divide y values by this number before interpolation and plotting
+        ,yvar_divisor=1e6      # Divide y values by this number before interpolation and plotting
         )
     wei_chart_2.update_layout(
         title_text='Economic surplus due to productivity change by scenario <br><sup>Cattle and small ruminants combined</sup>'
