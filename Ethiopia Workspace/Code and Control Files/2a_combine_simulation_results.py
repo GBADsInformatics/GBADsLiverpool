@@ -99,32 +99,6 @@ def colnames_from_index(INPUT_DF):
    dfmod.columns = cols_new
    return dfmod
 
-# Create a function to fill values of one column with another for a subset of rows
-# Example usage:
-# _row_select = (df['col'] == 'value')
-# df = fill_column_where(df ,_row_select ,'col' ,'fill_col' ,DROP=True)
-def fill_column_where(
-        DATAFRAME           # Dataframe
-        ,LOC                # Dataframe mask e.g. _loc = (df['col'] == 'Value')
-        ,COLUMN_TOFILL      # String
-        ,COLUMN_TOUSE       # String
-        ,DROP=False         # True: drop COLUMN_TOUSE
-    ):
-    funcname = inspect.currentframe().f_code.co_name
-    dfmod = DATAFRAME.copy()
-    print(f"<{funcname}> Processing {dfmod.loc[LOC].shape[0]} rows.")
-    try:
-        dfmod[COLUMN_TOUSE]     # If column to use exists
-        print(f"<{funcname}> - Filling {COLUMN_TOFILL} with {COLUMN_TOUSE}.")
-        dfmod.loc[LOC ,COLUMN_TOFILL] = dfmod.loc[LOC ,COLUMN_TOUSE]
-        if DROP:
-            dfmod = dfmod.drop(columns=COLUMN_TOUSE)
-            print(f"<{funcname}> Dropping {COLUMN_TOUSE}.")
-    except:
-        print(f"<{funcname}> - {COLUMN_TOUSE} not found. Filling {COLUMN_TOFILL} with nan.")
-        dfmod.loc[LOC ,COLUMN_TOFILL] = np.nan
-    return dfmod
-
 #%% PATHS AND VARIABLES
 
 CURRENT_FOLDER = os.getcwd()
