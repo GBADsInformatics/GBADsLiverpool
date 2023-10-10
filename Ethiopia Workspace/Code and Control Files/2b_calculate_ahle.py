@@ -8,13 +8,15 @@ where this code is stored.
 '''
 #%% PACKAGES AND FUNCTIONS
 
-import os                        # Operating system functions
+import os
 import inspect
 import io
 import time
+import datetime as dtm
 import numpy as np
 import pandas as pd
-import pickle                             # To save objects to disk
+import pickle
+import wbdata         # To access World Bank data through API calls
 
 # To clean up column names in a dataframe
 def cleancolnames(INPUT_DF):
@@ -106,33 +108,38 @@ DASH_DATA_FOLDER = os.path.join(GRANDPARENT_FOLDER, 'AHLE Dashboard' ,'Dash App'
 #%% EXTERNAL DATA
 
 # =============================================================================
-#### Prepare currency conversion data
+#### Retrieve currency conversion data from World Bank
 # =============================================================================
-# Read conversion data
-exchg_data = pd.read_csv(os.path.join(ETHIOPIA_DATA_FOLDER ,'worldbank_inflation_exchangerate_gdp_2010_2021' ,'20475199-8fa4-4249-baec-98b6635f68e3_Data.csv'))
-cleancolnames(exchg_data)
-datainfo(exchg_data)
+wb_search_exchg = wbdata.search_indicators('exchange')
 
-# Filter and rename
-exchg_data_tomerge = exchg_data.query("country_name == 'Ethiopia'")
-keep_rename_cols = {
-    'country_name':'country_name'
-    ,'time':'year'
-    ,'official_exchange_rate__lcu_per_us_dol___period_average___pa_nus_fcrf_':'exchg_rate_lcuperusdol'
-    }
-exchg_data_tomerge = exchg_data_tomerge[list(keep_rename_cols)].rename(columns=keep_rename_cols)
+# Indicators to retrieve as a dictionary
+# Keys: World Bank indicator codes
+# Values: desired column names in resulting dataframe
+wb_indicators_toget = {
+    'PA.NUS.FCRF':'exchg_rate_lcuperusdol'
+}
 
-# Fill coded values with nan
-exchg_data_tomerge['exchg_rate_lcuperusdol'] = exchg_data_tomerge['exchg_rate_lcuperusdol'].replace('..' ,np.nan).astype('float64')
+# Date range to retrieve
+wb_startdate = dtm.datetime(2010, 1, 1)
+current_year = dtm.datetime.now().year
+wb_enddate = dtm.datetime(current_year, 1, 1)
 
-# Year 2021 is missing. Fill with 2020.
-# This fills any missing year with the previous
-exchg_data_tomerge['exchg_rate_lcuperusdol_prev'] = exchg_data_tomerge['exchg_rate_lcuperusdol'].shift(periods=1)
-exchg_data_tomerge['exchg_rate_lcuperusdol'] = \
-    exchg_data_tomerge['exchg_rate_lcuperusdol'].fillna(exchg_data_tomerge['exchg_rate_lcuperusdol_prev'])
-del exchg_data_tomerge['exchg_rate_lcuperusdol_prev']
+# Retrieve the data
+wb_exchg_df = wbdata.get_dataframe(
+    wb_indicators_toget
+    ,country='all'
+    ,data_date=(wb_startdate ,wb_enddate)   # Date range to retrieve
+    ,freq='Y'                               # Frequency: Yearly
+    ,convert_date=True                      # True: convert date column to datetime type
+)
 
-datainfo(exchg_data_tomerge)
+# Change index to columns and rename
+wb_exchg_df = wb_exchg_df.reset_index()
+wb_exchg_df['year'] = wb_exchg_df['date'].dt.year
+wb_exchg_df = wb_exchg_df.rename(columns={'country':'country_name'})
+
+# Filter to Ethiopia
+exchg_data_tomerge = wb_exchg_df.query("country_name == 'Ethiopia'")
 
 # Export
 exchg_data_tomerge.to_pickle(os.path.join(ETHIOPIA_DATA_FOLDER ,'wb_exchg_data_processed.pkl.gz'))
