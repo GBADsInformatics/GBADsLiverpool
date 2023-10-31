@@ -1,0 +1,10 @@
+study ,breed ,ps,milky,semilky,sdmilky,szmilky,lactation length (days),se,sd,sz,study type,data collectionm method,sample size,reference
+1,Boran-Somali goats,b.pastoral ,0.37,0.0147,0.11,56,90,,,56,onstation ,monitoring and measuring ,120,"Tesfaye Alemu Tucho, Alemu Regassa and Lemma Fita. 2000. Preliminary production and reproduction performance 
+evaluation of Mid Rift Valley and Boran goats  "
+2,Boran (long-eared Somali,b.pastoral ,0.38,0.0707,0.2,8,90,,,,onstation ,monitoring and measuring ,8,"Lemma Fita, Lemma Aberra, Nega Tolla and Tesfaye Alemu. 2003. Effect of different legume supplementation on milk 
+production performance of Boran Goats. Proceedings of the 10th annual conference of the Ethiopian Society of 
+Animal Production (ESAP), Addis Ababa, Ethiopia, 22–24 August 2002. Addis Ababa, Ethiopia: ESAP. pp. 363–366. in a Review of  Solomon, A.K., Mwai, O., Grum, G., Haile, A., Rischkowsky, B.A., Solomon, G. and Dessie, T. 2014. Review of goat research and development projects "
+3,somali,b.pastoral ,0.43,0.1200,0.49,17,,,,,onstation ,monitoring and measuring ,11,"Mestawet, T.A., Girma, A., Adnoy, T. Devolda, T.G.,  Narvhus, G.A.,  Vegaruda, G. A. 2012.  Milk production, composition and variation at different lactation stages of four goat breeds in Ethiopia. Short communication. Amall Ruminant Research 105, 176–182"
+4,borena pastoral,pastoral ,0.53,0.0253,0.32,160,75,,,,farm,interview of farmers ,160 hh,"Tolera A., Abebe. A., 2007. Livestock production in pastoral and agro-pastoral production systems of southern Ethiopia. Livestock Research for Rural Development, 19,12 "
+5,chifra,pastoral ,0.40,0.0105,0.1,90,90,,0.4,90,farm,interview of farmers ,180hh,"Hassen,A.S.,  Tesfaye, Y. 2014.  Sheep and goat production objectives in pastoral and agro-pastoral production systems in Chifra district of Afar, Ethiopia. Trop Anim Health Prod (2014) 46:1467–1474 DOI 10.1007/s11250-014-0668-4. "
+6,all pastroral,pastoral ,0.52,0.0015,0.28,34971,,,,,,,,

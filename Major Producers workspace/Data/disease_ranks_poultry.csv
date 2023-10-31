@@ -1,0 +1,18 @@
+"",Industry,Economic,Public,Zoonotic,Animal,International,Disease,Genetic,OG rank within,OG rank
+Pathogen/disease,concern,impact,concern,potential,welfare,trade,score,variation,species,across species
+Salmonella spp.,2,2,3,3,2,,12,3,5,8
+Marek’s disease,3,3,1,,1,,8,3,4.3,7.3
+Coccidiosis,2,3,1,,2,,8,3,4.3,7.3
+E. coli,2,2,2,1,3,,10,2,3.7,6.7
+Newcastle disease,1,3,,,3,3,10,2,3.7,6.7
+Infectious bursal disease,,3,1,,3,,8,2,3.3,6.3
+Ascaridia galli,2,2,1,,2,,7,2,3.2,6.2
+Rous sarcoma,,,,,,,0,3,3,6
+Avian leukosis,1,1,,,2,,4,2,2.7,5.7
+Avian influenza,3,3,3,1,3,3,16,,2.7,5.7
+Campylobacter spp.,2,1,1,3,,,7,1,2.2,5.2
+Avian infectious bronchitis,3,3,1,,2,,9,,1.5,4.5
+Necrotic enteritis,3,3,1,,2,,9,,1.5,4.5
+Red mite,3,3,,,3,,9,,1.5,4.5
+Mycoplasma spp.,2,3,,,2,1,8,,1.3,4.3
+Dysbacteriosis,2,3,,,3,,8,,1.3,4.3
