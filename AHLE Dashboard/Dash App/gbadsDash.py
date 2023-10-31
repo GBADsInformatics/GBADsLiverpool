@@ -2142,7 +2142,8 @@ gbadsDash.layout = html.Div([
                        html.Img(title="Link to GBADS site", src=(os.environ.get("DASH_BASE_URL") if os.environ.get("DASH_BASE_URL") else "") + '/assets/GBADs-LOGO-Black-sm.png')
                        ]
                        ),
-                html.H3("Inclusiveness Challenge Delivery Rigour Transparency",
+                # html.H3("Inclusiveness Challenge Delivery Rigour Transparency",
+                html.H3("Global Burden of Animal Diseases",
                         style={"font-style": "italic",
                                "margin": "0",
                                "padding": "0"}),
