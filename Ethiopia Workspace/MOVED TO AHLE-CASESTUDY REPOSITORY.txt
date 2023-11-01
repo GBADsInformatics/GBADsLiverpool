@@ -1,0 +1,3 @@
+The Ethiopia Workspace has been moved to its own Github repository: https://github.com/GBADsInformatics/AHLE-CaseStudy.  The contents of this folder are replicated in the \Data and Processing Code\ folder of the new repository.
+
+Please make changes there instead of in this folder.
