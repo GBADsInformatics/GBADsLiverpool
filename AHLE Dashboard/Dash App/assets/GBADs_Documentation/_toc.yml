@@ -40,17 +40,6 @@ parts:
       - file: Analysis/Breed standards_swine
       - file: Analysis/Cost data_swine
     #- file: Analysis/Challenges and open issues
-  - caption: Ethiopia Case Study
-    chapters:
-    - file: Analysis/Overview of the approach_Ethiopia
-    - file: Tool/eth_basic_controls
-    - file: Tool/Reading the charts_Ethiopia
-      sections:
-      - file: Tool/eth_value_cost_chart
-      - file: Tool/eth_attribution_chart
-      #- file: Tool/eth_ahle_contrib_chart
-      - file: Tool/eth_subnational_map
-    #- file: Analysis/Compartmental population model
   - caption: Antimicrobial Usage
     chapters:
     #- file: Analysis/amu_overview
