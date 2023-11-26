@@ -1916,7 +1916,7 @@ gbadsDash.layout = html.Div([
             html.Div([
                 html.A(href="https://animalhealthmetrics.org/",
                        children=[
-                       html.Img(title="Link to GBADS site", src=(os.environ.get("DASH_BASE_URL") if os.environ.get("DASH_BASE_URL") else "") + '/assets/GBADs-LOGO-Black-sm.png')
+                       html.Img(title="Link to GBADS site", src=os.environ.get("BASE_URL", "") + '/assets/GBADs-LOGO-Black-sm.png')
                        ]
                        ),
                 # html.H3("Inclusiveness Challenge Delivery Rigour Transparency",
@@ -3818,7 +3818,7 @@ gbadsDash.layout = html.Div([
                dbc.Col(html.Div([
                    html.A(href="#AMU-tab",
                    children=[
-                       html.Img(title="Back to top",src=(os.environ.get("DASH_BASE_URL") if os.environ.get("DASH_BASE_URL") else "") + '/assets/up_arrow_icon_black-modified.png')
+                       html.Img(title="Back to top",src=os.environ.get("BASE_URL", "") + '/assets/up_arrow_icon_black-modified.png')
                    ], style={'width':'80px'},
                    ),
                        ], style = {'margin-left':"10px",
@@ -8124,17 +8124,17 @@ def returnApp():
     """
     This function is used to create the app and return it to waitress in the docker container
     """
-    # If DASH_BASE_URL is set, use DispatcherMiddleware to serve the app from that path
-    if 'DASH_BASE_URL' in os.environ:
+    # If BASE_URL is set, use DispatcherMiddleware to serve the app from that path
+    if 'BASE_URL' in os.environ:
         from werkzeug.middleware.dispatcher import DispatcherMiddleware
         app.wsgi_app = DispatcherMiddleware(Flask('dummy_app'), {
-            os.environ['DASH_BASE_URL']: app.server
+            os.environ['BASE_URL']: app.server
         })
         # Added redirect to new path
         @app.wsgi_app.app.route('/')
         def redirect_to_dashboard():
-            return redirect(os.environ['DASH_BASE_URL'])
+            return redirect(os.environ['BASE_URL'])
         return app.wsgi_app
 
-    # If no DASH_BASE_URL is set, just return the app server
+    # If no BASE_URL is set, just return the app server
     return app.server
