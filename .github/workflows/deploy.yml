@@ -9,7 +9,7 @@ on:
 
 env:
   DOCKER_IMAGE: gbadsinformatics/ahle-dash:latest
-  SERVICE_NAME: AHLE-dash-service
+  SERVICE_NAME: ahle-dash-service
   CLUSTER_NAME: GBADs-Dashboards-Cluster
   AWS_REGION: us-east-2
 
