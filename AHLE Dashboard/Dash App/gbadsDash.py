@@ -646,7 +646,11 @@ country_options_swine = []
 for i in np.sort(gbads_pigs_merged_fordash['country'].unique()) :
    country_shortname = country_shortnames[i]
    compound_label = f"{i} ({country_shortname})"
-   str(country_options_swine.append({'label':compound_label,'value':(i)}))
+   # Update March 2025: removing Denmark to avoid inconsistencies with the AMU Case Study dashboard
+   if country_shortname == 'DNK':
+       continue     # Go to next iteration of loop without adding this
+   else:
+       str(country_options_swine.append({'label':compound_label,'value':(i)}))
 
 year_options_swine = []
 for i in np.sort(gbads_pigs_merged_fordash['year'].unique()):
