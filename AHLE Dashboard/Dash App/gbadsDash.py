@@ -36,7 +36,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-import geopandas as gpd
+# import geopandas as gpd
 from flask import Flask, redirect
 # private (fa) libraries
 import lib.fa_dash_utils as fa
@@ -1341,7 +1341,8 @@ def prep_ahle_forwaterfall_ga(INPUT_DF):
     # Sort order is same as current values dictionary defined above
     items_plotorder = list(current_values_labels.values())
     values_combined['item'] = values_combined['item'].astype('category')
-    values_combined.item.cat.set_categories(items_plotorder, inplace=True)
+    # values_combined.item.cat.set_categories(items_plotorder, inplace=True)
+    values_combined.item.cat.set_categories(items_plotorder)
     values_combined = values_combined.sort_values(['item'])
 
     # Fill in zeros for ideal costs

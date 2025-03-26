@@ -20,15 +20,15 @@ in_gunicorn = str(os.environ).count('gunicorn') > 0
 brand_div = html.Div([
             html.Img(src='/assets/First_Analytics_logo_rgb no background.png',style={'height':'15%', 'width':'15%'}),
             html.Br(),
-            html.Br(),            
+            html.Br(),
             ], style={'margin-left':'10px','margin-top':'5px'}
             )
 
 def logit(*args, sep=' ', end='\n', file=None):
     '''Write a message to the log.'''
     print(f"[{dt.now().strftime('%Y%m%d_%H%M%S.%f')[:19]}]", *args)
-        
-    
+
+
 def instantiate_app(app_title='title', external_stylesheets=[]):  # returns a Dash app
     flask_server = None
     assets_folder=os.path.join(os.getcwd(),'assets')
@@ -39,14 +39,14 @@ def instantiate_app(app_title='title', external_stylesheets=[]):  # returns a Da
         flask_server = flask.Flask(__name__) # define flask app.server
         logit(f'Instantiating Dash for gunicorn with {assets_folder=}')
         logit(f'{external_stylesheets=}')
-        app = Dash(__name__, server=flask_server, title=app_title, 
+        app = Dash(__name__, server=flask_server, title=app_title,
                     external_stylesheets=external_stylesheets,
                     assets_folder=assets_folder)
     elif in_jupyter:
         logit(f'Instantiating JupyterDash with {assets_folder=}')
         logit(f'{external_stylesheets=}')
         from jupyter_dash import JupyterDash  # Needed to run in Jupyter notebook
-        app = JupyterDash(__name__ , title=app_title, external_stylesheets=external_stylesheets)  
+        app = JupyterDash(__name__ , title=app_title, external_stylesheets=external_stylesheets)
     else:
         from dash import Dash
         # app = Dash(__name__ , title=app_title, external_stylesheets=external_stylesheets)
@@ -54,12 +54,12 @@ def instantiate_app(app_title='title', external_stylesheets=[]):  # returns a Da
         logit(f'{external_stylesheets=}')
         if 'BASE_URL' in os.environ:
             # if the environment variable BASE_URL is set, then we set the dash url prefix
-            app = Dash(__name__ , title=app_title, 
-                   external_stylesheets=external_stylesheets, 
+            app = Dash(__name__ , title=app_title,
+                   external_stylesheets=external_stylesheets,
                    assets_folder=assets_folder, requests_pathname_prefix=os.environ['BASE_URL']+'/')
         else:
-            app = Dash(__name__ , title=app_title, 
-                   external_stylesheets=external_stylesheets, 
+            app = Dash(__name__ , title=app_title,
+                   external_stylesheets=external_stylesheets,
                    assets_folder=assets_folder)
     return flask_server, app
 
@@ -68,12 +68,12 @@ def get_open_port(beg=8050,end=8299):
     addr_inuse = [[conn.raddr, conn.laddr] for conn in net_connections()]
     ports = set(addr.port for addr in sum(addr_inuse, []) if addr)
     for use_port in range(beg, end):
-        if use_port not in ports: 
-            break  
+        if use_port not in ports:
+            break
     return use_port
 
 
-def run_server(app, use_port=8050, debug=None):    
+def run_server(app, use_port=8050, debug=None):
     os.environ["DASH_HOT_RELOAD_INTERVAL"] = "9000"
     if debug is None:
         logit(f'setting debug to {not in_gunicorn}')
@@ -84,10 +84,10 @@ def run_server(app, use_port=8050, debug=None):
         app.run_server(mode=mode, debug=debug, port=use_port)
     else:
         logit(f'Starting server on http://localhost:{use_port}/ with no mode specified and debug={debug}')
-        app.run_server(debug=debug, port=use_port)
+        app.run(debug=debug, port=use_port)
 
 
-def get_data(filename_or_relative_path, sheet_name=None, folder='data'):    
+def get_data(filename_or_relative_path, sheet_name=None, folder='data'):
     timeBeg = time()  # to time how long it takes
     fileNameBase, fileNameExt = os.path.splitext(filename_or_relative_path)
     if fileNameExt in '.xls .xlsx':
@@ -101,7 +101,7 @@ def get_data(filename_or_relative_path, sheet_name=None, folder='data'):
         logit(msg)
         # maybe should thow and error
         return None
-    
+
 def make_dropdown_item(ddt_row, df):
     ddr0 = [
         html.H6(ddt_row.heading),
