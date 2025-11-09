@@ -1,52 +1,39 @@
-name: AHLE Docker Image CI
-
 on:
   push:
-    branches: [ "main" ]
-    paths: ["AHLE Dashboard/Dash App/**"]
+    branches: [ "main" , "master" ]
 
   workflow_dispatch:
 
-env:
-  DOCKER_IMAGE: gbadsinformatics/ahle-dash:latest
-  SERVICE_NAME: ahle-dash-service
-  CLUSTER_NAME: GBADs-Dashboards-Cluster
-  AWS_REGION: us-east-2
+name: Build & Deploy
 
 jobs:
-  docker:
-    name: Build & Deploy
+  commit-hash:
+    name: Commit SHA
     runs-on: ubuntu-latest
+    outputs:
+      sha7: ${{ steps.commit-hash.outputs.sha7 }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push to Docker Hub
-        uses: docker/build-push-action@v3
-        with:
-          context: './AHLE Dashboard/Dash App'
-          push: true
-          tags: ${{ env.DOCKER_IMAGE }}
-          
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Get Commit SHA
+        id: commit-hash
+        run: echo "sha7=$(echo ${GITHUB_SHA} | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
-      - name: Redeploy Amazon ECS service
-        run: |
-          aws ecs update-service --cluster ${{ env.CLUSTER_NAME }} --service ${{ env.SERVICE_NAME }} --force-new-deployment
+  docker:
+    uses: GBADsInformatics/DevopsWorkflows/.github/workflows/docker.yml@v2.0
+    secrets: inherit
+    with:
+      IMAGE_NAME: ahle-dash
+
+  aws:
+    needs: [commit-hash, docker]
+    uses: GBADsInformatics/DevopsWorkflows/.github/workflows/aws.yml@v2.0
+    secrets:
+      template-input: >-
+        ApplicationName=ahle-dash,
+        DockerURI=gbadsinformatics/ahle-dash:${{ needs.commit-hash.outputs.sha7 }},
+        BaseURL=/ahle,
+        ListenerRulePriority=6
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    with:
+      stack-name: ahle-dash-stack
+      AWS_REGION: ca-central-1
